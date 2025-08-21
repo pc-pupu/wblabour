@@ -24,7 +24,11 @@ if (in_array("login", $urlarr)){
 <link href="<?php print $base_root.$base_path?>sites/all/themes/labourdept/css/style2.css" rel="stylesheet">
 <link href='https://fonts.googleapis.com/css?family=Lato:400,300,100,700,900' rel='stylesheet' type='text/css'>
 <!--<script language="javascript" src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/jquery.min.js"></script> -->   
+<<<<<<< HEAD
+<script language="javascript" src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/jquery.min.js"></script> 
+=======
 <script language="javascript" src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/jquery-1.9.1.js"></script> 
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 <script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/bootstrap.min.js"></script> 
 <!--for bootstrap datepicker-->
 <link href="<?php print $base_root.$base_path?>sites/all/themes/labourdept/css/bootstrap-datepicker.css" rel="stylesheet">
@@ -59,7 +63,11 @@ function googleTranslateElementInit() {
                     <?php }else{?>
                     
 						<!--<i class="fa fa-sign-in" aria-hidden="true"></i> <a href="<?php print $base_root.$base_path?>enlogin" class="login_link">Login</a>&nbsp;&nbsp;&nbsp;-->
+<<<<<<< HEAD
+                        <!-- <i class="fa fa-sign-in" aria-hidden="true"></i> <a href="<?php //print $base_root.$base_path?>assetlogin" class="login_link">Employee Login</a>&nbsp;&nbsp;&nbsp; -->
+=======
                         <i class="fa fa-sign-in" aria-hidden="true"></i> <a href="<?php print $base_root.$base_path?>assetlogin" class="login_link">Employee Login</a>&nbsp;&nbsp;&nbsp;
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
                         <i class="fa fa-sign-in" aria-hidden="true"></i> <a href="<?php print $base_root.$base_path?>user" class="login_link">Admin Login</a>&nbsp;&nbsp;&nbsp;
                       <?php }?> 
                       </div>
@@ -180,7 +188,11 @@ function googleTranslateElementInit() {
 
   <div class="custom-feedback">
 
+<<<<<<< HEAD
+  <a href="<?php print $base_root.$base_path?>may-we-help-you/" class="feedback-btn" style="color: white!important; text-decoration: none!important;">Feedback</a>
+=======
   <a href="https://wblabour.gov.in/may-we-help-you/" class="feedback-btn" style="color: white!important; text-decoration: none!important;">Feedback</a>
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
     
 
   </div>

@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * Implements hook_user_login().
+ */
+function single_login_user_login(&$edit, $account) {
+  if ($account->name == 'cmsmanager') {
+    db_query("DELETE FROM {sessions} WHERE uid = :uid AND sid != :sid", array(
+      ':uid' => $account->uid,
+      ':sid' => session_id(),
+    ));
+  }
+}

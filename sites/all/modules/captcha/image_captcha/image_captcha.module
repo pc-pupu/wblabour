@@ -225,12 +225,34 @@ function image_captcha_captcha($op, $captcha_type = '', $captcha_sid = NULL) {
         }
         // Generate a CAPTCHA code.
         $allowed_chars = _image_captcha_utf8_split(variable_get('image_captcha_image_allowed_chars', IMAGE_CAPTCHA_ALLOWED_CHARACTERS));
+<<<<<<< HEAD
+        $code_length = (int) variable_get('image_captcha_code_length', 6);
+       
+        // Enforce at least one uppercase, one lowercase, and one number
+        $upper = ['A','B','C','D','E','F','G','H','J','K','L','M','N','P','Q','R','S','T','U','V','W','X','Y','Z'];
+        $lower = ['a','b','c','d','e','f','g','h','j','k','m','n','p','q','r','s','t','u','v','w','x','y','z'];
+        $numbers = ['2','3','4','5','6','7','8','9'];
+
+        $code = $upper[array_rand($upper)] .
+                $lower[array_rand($lower)] .
+                $numbers[array_rand($numbers)];
+
+        // Fill the rest randomly
+        $remaining = $code_length - 3;
+        for ($i = 0; $i < $remaining; $i++) {
+          $code .= $allowed_chars[array_rand($allowed_chars)];
+        }
+
+        // Shuffle the code to mix the required characters
+        $code = str_shuffle($code);
+=======
         $code_length = (int) variable_get('image_captcha_code_length', 5);
         $code = '';
         for ($i = 0; $i < $code_length; $i++) {
           $code .= $allowed_chars[array_rand($allowed_chars)];
         }
 
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
         // Build the result to return.
         $result = array();
 
@@ -267,7 +289,11 @@ function image_captcha_captcha($op, $captcha_type = '', $captcha_sid = NULL) {
         // Handle the case insensitive validation option combined with ignoring spaces.
         switch (variable_get('captcha_default_validation', CAPTCHA_DEFAULT_VALIDATION_CASE_INSENSITIVE)) {
           case CAPTCHA_DEFAULT_VALIDATION_CASE_SENSITIVE:
+<<<<<<< HEAD
+            $result['captcha_validate'] = 'captcha_validate_exact';
+=======
             $result['captcha_validate'] = 'captcha_validate_ignore_spaces';
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
             break;
 
           case CAPTCHA_DEFAULT_VALIDATION_CASE_INSENSITIVE:

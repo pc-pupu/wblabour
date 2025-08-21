@@ -42,9 +42,46 @@ function notice_menu(){
 	'page arguments' => array('edit_notice',2),
 	'access arguments' => array('cmsnotice_per'),
   );
+<<<<<<< HEAD
+
+ $items['cmsentry/notice/download/%'] = array(
+  'title' => 'Secure Download for Notice',
+  'page callback' => 'notice_secure_file_download',
+  'page arguments' => array(3),
+  'access arguments' => array('cmsnotice_per'),
+  'type' => MENU_CALLBACK,
+);
+
+
+
   return $items;
 }
 
+function notice_secure_file_download($filename) {
+  $filepath = 'public://upload/notice/' . $filename;
+
+  if (file_exists(drupal_realpath($filepath))) {
+    $realpath = drupal_realpath($filepath);
+    $mime_type = file_get_mimetype($realpath);
+
+    header('Content-Type: ' . $mime_type);
+    header('Content-Disposition: attachment; filename="' . $safe_filename . '"');
+    header('Content-Length: ' . filesize($realpath));
+    readfile($realpath);
+    exit;
+  }
+  else {
+    drupal_set_message(t('File not found.'), 'error');
+    drupal_goto('cmsentry/cmsnotice');
+  }
+}
+
+
+=======
+  return $items;
+}
+
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 function test_upload($form, &$form_state){
 	$form['#attributes']['class'][] = 'sky-form custom-form-main';
 	$form['doc_file'] = array(
@@ -187,6 +224,11 @@ $noticesearch = isset($form_state['values']['notice_search']) && !empty($form_st
 	
 }
 
+<<<<<<< HEAD
+
+
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  function notice_list_form_submit($form, &$form_state){
 	//print_r( $form_state['values']['notice_datefrom'].'hiii'. $form_state['values']['notice_dateto']);
 	//die();
@@ -387,7 +429,11 @@ function add_notice($form, &$form_state){
     $form['add_notice_pdf'] = array(
 	   '#title' => t(' Upload Scanned file of the Notification (JPG,PDF only)'),
 	   '#type' => 'managed_file',
+<<<<<<< HEAD
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(10*1024*1024)),
+=======
 	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	   '#upload_location' => 'public://upload/notice/',
 	   '#process' => array('import_my_file_element_process'),
 	   '#required' => TRUE,
@@ -403,6 +449,52 @@ function add_notice($form, &$form_state){
 	return  $form;
 	 
  }
+<<<<<<< HEAD
+
+ function add_notice_validate($form, &$form_state) {
+  $fid = $form_state['values']['add_notice_pdf'];
+  if (is_array($fid)) {
+    $fid = reset($fid);
+  }
+
+  if ($fid) {
+    $file = file_load($fid);
+    if ($file) {
+      $filename = $file->filename;
+      $filepath = drupal_realpath($file->uri);
+
+      // 1. Check for double extensions like .exe.pdf
+      if (preg_match('/\.[^\.]+\.[^\.]+$/', $filename)) {
+        file_delete($file);
+        form_set_error('add_notice_pdf', t('Double extension files are not allowed. Only JPG or PDF files are permitted.'));
+        $form_state['rebuild'] = TRUE;
+        return;
+      }
+
+      // 2. Detect actual MIME type
+      if (function_exists('finfo_open')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $filepath);
+        finfo_close($finfo);
+      } else {
+        $mime = mime_content_type($filepath); // fallback
+      }
+
+      // 3. Check if MIME is valid
+      $allowed_mime = ['application/pdf', 'image/jpeg'];
+      if (!in_array($mime, $allowed_mime)) {
+        file_delete($file);
+        form_set_error('add_notice_pdf', t('Invalid file content (%mime). Only valid PDF or JPG files are allowed.', ['%mime' => $mime]));
+        $form_state['rebuild'] = TRUE;
+        return;
+      }
+    }
+  }
+}
+
+
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function add_notice_submit($form, &$form_state){ 
    //echo "hi"; exit;
@@ -488,6 +580,54 @@ function edit_notice($form, &$form_state, $args=''){
 	   '#required' => TRUE,
 	);
 	
+<<<<<<< HEAD
+	// $uri = 'public://upload/notice/'.trim($result['noticefile']);
+	
+	// if (file_exists($uri)) {
+	// 	$form['notice_file_up'] = array(
+ //        '#markup' => l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'),
+	// 		     ''.$GLOBALS['base_url'].'/sites/default/files/upload/notice/'.$result['noticefile'], array('html' => TRUE,
+	// 			 'attributes'=>array('target'=>'_blank' , 'class'=>array('pdfloc1')))),
+ //        );
+	// 	$form['scan_file'] = array(
+ //        '#type' => 'hidden',
+	// 	'#default_value' => trim($result['noticefile']),
+ //        );
+	// }else{
+	// 	$form['notice_file_up'] = array(
+ //        '#markup' => t('No File Exist'),
+	// 	'#prefix' => '<div class="pdfnone">',
+	//     '#suffix' => '</div>'
+ //        );
+	// }
+
+  $uri = 'public://upload/notice/' . trim($result['noticefile']);
+
+if (file_exists(drupal_realpath($uri))) {
+  $download_link = url('cmsentry/notice/download/' . trim($result['noticefile']), array('absolute' => TRUE));
+  $img_html = '<img src="' . $GLOBALS['base_url'] . '/' . drupal_get_path('theme', 'labourdept') . '/images/pdf.png" alt="Download PDF">';
+  
+  $form['notice_file_up'] = array(
+    '#markup' => l($img_html, $download_link, array(
+      'html' => TRUE,
+      'attributes' => array('class' => array('pdfloc1'))
+    )),
+  );
+
+  $form['scan_file'] = array(
+    '#type' => 'hidden',
+    '#default_value' => trim($result['noticefile']),
+  );
+} else {
+  $form['notice_file_up'] = array(
+    '#markup' => t('No File Exist'),
+    '#prefix' => '<div class="pdfnone">',
+    '#suffix' => '</div>',
+  );
+}
+
+
+=======
 	$uri = 'public://upload/notice/'.trim($result['noticefile']);
 	
 	if (file_exists($uri)) {
@@ -507,11 +647,16 @@ function edit_notice($form, &$form_state, $args=''){
 	    '#suffix' => '</div>'
         );
 	}
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 		 
     $form['edit_notice_pdf'] = array(
 	   '#title' => t(' Upload an notice Scaned file (JPG,PDF only)'),
 	   '#type' => 'managed_file',
+<<<<<<< HEAD
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(10*1024*1024)),
+=======
 	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	   '#upload_location' => 'public://upload/notice/',
 	   '#process' => array('import_my_file_element_process'),
 	   //'#required' => TRUE,
@@ -531,6 +676,53 @@ function edit_notice($form, &$form_state, $args=''){
 	return  $form;
 	 
  } 
+<<<<<<< HEAD
+
+ function edit_notice_validate($form, &$form_state) {
+  $fid = $form_state['values']['edit_notice_pdf'];
+
+  if (is_array($fid)) {
+    $fid = reset($fid); // Get the first FID
+  }
+
+  if ($fid) {
+    $file = file_load($fid);
+    if ($file) {
+      $filename = $file->filename;
+      $filepath = drupal_realpath($file->uri);
+
+      // 1. Check for double extensions like .exe.pdf
+      if (preg_match('/\.[^\.]+\.[^\.]+$/', $filename)) {
+        file_delete($file);
+        form_set_error('edit_notice_pdf', t('Double extension files are not allowed. Only JPG or PDF files are permitted.'));
+        $form_state['rebuild'] = TRUE;
+        return;
+      }
+
+      // 2. Validate real MIME type using finfo or fallback
+      if (function_exists('finfo_open')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $filepath);
+        finfo_close($finfo);
+      } else {
+        $mime = mime_content_type($filepath);
+      }
+
+      // 3. Allow only real PDF or JPG
+      $allowed_mime = ['application/pdf', 'image/jpeg'];
+      if (!in_array($mime, $allowed_mime)) {
+        file_delete($file);
+        form_set_error('edit_notice_pdf', t('Invalid file type (%mime). Only valid PDF or JPG files are allowed.', ['%mime' => $mime]));
+        $form_state['rebuild'] = TRUE;
+        return;
+      }
+    }
+  }
+}
+
+
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function edit_notice_submit($form, &$form_state){ 
 //echo "hi"; exit;

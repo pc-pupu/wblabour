@@ -1,0 +1,5 @@
+name = Single Login Control
+description = Force only one session per user
+package = Custom
+version = "7.x"
+core = 7.x

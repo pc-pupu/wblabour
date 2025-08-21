@@ -1,0 +1,5 @@
+name = Session Timeout
+description = Force logout after user inactivity
+package = Custom
+version = "7.x"
+core = 7.x

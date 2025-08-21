@@ -43,6 +43,20 @@ function circular_menu(){
 	'page arguments' => array('edit_circular',2),
 	'access arguments' => array('cmscircular_per'),
   );
+<<<<<<< HEAD
+
+  $items['cmsentry/circular/download/%'] = array(
+  'title' => 'Download Circular File',
+  'page callback' => 'circular_file_download_callback',
+  'page arguments' => array(3),
+  'access arguments' => array('cmscircular_per'),
+  'type' => MENU_CALLBACK,
+);
+
+
+
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
   return $items;
 }
 
@@ -185,6 +199,30 @@ function circular_list_form($form, &$form_states){
 function circular_list_form_submit($form, &$form_state){
 	$form_state['rebuild'] = TRUE;
  }
+<<<<<<< HEAD
+
+ function circular_file_download_callback($filename) {
+  $safe_filename = basename($filename);
+  $uri = 'public://upload/circular/' . $safe_filename;
+
+  if (file_exists(drupal_realpath($uri))) {
+    $filepath = drupal_realpath($uri);
+    $mime_type = file_get_mimetype($uri);
+
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="' . $safe_filename . '"');
+    header('Content-Length: ' . filesize($filepath));
+    readfile($filepath);
+    exit;
+  } else {
+    drupal_set_message(t('File not found.'), 'error');
+    drupal_goto('cmsentry/cmscircular');
+  }
+}
+
+
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function circular_list($datefrom='',$dateto='',$circularsearch=''){
 	 global $base_root, $base_path;
@@ -230,8 +268,17 @@ function circular_list($datefrom='',$dateto='',$circularsearch=''){
 	 $i = 20*($p) + 1;
 	 foreach($cms_circular_query_result_data as $data){
 		
+<<<<<<< HEAD
+		// $aa=$base_root.$base_path.'sites/default/files/upload/circular/'.$data->circularfile;
+		// $link_s=l(t('View'), $aa, array('attributes' => array('target'=>'_blank'))) ;
+
+		$download_path = 'cmsentry/circular/download/' . $data->circularfile;
+        $link_s = l(t('Download'), $download_path, array('attributes' => array('class' => array('download-link'))));
+
+=======
 		$aa=$base_root.$base_path.'sites/default/files/upload/circular/'.$data->circularfile;
 		$link_s=l(t('View'), $aa, array('attributes' => array('target'=>'_blank'))) ;
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 		$rows[] = array(
       				$i,
 					date('d-m-Y', strtotime($data->circulardate)),
@@ -324,8 +371,46 @@ function get_circular_list(){
     return '<div class="table-responsive statistics_box">'.$output.'</div>';
 }
 
+<<<<<<< HEAD
+// function validate_file_double_extension($form, &$form_state) {
+//   $fid = $form_state['values']['add_circular_pdf'];
+//   if ($fid && is_array($fid)) {
+//     $fid = reset($fid);
+//   }
+
+//   if ($fid) {
+//     $file = file_load($fid);
+//     if ($file) {
+//       $filename = $file->filename;
+
+//       if (substr_count($filename, '.') > 1) {
+//         // Delete the uploaded file from temp
+//         file_delete($file);
+
+//         // Remove it from submitted values so it doesn’t save
+//         unset($form_state['values']['add_circular_pdf']);
+
+//         // Set error
+//         form_set_error('add_circular_pdf', t('Double extension files are not allowed. Please upload only JPG or PDF.'));
+//       }
+//     }
+//   } else {
+//     // If no file uploaded, handle the required check manually
+//     form_set_error('add_circular_pdf', t('Please upload a file. Only JPG or PDF are allowed.'));
+//   }
+// }
+
+
+
 function add_circular($form, &$form_state){
    global $base_root, $base_path;
+
+   //drupal_add_js(drupal_get_path('module', 'circular') . '/myfunction.js');
+
+=======
+function add_circular($form, &$form_state){
+   global $base_root, $base_path;
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	 
    $form['add_circular_date'] = array(
 	 '#title'=>' Circular Date :',
@@ -348,6 +433,18 @@ function add_circular($form, &$form_state){
 	);
 		 
     $form['add_circular_pdf'] = array(
+<<<<<<< HEAD
+	  '#title' => t(' Upload a Circular Scanned file (JPG,PDF only)'),
+	  '#type' => 'managed_file',
+	  '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(10*1024*1024)),
+	  '#upload_location' => 'public://upload/circular/',
+	  '#process' => array('import_my_file_element_process'),
+	  '#required' => TRUE,
+	  '#prefix' => '<div class="col-md-4" id="file-upload-wrapper">',
+	  '#suffix' => '<div id="file-error-msg" style="color:red; font-size:14px; margin-top:5px;"></div></div>',
+	);
+
+=======
 	   '#title' => t(' Upload an Circular Scanned file (JPG,PDF only)'),
 	   '#type' => 'managed_file',
 	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
@@ -355,6 +452,7 @@ function add_circular($form, &$form_state){
 	   '#process' => array('import_my_file_element_process'),
 	   '#required' => TRUE,
 	);
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	
     $form['submit'] = array (
         '#type' => 'submit',
@@ -366,6 +464,83 @@ function add_circular($form, &$form_state){
 	return  $form;
 	 
  }
+<<<<<<< HEAD
+
+//  function add_circular_validate($form, &$form_state) {
+//   $fid = $form_state['values']['add_circular_pdf'];
+//   if (is_array($fid)) {
+//     $fid = reset($fid);
+//   }
+
+//   if ($fid) {
+//     $file = file_load($fid);
+//     if ($file) {
+//       $filename = $file->filename;
+
+//       // Double extension detection
+//       if (preg_match('/\.[^\.]+\.[^\.]+$/', $filename)) {
+//         file_delete($file); // delete invalid file
+
+//         // Force validation error
+//         form_set_error('add_circular_pdf', t('Double extension files are not allowed. Only JPG or PDF files are permitted.'));
+
+//         // Force form to rebuild with red border
+//         $form_state['rebuild'] = TRUE;
+//       }
+//     }
+//   }
+// }
+
+ function add_circular_validate($form, &$form_state) {
+  $fid = $form_state['values']['add_circular_pdf'];
+  if (is_array($fid)) {
+    $fid = reset($fid);
+  }
+
+  if ($fid) {
+    $file = file_load($fid);
+    if ($file) {
+      $filename = $file->filename;
+      $filepath = drupal_realpath($file->uri);
+
+      // 1. Check for double extensions (e.g., .exe.pdf)
+      if (preg_match('/\.[^.]+\.[^.]+$/', $filename)) {
+        file_delete($file);
+        form_set_error('add_circular_pdf', t('Double extension files are not allowed. Please upload a valid PDF or JPG.'));
+        $form_state['rebuild'] = TRUE;
+        return;
+      }
+
+      // 2. Check real MIME type using finfo
+      if (function_exists('finfo_open')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $filepath);
+        finfo_close($finfo);
+      } else {
+        $mime = mime_content_type($filepath); // fallback (older PHP)
+      }
+
+      // 3. Allow only real PDF or JPG MIME types
+      $allowed_mime = ['application/pdf', 'image/jpeg'];
+
+      if (!in_array($mime, $allowed_mime)) {
+        file_delete($file);
+        form_set_error('add_circular_pdf', t('Invalid file type detected (%mime). Only real PDF or JPG files are allowed.', ['%mime' => $mime]));
+        $form_state['rebuild'] = TRUE;
+        return;
+      }
+    }
+  }
+}
+
+
+
+
+ 
+
+
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function add_circular_submit($form, &$form_state){ 
 	$arr = array();
@@ -435,6 +610,56 @@ function edit_circular($form, &$form_state, $args=''){
        '#rows' => 4,
 	   '#type' => 'textarea',
 	   '#default_value' =>trim($result['circulardesc']),
+<<<<<<< HEAD
+	   '#required' => TRUE,
+	);
+	
+	// $uri = 'public://upload/circular/'.trim($result['circularfile']);
+	
+	// if (file_exists($uri)) {
+	// 	$form['circular_file_up'] = array(
+ //        '#markup' => l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'),
+	// 		     ''.$GLOBALS['base_url'].'/sites/default/files/upload/circular/'.$result['circularfile'], array('html' => TRUE,
+	// 			 'attributes'=>array('target'=>'_blank' , 'class'=>array('pdfloc1')))),
+ //        );
+	// 	$form['scan_file'] = array(
+ //        '#type' => 'hidden',
+	// 	'#default_value' => trim($result['circularfile']),
+ //        );
+	// }else{
+	// 	$form['circular_file_up'] = array(
+ //        '#markup' => t('No File Exist'),
+	// 	'#prefix' => '<div class="pdfnone">',
+	//     '#suffix' => '</div>'
+ //        );
+	// }
+
+	$uri = 'public://upload/circular/' . trim($result['circularfile']);
+
+		if (file_exists($uri)) {
+		  $download_link = $GLOBALS['base_url'] . '/cmsentry/circular/download/' . trim($result['circularfile']);
+		  $img_html = '<img src="' . $GLOBALS['base_url'] . '/' . drupal_get_path('theme', 'labourdept') . '/images/pdf.png" alt="Download PDF">';
+		  
+		  $form['circular_file_up'] = array(
+		    '#markup' => l($img_html, $download_link, array(
+		      'html' => TRUE,
+		      'attributes' => array('class' => array('pdfloc1'))
+		    )),
+		  );
+		  
+		  $form['scan_file'] = array(
+		    '#type' => 'hidden',
+		    '#default_value' => trim($result['circularfile']),
+		  );
+		} else {
+		  $form['circular_file_up'] = array(
+		    '#markup' => t('No File Exist'),
+		    '#prefix' => '<div class="pdfnone">',
+		    '#suffix' => '</div>',
+		  );
+		}
+
+=======
 	   '#element_validate' => array('circular_textfield_validate'),
 	   '#required' => TRUE,
 	);
@@ -458,11 +683,16 @@ function edit_circular($form, &$form_state, $args=''){
 	    '#suffix' => '</div>'
         );
 	}
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 		 
     $form['edit_circular_pdf'] = array(
 	   '#title' => t(' Upload an Circular Scaned file (JPG,PDF only)'),
 	   '#type' => 'managed_file',
+<<<<<<< HEAD
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(10*1024*1024)),
+=======
 	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	   '#upload_location' => 'public://upload/circular/',
 	   '#process' => array('import_my_file_element_process'),
 	   //'#required' => TRUE,
@@ -482,6 +712,52 @@ function edit_circular($form, &$form_state, $args=''){
 	return  $form;
 	 
  } 
+<<<<<<< HEAD
+
+ function edit_circular_validate($form, &$form_state) {
+  $fid = $form_state['values']['edit_circular_pdf'];
+  if (is_array($fid)) {
+    $fid = reset($fid);
+  }
+
+  if ($fid) {
+    $file = file_load($fid);
+    if ($file) {
+      $filename = $file->filename;
+      $filepath = drupal_realpath($file->uri);
+
+      // 1. Double extension detection
+      if (preg_match('/\.[^\.]+\.[^\.]+$/', $filename)) {
+        file_delete($file);
+        form_set_error('edit_circular_pdf', t('Double extension files are not allowed. Only JPG or PDF files are permitted.'));
+        $form_state['rebuild'] = TRUE;
+        return;
+      }
+
+      // 2. MIME type detection
+      if (function_exists('finfo_open')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $filepath);
+        finfo_close($finfo);
+      } else {
+        $mime = mime_content_type($filepath); // fallback
+      }
+
+      // 3. Allowed MIME types
+      $allowed_mime = ['application/pdf', 'image/jpeg'];
+      if (!in_array($mime, $allowed_mime)) {
+        file_delete($file);
+        form_set_error('edit_circular_pdf', t('Invalid file content type (%mime). Only valid PDF or JPG files are allowed.', ['%mime' => $mime]));
+        $form_state['rebuild'] = TRUE;
+        return;
+      }
+    }
+  }
+}
+
+
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function edit_circular_submit($form, &$form_state){ 
 	$arr = array();

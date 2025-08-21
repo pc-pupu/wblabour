@@ -38,10 +38,54 @@ function awards_menu(){
 	'page arguments' => array('delete_awards',2,3),
 	'access arguments' => array('cmsawards_per'),
   );
+<<<<<<< HEAD
+
+  $items['awards/download/%'] = array(
+  'title' => 'Download Award PDF',
+  'page callback' => 'awards_download_file',
+  'page arguments' => array(2),
+  'access arguments' => array('cmsawards_per'),
+  'type' => MENU_CALLBACK,
+);
+
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
   
   return $items;
 }
 
+<<<<<<< HEAD
+function awards_download_file($filename) {
+  $filepath = 'public://upload/awards/' . $filename;
+  if (!file_exists(drupal_realpath($filepath))) {
+    return drupal_not_found();
+  }
+
+  // Load file info from database for security (optional)
+  $query = db_select('file_managed', 'f')
+    ->fields('f')
+    ->condition('uri', $filepath)
+    ->execute()
+    ->fetchAssoc();
+
+  if (!$query) {
+    return drupal_access_denied();
+  }
+
+  // Serve the file with download headers
+  $realpath = drupal_realpath($filepath);
+  $mimetype = 'application/pdf';
+
+  header('Content-Type: ' . $mimetype);
+  header('Content-Disposition: attachment; filename="' . basename($filename) . '"');
+  header('Content-Length: ' . filesize($realpath));
+  readfile($realpath);
+  exit;
+}
+
+
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 
 function delete_awards($form, &$form_state, $arg='',$fid='') {
 	
@@ -285,10 +329,15 @@ function get_awards_list(){
 	 $cms_awards_query->leftJoin('cms_labour_court_mst', 'lc', 'lc.id=t.court_id');
      $cms_awards_query->fields('t', array('aid','caseno','caseyear','awardsdate','awardsparty1','awardsvs','awardsparty2','fid','awardsfile'));
 	 $cms_awards_query->fields('lc', array('court_no'));
+<<<<<<< HEAD
+	 $cms_awards_query->orderBy($order, $sort);
+	 $cms_awards_query->orderBy('t.aid', 'DESC'); 
+=======
 	 //$cms_awards_query = $cms_awards_query->extend('TableSort')->extend('PagerDefault')->limit(20);
 	 $cms_awards_query->orderBy($order, $sort);
 	 $cms_awards_query->orderBy('t.aid', 'DESC'); 
 	 //echo $cms_awards_query; exit;
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	 $cms_awards_query_result = $cms_awards_query->execute();
 	 $cms_awards_query_result_data = $cms_awards_query_result->fetchAll();
 	 
@@ -311,6 +360,32 @@ function get_awards_list(){
 	 $i=0;
 	 foreach($cms_awards_query_result_data as $data){
 		$i++;
+<<<<<<< HEAD
+		$edit = $base_root . $base_path . 'cmsentry/cmsawards/' . $data->aid . '/cmsawardsedit';
+		$delete = $base_root . $base_path . 'cmsentry/cmsawards/' . $data->aid . '/' . $data->fid . '/cmsawardsdelete';
+		$link_edit = l(t('Edit'), $edit);
+		$link_delete = l(t('Delete'), $delete);
+
+		
+		$pdf_icon = '<img src="' . $GLOBALS['base_url'] . '/' . drupal_get_path('theme', 'labourdept') . '/images/pdf.png" style="margin:0px">';
+		$download_link = l(t($pdf_icon), 'awards/download/' . $data->awardsfile, array('html' => TRUE));
+
+		$rows[] = array(
+			$i,
+			$data->caseno,
+			$data->caseyear,
+			date('d-m-Y', strtotime($data->awardsdate)),
+			$data->court_no,
+			$data->awardsparty1,
+			$data->awardsvs,
+			$data->awardsparty2,
+			$download_link,
+			array('data' => $link_edit . ' | ' . $link_delete),
+		);
+	}
+
+	$variables = array(
+=======
 		$edit=$base_root.$base_path.'cmsentry/cmsawards/'.$data->aid.'/cmsawardsedit';
 		$delete=$base_root.$base_path.'cmsentry/cmsawards/'.$data->aid.'/'.$data->fid.'/cmsawardsdelete';
 		$link_delete=l(t('Delete'), $delete) ;
@@ -345,14 +420,19 @@ function get_awards_list(){
   
     $variables = array(
 	  //'attributes' => $attributes,
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	  'header' => $header,
 	  'rows' => $rows,
 	  'attributes' => array('class' => array('table', 'table-bordered')),
 	);
 	$output = theme('datatable', $variables);
   
+<<<<<<< HEAD
+	return '<div class="table-responsive statistics_box">'.$output.'</div>';
+=======
   	 
     return '<div class="table-responsive statistics_box">'.$output.'</div>';
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 }
 
 function labourList(){
@@ -477,12 +557,66 @@ function cmsawards_form_validate($form, &$form_state){
   if (!$form_state['values']['awardsfile']) {
     form_set_error('awardsfile', 'You must upload scan pdf');    
   }
+<<<<<<< HEAD
+  if (!$form_state['values']['court_id']) {
+    form_set_error('court_id', 'You must select court no');    
+  }
+
+  // File validation
+  $fid = $form_state['values']['awardsfile'];
+  if ($fid && is_array($fid)) {
+    $fid = reset($fid); // Get first file ID
+  }
+
+  if ($fid) {
+    $file = file_load($fid);
+    if ($file) {
+      $filename = $file->filename;
+      $filepath = drupal_realpath($file->uri);
+
+      // 1. Double extension check (e.g. .exe.pdf)
+      if (preg_match('/\.[^\.]+\.[^\.]+$/', $filename)) {
+        file_delete($file);
+        form_set_error('awardsfile', t('Double extension files are not allowed. Only PDF files are permitted.'));
+        return;
+      }
+
+      // 2. MIME type check
+      if (function_exists('finfo_open')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $filepath);
+        finfo_close($finfo);
+      } else {
+        $mime = mime_content_type($filepath); // fallback
+      }
+
+      if ($mime !== 'application/pdf') {
+        file_delete($file);
+        form_set_error('awardsfile', t('Invalid file content (%mime). Only valid PDF files are allowed.', ['%mime' => $mime]));
+        return;
+      }
+
+      // 3. Max file size check (10 MB)
+      if (filesize($filepath) > 10 * 1024 * 1024) {
+        file_delete($file);
+        form_set_error('awardsfile', t('File size must not exceed 10 MB.'));
+        return;
+      }
+    }
+  }
+}
+
+
+
+
+=======
    if (!$form_state['values']['court_id']) {
     form_set_error('court_id', 'You must select court no');    
   }
 }
 
 
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function cmsawards_form_submit($form, &$form_state){ 
 	$data = array();
@@ -668,7 +802,11 @@ function edit_awards($form, &$form_state, $args=''){
 	 
  } 
  
+<<<<<<< HEAD
+function edit_awards_validate($form, &$form_state) { 
+=======
 function edit_awards_validate($form, &$form_state){ 
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
   if (!$form_state['values']['caseno']) {
     form_set_error('caseno', 'You must enter awards case number');    
   }
@@ -682,12 +820,64 @@ function edit_awards_validate($form, &$form_state){
     form_set_error('awardsparty2', 'You must enter party2');    
   }
   if (!$form_state['values']['awardsdate']) {
+<<<<<<< HEAD
+    form_set_error('awardsdate', 'You must select awards date');    
+=======
     form_set_error('awardsdate', 'You must select awardsdate');    
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
   }
   if (!$form_state['values']['court_id']) {
     form_set_error('court_id', 'You must select court no');    
   }
+<<<<<<< HEAD
+
+  // Validate uploaded file if provided
+  $fid = $form_state['values']['awardsfile'];
+  if ($fid && is_array($fid)) {
+    $fid = reset($fid); // Get first file ID
+  }
+
+  if ($fid) {
+    $file = file_load($fid);
+    if ($file) {
+      $filename = $file->filename;
+      $filepath = drupal_realpath($file->uri);
+
+      // 1. Double extension check
+      if (preg_match('/\.[^\.]+\.[^\.]+$/', $filename)) {
+        file_delete($file);
+        form_set_error('awardsfile', t('Double extension files are not allowed. Only PDF files are permitted.'));
+        return;
+      }
+
+      // 2. MIME type check
+      if (function_exists('finfo_open')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $filepath);
+        finfo_close($finfo);
+      } else {
+        $mime = mime_content_type($filepath); // fallback
+      }
+
+      if ($mime !== 'application/pdf') {
+        file_delete($file);
+        form_set_error('awardsfile', t('Invalid file content (%mime). Only valid PDF files are allowed.', ['%mime' => $mime]));
+        return;
+      }
+
+      // 3. Max file size check (10 MB)
+      if (filesize($filepath) > 10 * 1024 * 1024) {
+        file_delete($file);
+        form_set_error('awardsfile', t('File size must not exceed 10 MB.'));
+        return;
+      }
+    }
+  }
+}
+
+=======
 } 
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function edit_awards_submit($form, &$form_state){ 
 

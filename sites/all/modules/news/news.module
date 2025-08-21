@@ -41,9 +41,43 @@ function news_menu(){
 	'access arguments' => array('news_per'),
 	'file' => 'include/daily_session.inc',
   );
+<<<<<<< HEAD
+    $items['cmsentry/news/download/%'] = array(
+    'title' => 'Download News File',
+    'page callback' => 'news_file_download_callback',
+    'page arguments' => array(3),
+    'access arguments' => array('cmsnews_per'),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
+function news_file_download_callback($filename) {
+  $safe_filename = basename($filename);
+  $uri = 'public://upload/news/' . $safe_filename;
+
+  if (file_exists(drupal_realpath($uri))) {
+    $filepath = drupal_realpath($uri);
+    $mime_type = file_get_mimetype($filepath);
+
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="' . $safe_filename . '"');
+    header('Content-Length: ' . filesize($filepath));
+    readfile($filepath);
+    exit;
+  } else {
+    drupal_set_message(t('File not found.'), 'error');
+    drupal_goto('cmsentry/cmsnews');
+  }
+}
+
+
+=======
+  return $items;
+}
+
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 function news_list(){
 	 global $base_root, $base_path;
 	 $sort = 'DESC';
@@ -187,7 +221,11 @@ function add_news($form, &$form_state){
     $form['add_news_pdf'] = array(
 	   '#title' => t('Upload a Scanned file of the News (JPG,PDF only)'),
 	   '#type' => 'managed_file',
+<<<<<<< HEAD
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(10*1024*1024)),
+=======
 	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	   '#upload_location' => 'public://upload/news/',
 	   '#process' => array('import_my_file_element_process'),
 	   '#required' => TRUE,
@@ -203,6 +241,52 @@ function add_news($form, &$form_state){
 	return  $form;
 	 
  }
+<<<<<<< HEAD
+
+ function add_news_validate($form, &$form_state) {
+  $fid = $form_state['values']['add_news_pdf'];
+
+  if (is_array($fid)) {
+    $fid = reset($fid); // Get the actual FID
+  }
+
+  if ($fid) {
+    $file = file_load($fid);
+    if ($file) {
+      $filename = $file->filename;
+      $filepath = drupal_realpath($file->uri);
+
+      // 1. Check for double extensions like .exe.pdf
+      if (preg_match('/\.[^\.]+\.[^\.]+$/', $filename)) {
+        file_delete($file);
+        form_set_error('add_news_pdf', t('Double extension files are not allowed. Only JPG or PDF files are permitted.'));
+        $form_state['rebuild'] = TRUE;
+        return;
+      }
+
+      // 2. Detect actual MIME type
+      if (function_exists('finfo_open')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $filepath);
+        finfo_close($finfo);
+      } else {
+        $mime = mime_content_type($filepath); // fallback
+      }
+
+      // 3. Allow only actual PDF or JPG MIME types
+      $allowed_mime = ['application/pdf', 'image/jpeg'];
+      if (!in_array($mime, $allowed_mime)) {
+        file_delete($file);
+        form_set_error('add_news_pdf', t('Invalid file content (%mime). Only valid PDF or JPG files are allowed.', ['%mime' => $mime]));
+        $form_state['rebuild'] = TRUE;
+        return;
+      }
+    }
+  }
+}
+
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function add_news_submit($form, &$form_state){ 
 	$arr = array();
@@ -276,6 +360,22 @@ function edit_news($form, &$form_state, $args=''){
 	   '#required' => TRUE,
 	);
 	
+<<<<<<< HEAD
+	$uri = 'public://upload/news/' . trim($result['newsfile']);
+
+	if (file_exists(drupal_realpath($uri))) {
+	  $download_link = url('cmsentry/news/download/' . trim($result['newsfile']), array('absolute' => TRUE));
+	  $img_html = '<img src="' . $GLOBALS['base_url'] . '/' . drupal_get_path('theme', 'labourdept') . '/images/pdf.png" alt="Download PDF">';
+
+	  $form['news_file_up'] = array(
+	    '#markup' => l($img_html, $download_link, array(
+	      'html' => TRUE,
+	      'attributes' => array('class' => array('pdfloc1'))
+	    )),
+	  );
+	}
+	else{
+=======
 	$uri = 'public://upload/news/'.trim($result['newsfile']);
 	
 	if (file_exists($uri)) {
@@ -289,6 +389,7 @@ function edit_news($form, &$form_state, $args=''){
 		'#default_value' => trim($result['newsfile']),
         );
 	}else{
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 		$form['news_file_up'] = array(
         '#markup' => t('No File Exist'),
 		'#prefix' => '<div class="pdfnone">',
@@ -299,7 +400,11 @@ function edit_news($form, &$form_state, $args=''){
     $form['edit_news_pdf'] = array(
 	   '#title' => t('Upload a Scanned file of the News (JPG,PDF only)'),
 	   '#type' => 'managed_file',
+<<<<<<< HEAD
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(10*1024*1024)),
+=======
 	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	   '#upload_location' => 'public://upload/news/',
 	   '#process' => array('import_my_file_element_process'),
 	   //'#required' => TRUE,
@@ -319,6 +424,52 @@ function edit_news($form, &$form_state, $args=''){
 	return  $form;
 	 
  } 
+<<<<<<< HEAD
+
+ function edit_news_validate($form, &$form_state) {
+  $fid = $form_state['values']['edit_news_pdf'];
+
+  if (is_array($fid)) {
+    $fid = reset($fid); // Get the actual FID
+  }
+
+  if ($fid) {
+    $file = file_load($fid);
+    if ($file) {
+      $filename = $file->filename;
+      $filepath = drupal_realpath($file->uri);
+
+      // 1. Check for double extensions like .exe.pdf
+      if (preg_match('/\.[^\.]+\.[^\.]+$/', $filename)) {
+        file_delete($file);
+        form_set_error('edit_news_pdf', t('Double extension files are not allowed. Only JPG or PDF files are permitted.'));
+        $form_state['rebuild'] = TRUE;
+        return;
+      }
+
+      // 2. Detect actual MIME type using finfo (or fallback)
+      if (function_exists('finfo_open')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $filepath);
+        finfo_close($finfo);
+      } else {
+        $mime = mime_content_type($filepath); // Fallback for older PHP
+      }
+
+      // 3. Allow only real PDF or JPG
+      $allowed_mime = ['application/pdf', 'image/jpeg'];
+      if (!in_array($mime, $allowed_mime)) {
+        file_delete($file);
+        form_set_error('edit_news_pdf', t('Invalid file content (%mime). Only valid PDF or JPG files are allowed.', ['%mime' => $mime]));
+        $form_state['rebuild'] = TRUE;
+        return;
+      }
+    }
+  }
+}
+
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function edit_news_submit($form, &$form_state){ 
 	$arr = array();

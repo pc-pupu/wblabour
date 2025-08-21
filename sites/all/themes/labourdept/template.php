@@ -232,7 +232,11 @@ function labourdept_form_user_login_alter(&$form, &$form_state, $form_id){
 			//'#id'=>'s_val',
 			'#attributes' => array('id' => array('s_val')),
 			'#size' => 60,
+<<<<<<< HEAD
+			'#maxlength' => 30,
+=======
 			'#maxlength' => 125,
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 			'#required' => TRUE,
 		  );
 		$form['ct_val'] = array('#type' => 'hidden',
@@ -240,7 +244,11 @@ function labourdept_form_user_login_alter(&$form, &$form_state, $form_id){
 			//'#id'=>'ct_val',
 			'#attributes' => array('id' => array('ct_val')),
 			'#size' => 60,
+<<<<<<< HEAD
+			'#maxlength' => 30,
+=======
 			'#maxlength' => 125,
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 			'#required' => TRUE,
 		  );  
 	}
@@ -253,6 +261,57 @@ function labourdept_form_user_login_alter(&$form, &$form_state, $form_id){
 	}
 }*/
 
+<<<<<<< HEAD
+// function labourdept_preprocess_user_login(&$variables) {
+// 	#krumo($variables);
+// 	$variables['form']['name']['#attributes'] = array('class' => array('input-login-username'), 'autocomplete' => 'off', 'placeholder'=>"Username");
+// 	$variables['form']['pass']['#attributes'] = array('class' => array('input-login-password'), 'autocomplete' => 'off', 'placeholder'=>"Password2");
+// 	$variables['form']['captcha']['#attributes'] = array('class' => array('input-login-captcha'), 'autocomplete' => 'off');
+// 	$variables['form']['actions']['submit']['#attributes'] = array('class' => array('user-login-btn'), 'onclick' => 'pwd_handler(this);');
+	
+// 	#$variables['form']['name']['#title'] = '';
+	
+// }
+
+function labourdept_preprocess_user_login(&$variables) {
+  // Username field
+  $variables['form']['name']['#attributes'] = array(
+    'class' => array('input-login-username'),
+    'autocomplete' => 'off',
+    'placeholder' => 'Username',
+    'maxlength' => 30,
+    'oninput' => "if(this.value.length > 50) this.value = this.value.slice(0, 50);"
+  );
+
+  // Password field
+  $variables['form']['pass']['#attributes'] = array(
+    'class' => array('input-login-password'),
+    'autocomplete' => 'off',
+    'placeholder' => 'Password',
+    'maxlength' => 30,
+    'oninput' => "if(this.value.length > 50) this.value = this.value.slice(0, 50);"
+  );
+
+  // CAPTCHA field
+  $variables['form']['captcha']['#attributes'] = array(
+    'class' => array('input-login-captcha'),
+    'autocomplete' => 'off'
+  );
+
+  // Submit button
+  $variables['form']['actions']['submit']['#attributes'] = array(
+    'class' => array('user-login-btn'),
+    'onclick' => 'pwd_handler(this);'
+  );
+
+  // Add a forgot password link under the form
+  $variables['forgot_password_link'] = '<div class="forgot-password-link" style="text-align: right; margin-top: 10px;">
+    <a href="/user/password">Forgot password?</a>
+  </div>';
+}
+
+
+=======
 function labourdept_preprocess_user_login(&$variables) {
 	#krumo($variables);
 	$variables['form']['name']['#attributes'] = array('class' => array('input-login-username'), 'autocomplete' => 'off', 'placeholder'=>"Username");
@@ -264,6 +323,7 @@ function labourdept_preprocess_user_login(&$variables) {
 	
 }
 
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 /*function labourdept_preprocess_invester_login(&$variables) {
 	$variables['form']['name']['#attributes'] = array('class' => array('input-login-username'), 'autocomplete' => 'off', 'placeholder'=>"Username");
 	$variables['form']['pass']['#attributes'] = array('class' => array('input-login-password'), 'autocomplete' => 'off', 'placeholder'=>"Password");
