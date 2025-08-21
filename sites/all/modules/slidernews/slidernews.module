@@ -45,11 +45,36 @@ function slidernews_application(){
 	// $cms_news_query = $cms_news_query->range(0,3);
 	// $cms_news_query_result = $cms_news_query->execute();
 
+<<<<<<< HEAD
+=======
+	// $shutdown_message = '<p>Portal will be under maintenance w. e. f. 18th July 2025 6 p.m.</p>';
+
+	$shutdown_message = '';
+	if(date('Y-m-d H:i:s') >= '2025-07-11 17:00:00'){
+		// $shutdown_message = '<p><a target="" href="#">Test  <b style="color:red;font-size: 18px">(New)</b></a></p><br>';
+	}
+
+
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	$output ='';
 
 	$output.= '<ul id="ticker">';
 
+<<<<<<< HEAD
 	$output.= '<li><span> Notification: </span> <p><a target="_blank" href="sites/default/files/upload/notice/Application invited from retired Judicial Officers not below the rank of Addl District and Session Judge for appoinment on re-employment.pdf">Application invited from retired Judicial Officers not below the rank of Additional District and ..</a>&nbsp; <b style="color:red;font-size: 18px">(New)</b></p></li>';
+=======
+	$output.= '<li>
+	     <span style="margin-top: 25px;" class="text-center"> Notification: </span>'.$shutdown_message.' 
+	      <p><a target="_blank" href="sites/default/files/upload/notice/Labr 490.pdf">Schedule of Medical Examination for the recruitment to the post of...</a>&nbsp; <b style="color:red;font-size: 18px">(New)</b></p>
+
+	    <p><a target="_blank" href="sites/default/files/upload/notice/Application Forms and Qualifications for Safety Officer and Welfare Officer.pdf">Application Forms and Qualifications for Safety Officer and Welfare Officer.</a>&nbsp; <b style="color:red;font-size: 18px">(New)</b></p>
+
+	    <p><a target="_blank" href="sites/default/files/upload/notice/List of recommended candidates for the post of GDMO under WB ESI Medical Service under Labour Department, Govt of West Bengal.pdf">List of recommended candidates for the post of GDMO under WB ESI Medical Service under Labour Department, Government of West Bengal.</a>&nbsp; <b style="color:red;font-size: 18px">(New)</b></p>
+
+	</li>';
+
+
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 
 
 	// foreach($cms_circular_query_result as $data) {

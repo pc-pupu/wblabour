@@ -38,6 +38,7 @@ function awards_menu(){
 	'page arguments' => array('delete_awards',2,3),
 	'access arguments' => array('cmsawards_per'),
   );
+<<<<<<< HEAD
 
   $items['awards/download/%'] = array(
   'title' => 'Download Award PDF',
@@ -47,10 +48,13 @@ function awards_menu(){
   'type' => MENU_CALLBACK,
 );
 
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
   
   return $items;
 }
 
+<<<<<<< HEAD
 function awards_download_file($filename) {
   $filepath = 'public://upload/awards/' . $filename;
   if (!file_exists(drupal_realpath($filepath))) {
@@ -80,6 +84,8 @@ function awards_download_file($filename) {
 }
 
 
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 
 function delete_awards($form, &$form_state, $arg='',$fid='') {
 	
@@ -323,8 +329,15 @@ function get_awards_list(){
 	 $cms_awards_query->leftJoin('cms_labour_court_mst', 'lc', 'lc.id=t.court_id');
      $cms_awards_query->fields('t', array('aid','caseno','caseyear','awardsdate','awardsparty1','awardsvs','awardsparty2','fid','awardsfile'));
 	 $cms_awards_query->fields('lc', array('court_no'));
+<<<<<<< HEAD
 	 $cms_awards_query->orderBy($order, $sort);
 	 $cms_awards_query->orderBy('t.aid', 'DESC'); 
+=======
+	 //$cms_awards_query = $cms_awards_query->extend('TableSort')->extend('PagerDefault')->limit(20);
+	 $cms_awards_query->orderBy($order, $sort);
+	 $cms_awards_query->orderBy('t.aid', 'DESC'); 
+	 //echo $cms_awards_query; exit;
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	 $cms_awards_query_result = $cms_awards_query->execute();
 	 $cms_awards_query_result_data = $cms_awards_query_result->fetchAll();
 	 
@@ -347,6 +360,7 @@ function get_awards_list(){
 	 $i=0;
 	 foreach($cms_awards_query_result_data as $data){
 		$i++;
+<<<<<<< HEAD
 		$edit = $base_root . $base_path . 'cmsentry/cmsawards/' . $data->aid . '/cmsawardsedit';
 		$delete = $base_root . $base_path . 'cmsentry/cmsawards/' . $data->aid . '/' . $data->fid . '/cmsawardsdelete';
 		$link_edit = l(t('Edit'), $edit);
@@ -371,13 +385,54 @@ function get_awards_list(){
 	}
 
 	$variables = array(
+=======
+		$edit=$base_root.$base_path.'cmsentry/cmsawards/'.$data->aid.'/cmsawardsedit';
+		$delete=$base_root.$base_path.'cmsentry/cmsawards/'.$data->aid.'/'.$data->fid.'/cmsawardsdelete';
+		$link_delete=l(t('Delete'), $delete) ;
+		$link_edit=l(t('Edit'), $edit) ;
+		$rows[] = array(
+      				$i,
+      				$data->caseno,
+					$data->caseyear,
+					date('d-m-Y', strtotime($data->awardsdate)),
+					$data->court_no,
+					$data->awardsparty1,
+					$data->awardsvs,
+					$data->awardsparty2,
+					l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png" style="margin:0px">'),
+			     ''.$GLOBALS['base_url'].'/sites/default/files/upload/awards/'.$data->awardsfile, array('html' => TRUE,
+				 'attributes'=>array('target'=>'_blank' , 'class'=>array('')))),
+					array('data' => $link_edit.' | '.$link_delete ),	
+	  	);   
+	 }
+	 
+	/*$output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');*/
+  
+    $variables = array(
+	  //'attributes' => $attributes,
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	  'header' => $header,
 	  'rows' => $rows,
 	  'attributes' => array('class' => array('table', 'table-bordered')),
 	);
 	$output = theme('datatable', $variables);
   
+<<<<<<< HEAD
 	return '<div class="table-responsive statistics_box">'.$output.'</div>';
+=======
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 }
 
 function labourList(){
@@ -502,6 +557,7 @@ function cmsawards_form_validate($form, &$form_state){
   if (!$form_state['values']['awardsfile']) {
     form_set_error('awardsfile', 'You must upload scan pdf');    
   }
+<<<<<<< HEAD
   if (!$form_state['values']['court_id']) {
     form_set_error('court_id', 'You must select court no');    
   }
@@ -553,6 +609,14 @@ function cmsawards_form_validate($form, &$form_state){
 
 
 
+=======
+   if (!$form_state['values']['court_id']) {
+    form_set_error('court_id', 'You must select court no');    
+  }
+}
+
+
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function cmsawards_form_submit($form, &$form_state){ 
 	$data = array();
@@ -738,7 +802,11 @@ function edit_awards($form, &$form_state, $args=''){
 	 
  } 
  
+<<<<<<< HEAD
 function edit_awards_validate($form, &$form_state) { 
+=======
+function edit_awards_validate($form, &$form_state){ 
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
   if (!$form_state['values']['caseno']) {
     form_set_error('caseno', 'You must enter awards case number');    
   }
@@ -752,11 +820,16 @@ function edit_awards_validate($form, &$form_state) {
     form_set_error('awardsparty2', 'You must enter party2');    
   }
   if (!$form_state['values']['awardsdate']) {
+<<<<<<< HEAD
     form_set_error('awardsdate', 'You must select awards date');    
+=======
+    form_set_error('awardsdate', 'You must select awardsdate');    
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
   }
   if (!$form_state['values']['court_id']) {
     form_set_error('court_id', 'You must select court no');    
   }
+<<<<<<< HEAD
 
   // Validate uploaded file if provided
   $fid = $form_state['values']['awardsfile'];
@@ -802,6 +875,9 @@ function edit_awards_validate($form, &$form_state) {
   }
 }
 
+=======
+} 
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function edit_awards_submit($form, &$form_state){ 
 

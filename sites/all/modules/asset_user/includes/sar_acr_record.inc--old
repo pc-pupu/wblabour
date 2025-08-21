@@ -1,0 +1,290 @@
+<?php
+
+function sar_acr_record_form($form, &$form_state){
+	
+global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+		
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">SAR / ACR Availability</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	 
+	 $form['decission_sacracr'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Decission'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Decission'),
+		'#prefix' => '<div id="decission_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 ); 
+	 
+	 $form['fname_saracr'] = array(
+		'#type' => 'textfield',
+		'#autocomplete_path' => 'getassetuser/autocompletesaracr',
+		'#ajax' => array('event' => 'blur',
+                      'callback' => '_reload_mem_order_list_saracr',
+                      'effect' => 'fade',
+                      'progress' => array('type' => '','message' => '',),
+                   ),
+		'#title' => t('Enter Officers Name'),
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Enter Officers Name'),
+		'#prefix' => '<div class="col-md-12">',
+		'#suffix' => '</div>'
+	 ); 
+	 
+  $form['uid_saracr'] = array(
+		'#type' => 'hidden',
+		'#title' => t('User Id Backlog'),
+		//'#id' =>'order_no_map',
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('doc_name_clear','form-control'),'placeholder'=>'User Id Backlog'),
+		'#prefix' => '<div id="order_no_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+ $form['designation_saracr'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Designation'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Designation'),
+		'#prefix' => '<div id="designation_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 ); 
+	 
+	$form['district_saracr'] = array(
+		'#type' => 'hidden',
+		'#title' => t('District'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'District'),
+		'#prefix' => '<div id="district_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	$form['directorate_saracr'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Directorate'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Directorate'),
+		'#prefix' => '<div id="directorate_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );  
+	 
+	 $form['doj_saracr'] = array(
+		'#type' => 'textfield',
+		'#title' => t('DOJ'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'DOJ'),
+		'#prefix' => '<div id="doj_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	 
+	 $form['fetch_data_saracr'] = array(
+		'#prefix' => '<div id="fetch_data_map_backlog"><div class="col-md-12">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	 $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Accept',
+		'#attributes' => array('class'=>array('btn btn-success pull-left')),
+		'#prefix' => '<div id="frmbtn_backlog" style="display:none"><div class="col-md-3">',
+  		'#suffix' => '</div></div>',
+     ); 
+	 
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+
+return $form;	 
+}
+
+
+function _reload_mem_order_list_saracr($form, $form_state) {
+ drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+ $commands   = array();
+ //echo $form_state['values']['fname']; exit;
+ $user_arr = explode('-',$form_state['values']['fname_saracr']);
+ 
+ //print_r($mydata);
+ $verify = getVerifyByUidYear($user_arr[1],date('Y'));
+ 
+	$header = array();
+	$rows   = array();
+	
+	$header = array(  
+	  array('data' => t('Employee Information'),'colspan' => 4),  
+	);
+ 
+ if(!empty($verify) && $verify['status']==1){
+	 
+	 $rows[] = array( 
+	  array('data' => t('You have already submitted SAR / ACR for all years'),'colspan' => 4),
+	);
+	 
+	 $rows[] = array( 
+	 // array('data' => l('<strong class="btn btn-danger print-btn"> Print Acknowlwdgement</strong>','acknowledgement-print/'.$user_arr[1].'/'.$verify['declaration_yr'], array('html' => TRUE,'attributes'=>array('target'=>'_blank'))) ,'colspan' => 4),
+	 
+ 	 
+	 
+	 
+	);
+ }else{
+	 
+	 $mydata = getUserInfoByUid($user_arr[1]);
+ 
+	 $form['uid_saracr']['#value'] = $user_arr[1];
+	 $form['designation_saracr']['#value'] = $mydata['designation'];
+	 $form['directorate_saracr']['#value'] = $mydata['directorate_code'];
+	 $form['district_saracr']['#value'] = $mydata['district_code'];
+	 $form['doj_saracr']['#value'] = $mydata['doj'];
+	 if(!empty($verify) && $verify['status']==0){
+		 $form['decission_sacracr']['#value'] = 'UPDATE';
+	 }else{
+		 $form['decission_sacracr']['#value'] = 'INSERT';
+	 }
+	 
+	$rows[] = array(  
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Officers Designation </b>')),
+	  array('data' => t('<b>Directorate Name  </b>')),
+	  array('data' => t('<b>District Name  </b>')),
+	);
+	$rows[] = array( 
+	  array('data' => t($mydata['fname'])),
+	  array('data' => t($mydata['designation'])), 	 
+	  array('data' => t($mydata['directorate_name'])), 
+	  array('data' => t($mydata['district_name'])),
+	);
+ }
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+  
+ //$commands[] = ajax_command_invoke('.doc_name_clear', 'val', array($form['values']['fname']));
+ $commands[] = ajax_command_replace('#order_no_map_backlog', '<div id="order_no_map_backlog">'.drupal_render($form['uid_saracr']).'</div>');
+ $commands[] = ajax_command_replace('#designation_map_backlog', '<div id="designation_map_backlog">'.drupal_render($form['designation_saracr']).'</div>');
+ $commands[] = ajax_command_replace('#directorate_map_backlog', '<div id="directorate_map_backlog">'.drupal_render($form['directorate_saracr']).'</div>');
+ $commands[] = ajax_command_replace('#district_map_backlog', '<div id="district_map_backlog">'.drupal_render($form['district_saracr']).'</div>'); 
+ $commands[] = ajax_command_replace('#doj_map_backlog', '<div id="doj_map_backlog">'.drupal_render($form['doj_saracr']).'</div>'); 
+ $commands[] = ajax_command_replace('#fetch_data_map_backlog', '<div id="fetch_data_map_backlog"><div class="col-md-12">'.$output.'</div></div>');
+ $commands[] = ajax_command_replace('#decission_map_backlog', '<div id="decission_map_backlog">'.drupal_render($form['decission_sacracr']).'</div>');
+//print_r($commands);
+ if(!empty($verify) && $verify['status']==1){
+	$commands[] = ajax_command_invoke('#frmbtn_backlog', 'hide');
+	$commands[] = ajax_command_invoke('#order_no_map_backlog_date', 'hide');
+ }else{
+ 	$commands[] = ajax_command_invoke('#frmbtn_backlog', 'show');
+	$commands[] = ajax_command_invoke('#order_no_map_backlog_date', 'show');
+	
+ }
+ 
+ return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function get_asset_user_saracr($string=''){
+	
+	global $user;
+	
+	$direc_code = getLoginUserDetailForAsset($user->uid);  
+	
+	$matches = array();
+	$query = db_select('users', 'u');
+	$query->leftJoin('users_roles', 'ur', 'u.uid = ur.uid');  
+	$query->leftJoin('role', 'r', 'ur.rid = r.rid'); 
+	$query->leftJoin('a_user_details', 'ud', 'u.uid = ud.uid');
+	
+	$query->leftJoin('a_user_details_service', 'us', 'u.uid = us.uid'); 
+	$query->fields('us', array('designation','district_code','directorate_code')); 
+	
+	//$query->fields('ur', array('uid')); 
+	$query->fields('u', array('uid','name','access','created','status'));
+	$query->fields('ud', array('fname'));
+	$query->addField('r', 'name', 'rolename');
+	$query->condition('ud.fname', '%' . trim($string) . '%', 'LIKE');
+	if($user->uid != 1486){
+		$query->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+	}
+	
+	if(in_array(variable_get('field', 11), array_keys($user->roles))){
+		$query->condition('us.emp_group','A','!=');
+		$query->condition('us.office_id',$direc_code['office_id'],'=');
+	}
+	
+	$query->condition('ud.status',0,'=');
+	$query->orderBy("r.name", "ASC");
+	$query->range(0,10);
+	$result = $query->execute();
+	//$rsData = $result->fetchAll();
+		
+
+    // save the query to matches
+    foreach ($result as $row) {
+	  $matches[$row->fname."-".$row->uid] = check_plain($row->fname."-".$row->designation);
+    }
+	
+    // Return the result to the form in json
+    drupal_json_output($matches);
+}
+
+
+function getVerifyByUidYear($uid,$currentYear){
+  $rsData = array();	
+  $query = db_select('a_asset_mst','am');
+  $query->fields('am', array('uid','declaration_yr','designation','directorate_code','status','created_date'));
+  $query->condition('am.uid', $uid, '=');
+  $query->condition('am.declaration_yr', $currentYear, '=');
+  $result = $query->execute();
+  $rsData = $result->fetchAssoc();
+  return $rsData;
+}
+
+function getUserInfoByUid($uid){
+	$query = db_select('users', 'u');
+	$query->leftJoin('a_user_details', 'ud', 'u.uid = ud.uid');
+	
+	$query->leftJoin('a_user_details_service', 'us', 'u.uid = us.uid'); 
+	$query->fields('us', array('designation','district_code','directorate_code'));
+	
+	$query->leftJoin('a_directorate_mst', 'd', 'd.directorate_code = us.directorate_code'); 
+	$query->fields('d', array('directorate_name')); 
+	
+	$query->leftJoin('district_master', 'dis', 'dis.district_code = us.district_code'); 
+	$query->fields('dis', array('district_name')); 
+	
+	$query->fields('u', array('uid','name','access','created','status'));
+	$query->fields('ud', array('fname','hrms_id','doj'));
+	$query->condition('u.uid', $uid, '=');
+	$result = $query->execute();
+	$userData = $result->fetchAssoc();
+	return $userData;
+	
+	//print_r($query); exit;
+}

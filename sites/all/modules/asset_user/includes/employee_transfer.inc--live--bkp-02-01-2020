@@ -1,0 +1,1142 @@
+<?php
+
+function employee_transfer_form($form, &$form_state){
+	//ctools_include('modal');
+	//ctools_modal_add_js();
+	global $user;
+	drupal_add_js(drupal_get_path('module', 'asset_user') . '/myfunction.js');	
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+		
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Transfer Employee</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	 
+	 /*$form['decission_sacracr'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Decission'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Decission'),
+		'#prefix' => '<div id="decission_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 ); */
+	 
+	 $form['fname_transfer'] = array(
+		'#type' => 'textfield',
+		'#autocomplete_path' => 'getassetuser/autocompletetransfer',
+		'#ajax' => array('event' => 'blur',
+                      'callback' => '_reload_mem_order_list_transfer',
+                      'effect' => 'fade',
+                      'progress' => array('type' => '','message' => '',),
+                   ),
+		'#title' => t('Enter Officers Name'),
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Enter Officers Name'),
+		'#prefix' => '<div class="col-md-12">',
+		'#suffix' => '</div>'
+	 ); 
+	 
+  	$form['uid_transfer'] = array(
+		'#type' => 'hidden',
+		'#title' => t('User Id Backlog'),
+		//'#id' =>'order_no_map',
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('doc_name_clear','form-control'),'placeholder'=>'User Id Backlog'),
+		'#prefix' => '<div id="order_no_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+ 	$form['designation_transfer'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Designation'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Designation'),
+		'#prefix' => '<div id="designation_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 ); 
+	 
+	$form['district_transfer'] = array(
+		'#type' => 'hidden',
+		'#title' => t('District'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'District'),
+		'#prefix' => '<div id="district_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	$form['directorate_transfer'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Directorate'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Directorate'),
+		'#prefix' => '<div id="directorate_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );  
+	 
+	 $form['doj_transfer'] = array(
+		'#type' => 'hidden',
+		'#title' => t('DOJ'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'DOJ'),
+		'#prefix' => '<div id="doj_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	 $form['pay_scale'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Pay Scale'),
+		//'#value'=>'',
+		//'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Pay Scale'),
+		'#prefix' => '<div id="pay_scale_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	 $form['emp_group'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Emp Group'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Emp Group'),
+		'#prefix' => '<div id="emp_group_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	 $form['direct_promotee'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Direct Promotee'),
+		//'#value'=>'',
+		//'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Direct Promotee'),
+		'#prefix' => '<div id="direct_promotee_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	 $form['promotion_date_empgroupa'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Promotion Date Empgroupa'),
+		//'#value'=>'',
+		//'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Promotion Date Empgroupa'),
+		'#prefix' => '<div id="promotion_date_empgroupa_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	 $form['asset_received_manner'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Asset Received Manner'),
+		//'#value'=>'',
+		//'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Asset Received Manner'),
+		'#prefix' => '<div id="asset_received_manner_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	 $form['transfer_from_office'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Transfer From Office'),
+		//'#value'=>'',
+		//'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Transfer From Office'),
+		'#prefix' => '<div id="transfer_from_office_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	 
+	 $form['fetch_data_transfer'] = array(
+		'#prefix' => '<div id="fetch_data_map_backlog"><div class="col-md-12">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	 $form['fetch_data_year'] = array(
+		'#prefix' => '<div id="fetch_data_map_year"><div class="col-md-12">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	 /*$form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Update',
+		'#attributes' => array('class'=>array('btn btn-success pull-left')),
+		'#prefix' => '<div id="frmbtn_backlog" style="display:none"><div class="col-md-3">',
+  		'#suffix' => '</div></div>',
+     ); */
+	 
+	/* $form['btn_link'] = array (
+	 '#type' => 'markup',
+	 '#markup' => '<div id="btn_link"><div class="col-md-3"></div></div>',
+	);*/
+	
+	if(isset($form_state['values']['fname_transfer']) && $form_state['values']['fname_transfer']!=""){
+		$user_arr = explode('-',$form_state['values']['fname_transfer']);
+		$mydata = getUserInfoByUid($user_arr[1]);
+		/*$financial_yr = array();
+		$dojyr = explode('-',$mydata['doj']);
+		  for($y=$dojyr[0]; $y<=date('Y'); $y++){
+				$rsData = array();
+				$query = db_select('a_sar_file', 'f');
+				$query ->fields('f', array( 'asr_id', 'uid', 'financial_yr', 'doj_yr', 'directorate_code', 'district_code','file_name','sar_file','status'));
+				$query->condition('f.uid',$user_arr[1], '='); 
+				$query->condition('f.financial_yr', trim($y.'-'.($y+1)), '='); 
+				$result = $query->execute();
+				$rsData = $result->fetchAll();
+				if(empty($rsData)){
+					$financial_yr[trim($y.'-'.($y+1))] = trim($y.'-'.($y+1));
+				}
+		  }*/
+		$type = array('T'=>'Transfer','P'=>'Promotion','TP'=>'Transfer with Promotion');   
+		$form['type'] = array(
+			'#type' => 'select',
+			'#title' => t('Select Type'),
+			'#ajax'=>array(
+					'callback'	=> 'ajax_type_callback',
+					'event' 	=> 'change',
+					'effect' 	=> 'fade',			
+					'progress'	=>	array(
+						'type'		=>'throbber',
+						'message'	=>t('loading'),
+					),
+			),
+			'#required' => TRUE,
+			'#options' => $type,
+			'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Financial Year',),
+			'#prefix' => '<div id="type_replace_div"><div class="col-md-2">',
+			'#suffix' => '</div></div>'
+		);
+		/*$form['doc_file'] = array(
+			'#type' => 'file',
+			'#required' => TRUE,
+			'#title' => t('Upload (PDF only)'),
+			'#description' => t('Max size 1MB'),
+			'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Upload documents'),
+			'#prefix' => '<div id="doc_file_replace_div"><div class="col-md-2">',
+			'#suffix' => '</div></div>'
+	    );*/
+		if(isset($form_state['values']['type']) && trim($form_state['values']['type']) != '' && trim($form_state['values']['type']) == 'T'){
+			$form['district_code'] = array(
+				'#type' => 'select',
+				'#title' => t('District'),
+				'#ajax'=>array(
+						'callback'	=> 'ajax_district_callback',
+						'event' 	=> 'change',
+						'effect' 	=> 'fade',			
+						'progress'	=>	array(
+							'type'		=>'throbber',
+							'message'	=>t('loading'),
+						),
+				),
+				'#required' => TRUE,
+				'#options' => getDistrictAllList(),
+				'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Type'),
+				'#prefix' => '<div id="district_code_replace_div"><div class="col-md-2">',
+				'#suffix' => '</div></div>'
+			);
+		}else{
+			$form['district_code'] = array(
+				'#prefix' => '<div id="district_code_replace_div">',
+				'#suffix' => '</div>'
+			);
+		}
+		if(isset($form_state['values']['district_code']) && trim($form_state['values']['district_code']) != '' && trim($form_state['values']['district_code']) != '0' && isset($form_state['values']['type']) && trim($form_state['values']['type']) != '' && trim($form_state['values']['type']) == 'T'){
+			$form['office_id'] = array(
+			  '#title' => t('Select Office'),	
+			  '#type' => 'select',
+			  '#ajax'=>array(
+					'callback'	=> 'ajax_office_callback',
+					'event' 	=> 'change',
+					'effect' 	=> 'fade',			
+					'progress'	=>	array(
+						'type'		=>'throbber',
+						'message'	=>t('loading'),
+					),
+			  ),
+			  //'#multiple' => TRUE,
+			  '#required' => TRUE,
+			  '#options' => getOfficeListByDistrict($form_state['values']['district_code'],$mydata['directorate_code']),
+			  '#attributes' => array('class'=>array('form-control')),
+			  '#prefix' => '<div id="office_id_replace_div" class="col-md-2">',
+			  '#suffix' => '</div>'
+			);
+		 }else{
+			 $form['office_id'] = array(
+				'#prefix' => '<div id="office_id_replace_div">',
+				'#suffix' => '</div>'
+			); 
+		 }
+		/*$form['comment'] = array(
+			'#type' => 'select',
+			'#title' => t('Comment'),
+			'#required' => TRUE,
+			'#options' => array(''=>'-select-','Outstanding'=>'Outstanding','Excellent'=>'Excellent','Very Good'=>'Very Good','Good'=>'Good','Average'=>'Average','Poor'=>'Poor'),
+			'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Comment'),
+			'#prefix' => '<div id="comment_replace_div"><div class="col-md-2">',
+			'#suffix' => '</div></div>'
+	    );*/
+		if(isset($form_state['values']['district_code']) && trim($form_state['values']['district_code']) != '' && trim($form_state['values']['district_code']) != '0' && isset($form_state['values']['type']) && trim($form_state['values']['type']) != '' && trim($form_state['values']['type']) == 'T' && isset($form_state['values']['office_id']) && trim($form_state['values']['office_id']) != '' && trim($form_state['values']['office_id']) != '0'){
+			$form['release_date'] = array(
+				'#type' => 'textfield',
+				'#title' => t('Release Date'),
+				'#required' => TRUE,
+				'#attributes' => array('id'=>'release_date_clear_div','class'=>array('form-control','doc_name_clear','datepiker'),'placeholder'=>'Release Date','autocomplete'=>'off'),
+				'#prefix' => '<div id="release_date_replace_div"><div class="col-md-3">',
+				'#suffix' => '</div></div>'
+			);
+			$form['order_no'] = array(
+				'#type' => 'textfield',
+				'#title' => t('Order No'),
+				'#required' => TRUE,
+				'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Order No','autocomplete'=>'off'),
+				'#prefix' => '<div id="order_no_replace_div"><div class="col-md-3">',
+				'#suffix' => '</div></div>'
+			);
+			$form['transfer_submit'] = array(
+				'#type' => 'submit',
+				//'#submit'=> array(),
+				/*'#ajax' => array(
+						'callback' => 'ajax_add_sarfy_callback',
+						//'wrapper' => 'table_div_replace',
+					),
+				'#limit_validation_errors' => array(),	*/
+				'#value' => t('Submit'),
+				'#attributes' => array('class'=>array('btn btn-info')),
+				'#prefix' => '<div id="transfer_submit_replace_div"><div class="col-md-12">',
+				'#suffix' => '</div></div>'
+			);
+		}else{
+			$form['release_date'] = array(
+				'#prefix' => '<div id="release_date_replace_div">',
+				'#suffix' => '</div>'
+			);
+			$form['order_no'] = array(
+				'#prefix' => '<div id="order_no_replace_div">',
+				'#suffix' => '</div>'
+			);
+			$form['transfer_submit'] = array(
+				'#prefix' => '<div id="transfer_submit_replace_div">',
+				'#suffix' => '</div>'
+			);
+		}
+		/*$form['transfer_submit'] = array(
+			'#type' => 'submit',
+			'#submit'=> array(),
+			'#ajax' => array(
+					'callback' => 'ajax_add_sarfy_callback',
+					//'wrapper' => 'table_div_replace',
+				),
+			'#limit_validation_errors' => array(),	
+			'#value' => t('Add'),
+			'#attributes' => array('class'=>array('btn btn-info')),
+			'#prefix' => '<div id="transfer_submit_replace_div"><div class="col-md-2">',
+			'#suffix' => '</div></div>'
+		);*/
+		/*$form['sar_info'] = array(
+			'#prefix' => '<div id="sar_info_replace_div"><div class="col-md-12">'.get_sar_file_list($user_arr[1]),
+			'#suffix' => '</div></div>'
+		);*/
+	}else{
+		$form['type'] = array(
+			'#prefix' => '<div id="type_replace_div">',
+			'#suffix' => '</div>'
+		);
+		/*$form['doc_file'] = array(
+			'#prefix' => '<div id="doc_file_replace_div">',
+			'#suffix' => '</div>'
+	    );*/
+		$form['district_code'] = array(
+			'#prefix' => '<div id="district_code_replace_div">',
+			'#suffix' => '</div>'
+	    );
+		$form['office_id'] = array(
+			'#prefix' => '<div id="office_id_replace_div">',
+			'#suffix' => '</div>'
+		);
+		/*$form['comment'] = array(
+			'#prefix' => '<div id="comment_replace_div">',
+			'#suffix' => '</div>'
+	    );*/
+		$form['release_date'] = array(
+			'#prefix' => '<div id="release_date_replace_div">',
+			'#suffix' => '</div>'
+	    );
+		$form['order_no'] = array(
+			'#prefix' => '<div id="order_no_replace_div">',
+			'#suffix' => '</div>'
+		);
+		$form['transfer_submit'] = array(
+			'#prefix' => '<div id="transfer_submit_replace_div">',
+			'#suffix' => '</div>'
+		);
+		/*$form['sar_info'] = array(
+			'#prefix' => '<div id="sar_info_replace_div">',
+			'#suffix' => '</div></div>'
+		);*/
+	}
+	
+	$form['type_blank'] = array(
+		'#prefix' => '<div id="type_replace_div">',
+		'#suffix' => '</div>'
+	);
+	$form['district_code_blank'] = array(
+		'#prefix' => '<div id="district_code_replace_div">',
+		'#suffix' => '</div>'
+	);
+	
+	$form['office_id_blank'] = array(
+		'#prefix' => '<div id="office_id_replace_div">',
+		'#suffix' => '</div>'
+	);
+	
+	$form['release_date_blank'] = array(
+		'#prefix' => '<div id="release_date_replace_div">',
+		'#suffix' => '</div>'
+	);
+	$form['order_no_blank'] = array(
+		'#prefix' => '<div id="order_no_replace_div">',
+		'#suffix' => '</div>'
+	);
+	$form['transfer_submit_blank'] = array(
+		'#prefix' => '<div id="transfer_submit_replace_div">',
+		'#suffix' => '</div>'
+	);
+	 
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+
+return $form;	 
+}
+
+function ajax_type_callback($form,&$form_state){
+	$commands = array();
+	$commands[] = ajax_command_replace('#district_code_replace_div', drupal_render($form['district_code']));
+	$commands[] = ajax_command_replace('#office_id_replace_div', drupal_render($form['office_id']));
+	$commands[] = ajax_command_replace('#release_date_replace_div', drupal_render($form['release_date']));
+	$commands[] = ajax_command_replace('#order_no_replace_div', drupal_render($form['order_no']));
+	$commands[] = ajax_command_replace('#transfer_submit_replace_div', '<div id="transfer_submit_replace_div">'.drupal_render($form['transfer_submit_blank']).'</div>');
+	return array('#type' => 'ajax', '#commands' => $commands);
+}
+function ajax_district_callback($form,&$form_state){
+	$commands = array();
+	
+	$commands[] = ajax_command_replace('#office_id_replace_div', drupal_render($form['office_id']));
+	$commands[] = ajax_command_replace('#release_date_replace_div', drupal_render($form['release_date_blank']));
+	$commands[] = ajax_command_replace('#order_no_replace_div', drupal_render($form['order_no_blank']));
+	$commands[] = ajax_command_replace('#transfer_submit_replace_div', '<div id="transfer_submit_replace_div">'.drupal_render($form['transfer_submit_blank']).'</div>');
+	//$commands[] = ajax_command_replace('#release_date_replace_div', drupal_render($form['release_date']));
+	return array('#type' => 'ajax', '#commands' => $commands);
+} 
+function ajax_office_callback($form,&$form_state){
+	$commands = array();
+	$commands[] = ajax_command_replace('#release_date_replace_div', drupal_render($form['release_date']));
+	$commands[] = ajax_command_replace('#order_no_replace_div', drupal_render($form['order_no']));
+	$commands[] = ajax_command_invoke(NULL, "myJqueryDatePiker", array('anyparametervalue') );
+	$commands[] = ajax_command_replace('#transfer_submit_replace_div', '<div id="transfer_submit_replace_div">'.drupal_render($form['transfer_submit']).'</div>');
+	return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function _reload_mem_order_list_transfer($form, $form_state) {
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	$commands   = array();
+	$mydata = array();
+	$output = '';
+	$user_arr = explode('-',$form_state['values']['fname_transfer']);
+	$header_info = array();
+	$rows_info   = array();
+	$header_info = array(  
+	  array('data' => t('Employee Information'),'colspan' => 5),  
+	);
+	 $mydata = getUserInfoByUid($user_arr[1]);
+ 	 if(!empty($mydata)){	
+ 
+	 $form['uid_transfer']['#value'] = $user_arr[1];
+	 $form['designation_transfer']['#value'] = $mydata['designation'];
+	 $form['directorate_transfer']['#value'] = $mydata['directorate_code'];
+	 $form['district_transfer']['#value'] = $mydata['district_code'];
+	 $form['doj_transfer']['#value'] = $mydata['doj'];
+	 $form['pay_scale']['#value'] = $mydata['pay_scale'];
+	 $form['emp_group']['#value'] = $mydata['emp_group'];
+	 $form['direct_promotee']['#value'] = $mydata['direct_promotee'];
+	 $form['promotion_date_empgroupa']['#value'] = $mydata['promotion_date_empgroupa'];
+	 $form['asset_received_manner']['#value'] = $mydata['asset_received_manner'];
+	 $form['transfer_from_office']['#value'] = $mydata['office_id'];
+	 
+	 
+	$rows_info[] = array(  
+	  array('data' => t('<b>HRMS ID  </b>')),
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Officers Designation </b>')),
+	  array('data' => t('<b>Directorate Name  </b>')),
+	  array('data' => t('<b>District Name  </b>')),
+	);
+	$rows_info[] = array( 
+	  array('data' => t($mydata['hrms_id'])),	
+	  array('data' => t($mydata['fname'])),
+	  array('data' => t($mydata['designation'])), 	 
+	  array('data' => t($mydata['directorate_name'])), 
+	  array('data' => t($mydata['district_name'])),
+	);
+	
+	$output_info = theme_table(
+		array(
+		  'header' => $header_info,
+		  'rows' => $rows_info,
+		  'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	  
+	  $output = getFinancialYear($user_arr[1]);
+	  
+	
+	  
+	
+	 
+ //$commands[] = ajax_command_invoke('.doc_name_clear', 'val', array($form['values']['fname']));
+ $commands[] = ajax_command_replace('#order_no_map_backlog', '<div id="order_no_map_backlog">'.drupal_render($form['uid_transfer']).'</div>');
+ $commands[] = ajax_command_replace('#designation_map_backlog', '<div id="designation_map_backlog">'.drupal_render($form['designation_transfer']).'</div>');
+ $commands[] = ajax_command_replace('#directorate_map_backlog', '<div id="directorate_map_backlog">'.drupal_render($form['directorate_transfer']).'</div>');
+ $commands[] = ajax_command_replace('#district_map_backlog', '<div id="district_map_backlog">'.drupal_render($form['district_transfer']).'</div>'); 
+ $commands[] = ajax_command_replace('#doj_map_backlog', '<div id="doj_map_backlog">'.drupal_render($form['doj_transfer']).'</div>'); 
+ $commands[] = ajax_command_replace('#pay_scale_backlog', '<div id="pay_scale_backlog">'.drupal_render($form['pay_scale']).'</div>'); 
+ $commands[] = ajax_command_replace('#emp_group_backlog', '<div id="emp_group_backlog">'.drupal_render($form['emp_group']).'</div>'); 
+ $commands[] = ajax_command_replace('#direct_promotee_backlog', '<div id="direct_promotee_backlog">'.drupal_render($form['direct_promotee']).'</div>'); 
+ $commands[] = ajax_command_replace('#promotion_date_empgroupa_backlog', '<div id="promotion_date_empgroupa_backlog">'.drupal_render($form['promotion_date_empgroupa']).'</div>'); 
+ $commands[] = ajax_command_replace('#asset_received_manner_backlog', '<div id="asset_received_manner_backlog">'.drupal_render($form['asset_received_manner']).'</div>'); 
+ $commands[] = ajax_command_replace('#transfer_from_office_backlog', '<div id="transfer_from_office_backlog">'.drupal_render($form['transfer_from_office']).'</div>'); 
+ 
+ 
+ 
+ 
+ $commands[] = ajax_command_replace('#fetch_data_map_backlog', '<div id="fetch_data_map_backlog"><div class="col-md-12">'.$output_info.'</div></div>');
+ $commands[] = ajax_command_replace('#fetch_data_map_year', '<div id="fetch_data_map_year"><div class="col-md-12">'.$output.'</div></div>');
+ //$commands[] = ajax_command_replace('#decission_map_backlog', '<div id="decission_map_backlog">'.drupal_render($form['decission_sacracr']).'</div>');
+ 
+ $commands[] = ajax_command_replace('#type_replace_div', '<div id="type_replace_div">'.drupal_render($form['type']).'</div>');
+ 
+ $commands[] = ajax_command_replace('#district_code_replace_div', drupal_render($form['district_code_blank']));
+ $commands[] = ajax_command_replace('#office_id_replace_div', drupal_render($form['office_id_blank']));
+ $commands[] = ajax_command_replace('#release_date_replace_div', drupal_render($form['release_date_blank']));
+ $commands[] = ajax_command_replace('#order_no_replace_div', drupal_render($form['order_no_blank']));
+ //$commands[] = ajax_command_replace('#doc_file_replace_div', '<div id="doc_file_replace_div">'.drupal_render($form['doc_file']).'</div>');
+ //$commands[] = ajax_command_replace('#district_code_replace_div', '<div id="district_code_replace_div">'.drupal_render($form['district_code']).'</div>');
+ //$commands[] = ajax_command_replace('#comment_replace_div', '<div id="comment_replace_div">'.drupal_render($form['comment']).'</div>');
+ //$commands[] = ajax_command_replace('#release_date_replace_div', '<div id="release_date_replace_div">'.drupal_render($form['release_date']).'</div>');
+ $commands[] = ajax_command_replace('#transfer_submit_replace_div', '<div id="transfer_submit_replace_div">'.drupal_render($form['transfer_submit_blank']).'</div>');
+ //$commands[] = ajax_command_replace('#sar_info_replace_div', '<div id="sar_info_replace_div">'.drupal_render($form['sar_info']).'</div>');
+ 
+	}else{
+		$form['uid_transfer']['#value'] = '';	
+		 $rows_info[] = array(  
+			  array('data' => t('<b>You are not allow to transfer</b>')),
+		  );
+		  
+		  $output_info = theme_table(
+			array(
+			  'header' => $header_info,
+			  'rows' => $rows_info,
+			  'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+			  'sticky' => true,
+			  'caption' => '',
+			  'colgroups' => array(),
+			  'empty' => t("No data found!") // The message to be displayed if table is empty
+			)
+		  ).theme('pager');	
+		  
+		  $commands[] = ajax_command_replace('#order_no_map_backlog', '<div id="order_no_map_backlog">'.drupal_render($form['uid_transfer']).'</div>');
+		  $commands[] = ajax_command_replace('#fetch_data_map_backlog', '<div id="fetch_data_map_backlog"><div class="col-md-12">'.$output_info.'</div></div>');
+		  $commands[] = ajax_command_replace('#fetch_data_map_year', '<div id="fetch_data_map_year"><div class="col-md-12">'.$output.'</div></div>');
+		  $commands[] = ajax_command_replace('#type_replace_div', '<div id="type_replace_div">'.drupal_render($form['type_blank']).'</div>');
+		  
+	 }   
+ 
+ return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function getFinancialYear($uid){
+	$mydata = getUserInfoByUid($uid);
+	$header = array();
+	$rows   = array();
+	$output = '<div id="parent_table_div_sar"><table class="table pretty table-bordered table-hover sticky-enabled tableheader-processed sticky-table"><thead><tr><th colspan="6">Office Details</th></tr></thead>';
+	 	
+	$OfficeAddress = db_select('a_office_master','aom');
+	$OfficeAddress->fields('aom', array('office_id','office_name','directorate_code','is_active','office_address')); 
+	$OfficeAddress->condition('aom.office_id',$mydata['office_id'],'=');
+	$result = $OfficeAddress->execute();
+	$OfficeData = $result->fetchAssoc();
+	$output .= '<tr>';
+	$output .= '<td>Office Name</td><td>'.$OfficeData['office_name'].'</td>'; 	
+	$output .= '</tr><tr>';
+	$output .= '<td>Office Address</td><td>'.$OfficeData['office_address'].'</td>'; 	
+	$output .='</tr></table></div>';
+	
+	return $output;	
+}
+
+
+/*function ajax_add_sarfy_callback($form, &$form_state){
+	global $user;
+	
+	$commands   = array();
+	
+	if(trim($form_state['input']['type'])!="" && trim($_FILES['files']['name']['doc_file'])!=""){
+		
+		$file_name = trim($_FILES['files']['name']['doc_file']);
+		$file_path = $_FILES['files']['tmp_name']['doc_file'];
+	  	$file_size = $_FILES['files']['size']['doc_file'];
+		$file_ext = pathinfo($file_name, PATHINFO_EXTENSION);
+		
+		$directory_path	=	file_default_scheme().'://upload/sar/';
+		
+		$extensions = 'pdf' ; 
+
+	    $validators = array(
+		   'file_validate_extensions' => array($extensions),   
+		   'file_validate_size' => array(1*1024*1024) // 5MB
+		);
+		
+		$error_description = "";
+		if(!$file = file_save_upload('doc_file', $validators, $directory_path, FILE_EXISTS_RENAME)){
+			//die('not uploaded');
+			
+			if(strtolower(trim($file_ext)) != 'pdf'){
+				$error_description = "Allow to upload PDF only";
+			}else if($file_size >= (1*1024*1024)){
+				$error_description = "File is too big";
+			}else{
+				$error_description = "Unable to upload file";
+			}
+			$commands[] = ajax_command_replace('#ajax_error_replace_div', '<div id="ajax_error_replace_div" style="color:#F00"><div class="col-md-12">'.$error_description.'</div></div>');
+		}else{
+			//$file_name = $file->filename;
+			
+			$file_uri = $file->uri;
+			$file_contents = file_get_contents($file_uri);
+			//$file->status = FILE_STATUS_PERMANENT; //ADDED
+		    file_save($file);
+			$upld_directory_path=file_create_url($file->uri); //NOT USED
+			$Full_File_Path=$file->uri;
+			$doc_file_details = array(
+							//'fid' => $file->fid,
+							'financial_yr' => trim($form_state['input']['type']),
+							//'financial_yr' => trim($form_state['input']['financial_yr']),
+							'doj_yr' =>trim($form_state['input']['doj_transfer']),
+							'uid' => trim($form_state['input']['uid_transfer']),
+							'directorate_code' => trim($form_state['input']['directorate_transfer']),
+							'district_code' => trim($form_state['input']['district_transfer']),
+							'file_name' => trim($_FILES['files']['name']['doc_file']),
+							'sar_file' => $file_contents,
+							'release_date' => trim($form_state['input']['release_date']),
+							'sar_type' => trim($form_state['input']['type']),
+							'sar_comment' => trim($form_state['input']['comment']),
+							'status' => 0,
+						);			
+						
+			$id = db_insert('a_sar_file')->fields($doc_file_details)->execute();
+			if($id){
+				
+				$mydata = getUserInfoByUid($form_state['input']['uid_transfer']);
+				$financial_yr = array();
+				$dojyr = explode('-',$mydata['doj']);
+				  for($y=$dojyr[0]; $y<=date('Y'); $y++){
+						$rsData = array();
+						$query = db_select('a_sar_file', 'f');
+						$query ->fields('f', array( 'asr_id', 'uid', 'financial_yr', 'doj_yr', 'directorate_code', 'district_code','file_name','sar_file','status'));
+						$query->condition('f.uid',$form_state['input']['uid_transfer'], '='); 
+						$query->condition('f.financial_yr', trim($y.'-'.($y+1)), '='); 
+						$result = $query->execute();
+						$rsData = $result->fetchAll();
+						if(empty($rsData)){
+							$financial_yr[trim($y.'-'.($y+1))] = trim($y.'-'.($y+1));
+						}
+				  }
+				$form['type']['#options'] = $financial_yr; 
+				//$form['type']['#options'] = array(''=>'-Select-','Old'=>'Old','New'=>'New');
+				//$form['comment']['#options'] = array(''=>'-Select-','Outstanding'=>'Outstanding','Excellent'=>'Excellent','Very Good'=>'Very Good','Good'=>'Good','Average'=>'Average','Poor'=>'Poor');
+				
+				$commands[] = ajax_command_invoke('#release_date_clear_div', 'val', array(''));
+				$commands[] = ajax_command_replace('#type_replace_div', drupal_render($form['type']));
+				$commands[] = ajax_command_replace('#district_code_replace_div', drupal_render($form['district_code']));
+				//$commands[] = ajax_command_replace('#comment_replace_div', drupal_render($form['comment']));
+				//$commands[] = ajax_command_replace('#doc_file_replace_div', drupal_render($form['doc_file']));
+				$commands[] = ajax_command_replace('#fetch_data_map_year', '<div id="fetch_data_map_year"><div class="col-md-12">'.getFinancialYear(trim($form_state['input']['uid_transfer'])).'</div></div>');
+				//$commands[] = ajax_command_replace('#sar_info_replace_div', '<div id="sar_info_replace_div"><div class="col-md-12">'.get_sar_file_list(trim($form_state['input']['uid_transfer'])).'</div></div>');
+				
+				$commands[] = ajax_command_replace('#ajax_error_replace_div', '<div id="ajax_error_replace_div" style="color:#F00"><div class="col-md-12">'.$error_description.'</div></div>');
+			}
+			
+		}
+		
+	}else{
+		$commands[] = ajax_command_replace('#ajax_error_replace_div', '<div id="ajax_error_replace_div" style="color:#F00"><div class="col-md-12">Please Select Financial Year</div></div>');
+	}
+	return array('#type' => 'ajax', '#commands' => $commands);
+}*/
+
+function employee_transfer_form_submit($form, &$form_state){
+	//print_r($form_state['values']);	
+	//exit;
+	global $user;
+	if($form_state['values']['type'] == 'T'){
+		$query = db_update('a_user_details_service');
+		$query->fields(array('service_status' => 0, 'order_no' => trim($form_state['values']['order_no']), 'release_date' => trim($form_state['values']['release_date']), 'transfer_promotion_type' => trim($form_state['values']['type']), 'transfer_by' => $user->uid));
+		$query->condition('uid', trim($form_state['values']['uid_transfer']), '=');
+		$query->condition('service_status', 1, '=');
+		$rs = $query->execute();
+		if($rs){
+				$query_insert = array(
+						'uid' => trim($form_state['values']['uid_transfer']),
+						'directorate_code' => trim($form_state['values']['directorate_transfer']),
+						'district_code' => trim($form_state['values']['district_code']),
+						'designation' =>trim($form_state['values']['designation_transfer']),
+						'pay_scale' => trim($form_state['values']['pay_scale']),
+						'emp_group' => trim($form_state['values']['emp_group']),
+						'direct_promotee' => trim($form_state['values']['direct_promotee']),
+						'promotion_date_empgroupa' => date('Y-m-d H:i:s',strtotime(trim($form_state['values']['promotion_date_empgroupa']))),
+						'asset_received_manner' => trim($form_state['values']['asset_received_manner']),
+						'office_id' => trim($form_state['values']['office_id']),
+						'transfer_from_office' => trim($form_state['values']['transfer_from_office']),
+						'subdivision' => '0',
+						'service_status' => 2,
+						'order_no' => trim($form_state['values']['order_no']),
+						//'release_accept_date' => trim($form_state['values']['release_date'])
+					);	
+					
+			$id = db_insert('a_user_details_service')->fields($query_insert)->execute();
+			drupal_set_message('Employee Successfully Transfer');		
+		}else{
+			drupal_set_message('Unable to Transfer. Please contact to System administrator.');
+		}
+	}else{
+		drupal_set_message('Unable to Transfer. Please select Transfer from dropdown.');
+	}
+}
+
+function get_asset_user_transfer($string=''){
+	
+	global $user;
+	
+	$direc_code = getLoginUserDetailForAsset($user->uid);  
+	
+	$matches = array();
+	$query = db_select('users', 'u');
+	$query->leftJoin('users_roles', 'ur', 'u.uid = ur.uid');  
+	$query->leftJoin('role', 'r', 'ur.rid = r.rid'); 
+	$query->leftJoin('a_user_details', 'ud', 'u.uid = ud.uid');
+	
+	$query->leftJoin('a_user_details_service', 'us', 'u.uid = us.uid'); 
+	$query->fields('us', array('designation','district_code','directorate_code')); 
+	
+	$query->fields('u', array('uid','name','access','created','status'));
+	$query->fields('ud', array('fname'));
+	$query->addField('r', 'name', 'rolename');
+	$query->condition('ud.fname', '%' . trim($string) . '%', 'LIKE');
+	if($user->uid != 1486){
+		$query->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+	}
+	
+	if(in_array(variable_get('field', 11), array_keys($user->roles))){
+		//$query->condition('us.emp_group','A','!=');
+		$query->condition('us.office_id',$direc_code['office_id'],'=');
+	}
+	$query->condition('us.emp_group','A','!=');
+	$query->condition('ud.status',0,'=');
+	$query->orderBy("r.name", "ASC");
+	$query->range(0,10);
+	$result = $query->execute();
+	//$rsData = $result->fetchAll();
+		
+
+    // save the query to matches
+    foreach ($result as $row) {
+	  $matches[$row->fname."-".$row->uid] = check_plain($row->fname."-".$row->designation);
+    }
+	
+    // Return the result to the form in json
+    drupal_json_output($matches);
+}
+
+
+function getVerifyByUidYear($uid,$currentYear){
+  $rsData = array();	
+  $query = db_select('a_asset_mst','am');
+  $query->fields('am', array('uid','declaration_yr','designation','directorate_code','status','created_date'));
+  $query->condition('am.uid', $uid, '=');
+  $query->condition('am.declaration_yr', $currentYear, '=');
+  $result = $query->execute();
+  $rsData = $result->fetchAssoc();
+  return $rsData;
+}
+
+function getUserInfoByUid($uid){
+	$query = db_select('users', 'u');
+	$query->leftJoin('a_user_details', 'ud', 'u.uid = ud.uid');
+	
+	$query->leftJoin('a_user_details_service', 'us', 'u.uid = us.uid'); 
+	$query->fields('us', array('designation','district_code','directorate_code','office_id','pay_scale','emp_group','direct_promotee','promotion_date_empgroupa','asset_received_manner','order_no','joining_date','release_date','transfer_from_office'));
+	
+	$query->leftJoin('a_directorate_mst', 'd', 'd.directorate_code = us.directorate_code'); 
+	$query->fields('d', array('directorate_name')); 
+	
+	$query->leftJoin('district_master', 'dis', 'dis.district_code = us.district_code'); 
+	$query->fields('dis', array('district_name')); 
+	
+	$query->fields('u', array('uid','name','access','created','status'));
+	$query->fields('ud', array('fname','hrms_id','doj'));
+	$query->condition('u.uid', $uid, '=');
+	$query->condition('us.service_status', '1', '=');
+	$result = $query->execute();
+	$userData = $result->fetchAssoc();
+	return $userData;
+}
+
+/*function sar_acr_file_display($arg){
+	if($arg != 0){
+		$query = db_select('a_sar_file', 'f');
+		$query ->fields('f', array('asr_id','file_name','sar_file','status'));
+		$query->condition('f.asr_id', $arg, '='); 
+		$result = $query->execute();
+		$result_data = $result->fetchAssoc();
+		header("Content-Type: application/pdf");
+		header('Content-Disposition: inline; filename="'.$result_data['file_name'].'"');
+		echo $result_data['sar_file'];
+		exit();
+	}else{
+		drupal_set_message('Unable to open file');
+	}
+}*/
+
+function employee_transfer_out_list(){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+		drupal_goto('profileupdate');
+		exit;
+	}	
+	
+	//$user_info = getUserInfoByUid($user->uid);
+	//print_r($user_info); exit;
+	
+	// list for transfer out
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$query = db_select('users', 'u');
+	$query->leftJoin('a_user_details', 'ud', 'u.uid = ud.uid');
+	
+	$query->leftJoin('a_user_details_service', 'us', 'u.uid = us.uid'); 
+	$query->fields('us', array('user_service_id','designation','district_code','directorate_code','office_id','pay_scale','emp_group','direct_promotee','promotion_date_empgroupa','asset_received_manner','order_no','joining_date','release_date','transfer_from_office'));
+	
+	$query->leftJoin('a_directorate_mst', 'd', 'd.directorate_code = us.directorate_code'); 
+	$query->fields('d', array('directorate_name')); 
+	
+	$query->leftJoin('district_master', 'dis', 'dis.district_code = us.district_code'); 
+	$query->fields('dis', array('district_name')); 
+	
+	$query->fields('u', array('uid','name','access','created','status'));
+	$query->fields('ud', array('fname','hrms_id','doj'));
+	$query->condition('us.service_status', '0', '=');
+	$query->condition('us.transfer_promotion_type', 'T', '=');
+	$query->condition('us.transfer_by', $user->uid, '=');
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	//print_r($resultData); exit;
+	
+	$output = '';
+	$header = array(
+				array('data'=> 'Sl No'),
+				array('data'=> 'HRMS ID'),
+				array('data'=> 'Employee Name'),
+				array('data'=> 'Transfer From'),
+				array('data'=> 'Transfer To'),
+				array('data'=> 'Release Date'),
+				//array('data'=> 'Status')
+			);
+			
+	$rows = array();
+	$i = 0;
+	foreach($resultData as $val){
+		
+		$resultData1 = array();
+		$query1 = db_select('a_user_details_service', 'us');
+		$query1->fields('us', array('user_service_id','designation','district_code','directorate_code','office_id','pay_scale','emp_group','direct_promotee','promotion_date_empgroupa','asset_received_manner','order_no','joining_date','release_date','transfer_from_office'));
+		$query1->condition('us.uid', $val->uid, '=');
+		$query1->condition('us.service_status', '2', '=');
+		$result1 = $query1->execute();
+		$resultData1 = $result1->fetchAssoc();
+		
+		if(!empty($resultData1)){
+			$transfer_from = getOfficeName($resultData1['transfer_from_office']);
+			$transfer_to = getOfficeName($resultData1['office_id']);
+		
+		$i++;	
+	
+	$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 'showcause-print/'.$val->showcause_id.'/'.date('Y'), array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+	  
+	  $rows [] = array(  
+	  		  $i,	
+			  array('data' => t($val->hrms_id)),
+			  array('data' => t($val->fname)),
+			  array('data' => t($transfer_from['office_name'])),
+			  array('data' => t($transfer_to['office_name'])),
+			  array('data' => trim(!empty($val->release_date)) ? t(date('d-m-Y',strtotime($val->release_date))) : 'N/A'),
+			  //array('data' => t($val->status)),
+		); 
+		
+		}
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '',
+		  'colgroups' => array(),
+		  'empty' => t("No data found") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	  
+	return $output;	
+}
+
+function employee_transfer_in_list(){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+		drupal_goto('profileupdate');
+		exit;
+	}	
+	
+	$user_info = getUserInfoByUid($user->uid);
+	//print_r($user_info); exit;
+	
+	// list for transfer out
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$query = db_select('a_user_details_service', 'us');
+	$query->leftJoin('users', 'u', 'u.uid = us.uid'); 
+	$query->leftJoin('a_user_details', 'ud', 'u.uid = ud.uid');
+	$query->fields('us', array('user_service_id','designation','district_code','directorate_code','office_id','pay_scale','emp_group','direct_promotee','promotion_date_empgroupa','asset_received_manner','order_no','joining_date','release_date','transfer_from_office'));
+	
+	$query->leftJoin('a_directorate_mst', 'd', 'd.directorate_code = us.directorate_code'); 
+	$query->fields('d', array('directorate_name')); 
+	
+	$query->leftJoin('district_master', 'dis', 'dis.district_code = us.district_code'); 
+	$query->fields('dis', array('district_name')); 
+	
+	$query->fields('u', array('uid','name','access','created','status'));
+	$query->fields('ud', array('fname','hrms_id','doj'));
+	$query->condition('us.service_status', '2', '=');
+	$query->condition('us.directorate_code', $user_info['directorate_code'], '=');
+	if($user_info['office_id']!='0'){
+		$query->condition('us.office_id', $user_info['office_id'], '=');
+	}
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	//print_r($resultData); exit;
+	
+	$output = '';
+	$header = array(
+				array('data'=> 'Sl No'),
+				array('data'=> 'HRMS ID'),
+				array('data'=> 'Employee Name'),
+				array('data'=> 'Transfer From'),
+				array('data'=> 'Transfer To'),
+				array('data'=> 'Action'),
+				//array('data'=> 'Status')
+			);
+			
+	$rows = array();
+	$i = 0;
+	foreach($resultData as $val){
+		
+		$resultData1 = array();
+		$query1 = db_select('a_user_details_service', 'us');
+		$query1->fields('us', array('user_service_id','designation','district_code','directorate_code','office_id','pay_scale','emp_group','direct_promotee','promotion_date_empgroupa','asset_received_manner','order_no','joining_date','release_date','transfer_from_office'));
+		$query1->condition('us.uid', $val->uid, '=');
+		$query1->condition('us.service_status', '2', '=');
+		$result1 = $query1->execute();
+		$resultData1 = $result1->fetchAssoc();
+		
+		if(!empty($resultData1)){
+			$transfer_from = getOfficeName($resultData1['transfer_from_office']);
+			$transfer_to = getOfficeName($resultData1['office_id']);
+		
+		$i++;	
+	
+		$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/view.png">'), 'transfer-accept/'.$val->uid, array('html' => TRUE,'attributes'=>array('title' => 'View')));
+	  
+	  $rows [] = array(  
+	  		  $i,	
+			  array('data' => t($val->hrms_id)),
+			  array('data' => t($val->fname)),
+			  array('data' => t($transfer_from['office_name'])),
+			  array('data' => t($transfer_to['office_name'])),
+			  array('data' => $link),
+			  //array('data' => t($val->status)),
+		); 
+		
+		}
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '',
+		  'colgroups' => array(),
+		  'empty' => t("No data found") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	  
+	return $output;	
+}
+
+function getOfficeName($office_id){
+	$OfficeAddress = db_select('a_office_master','aom');
+	$OfficeAddress->fields('aom', array('office_id','office_name','directorate_code','is_active','office_address')); 
+	$OfficeAddress->condition('aom.office_id', $office_id, '=');
+	$result = $OfficeAddress->execute();
+	$OfficeData = $result->fetchAssoc();
+	return $OfficeData;
+}
+
+function transfer_accepted_form($form, &$form_state, $arg){
+	//echo $arg; exit;
+	global $user;
+	drupal_add_js(drupal_get_path('module', 'asset_user') . '/myfunction.js');	
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+		
+	$form['#attributes']['class'][] = 'form-vertical';
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Transfer Employee</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	 
+		$mydata = array();
+		$output = '';
+		$header_info = array();
+		$rows_info   = array();
+		$header_info = array(  
+		  array('data' => t('Employee Information'),'colspan' => 5),  
+		); 	
+	$query = db_select('users', 'u');
+	$query->leftJoin('a_user_details', 'ud', 'u.uid = ud.uid');
+	$query->leftJoin('a_user_details_service', 'us', 'u.uid = us.uid'); 
+	$query->fields('us', array('designation','district_code','directorate_code','office_id','pay_scale','emp_group','direct_promotee','promotion_date_empgroupa','asset_received_manner','order_no','joining_date','release_date','transfer_from_office'));
+	$query->leftJoin('a_directorate_mst', 'd', 'd.directorate_code = us.directorate_code'); 
+	$query->fields('d', array('directorate_name')); 
+	$query->leftJoin('district_master', 'dis', 'dis.district_code = us.district_code'); 
+	$query->fields('dis', array('district_name')); 
+	$query->fields('u', array('uid','name','access','created','status'));
+	$query->fields('ud', array('fname','hrms_id','doj'));
+	$query->condition('u.uid', $arg, '=');
+	$query->condition('us.service_status', '2', '=');
+	$result = $query->execute();
+	$mydata = $result->fetchAssoc();
+	 //print_r($mydata); exit;
+ 	 if(!empty($mydata)){	
+ 
+			$rows_info[] = array(  
+			  array('data' => t('<b>HRMS ID  </b>')),
+			  array('data' => t('<b>Officers Name  </b>')),
+			  array('data' => t('<b>Officers Designation </b>')),
+			  array('data' => t('<b>Directorate Name  </b>')),
+			  array('data' => t('<b>District Name  </b>')),
+			);
+			$rows_info[] = array( 
+			  array('data' => t($mydata['hrms_id'])),	
+			  array('data' => t($mydata['fname'])),
+			  array('data' => t($mydata['designation'])), 	 
+			  array('data' => t($mydata['directorate_name'])), 
+			  array('data' => t($mydata['district_name'])),
+			);
+			
+			$output = theme_table(
+				array(
+				  'header' => $header_info,
+				  'rows' => $rows_info,
+				  'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+				  'sticky' => true,
+				  'caption' => '',
+				  'colgroups' => array(),
+				  'empty' => t("No data found!") // The message to be displayed if table is empty
+				)
+			  ).theme('pager');	
+	 }
+	 
+	 $form['transfer_info'] = array(
+		'#prefix' => '<div class="col-md-12">'.$output,
+		'#suffix' => '</div>'
+	 );
+	 $form['uid'] = array(
+		'#type' => 'hidden',
+		'#title' => t('User Id'),
+		//'#id' =>'order_no_map',
+		'#default_value'=>$mydata['uid'],
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'User Id'),
+		'#prefix' => '<div class="col-md-3">',
+		'#suffix' => '</div>'
+	 );
+	 $form['accept_dt'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Accept Date'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control','datepiker'),'placeholder'=>'Accept Date'),
+		'#prefix' => '<div class="col-md-3">',
+		'#suffix' => '</div>'
+	 );
+	 $form['accept_submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Submit'),
+		'#attributes' => array('class'=>array('btn btn-info')),
+		'#prefix' => '<div class="col-md-12">',
+		'#suffix' => '</div>'
+	 );
+	 $form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	 return $form;
+}
+
+function transfer_accepted_form_submit($form, &$form_state){
+	$query = db_update('a_user_details_service');
+	$query->fields(array('service_status' => 1, 'joining_date' => trim($form_state['values']['accept_dt'])));
+	$query->condition('uid', trim($form_state['values']['uid']), '=');
+	$query->condition('service_status', 2, '=');
+	$rs = $query->execute();
+	if($rs){
+		drupal_set_message('Successfully Accepted');
+	}else{
+		drupal_set_message('Unable to accept. Please try again later.');
+	}
+	drupal_goto('employee-transfer-in-list');
+}

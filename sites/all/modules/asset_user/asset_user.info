@@ -1,0 +1,4 @@
+name = Assets Management
+description = Assets Management Module
+package = Assets Management Modules
+core = 7.x

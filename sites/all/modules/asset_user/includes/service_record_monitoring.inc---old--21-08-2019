@@ -1,0 +1,1518 @@
+<?php
+
+function service_record_monitoring($form, &$form_state){ 
+		
+	global $user;
+	drupal_add_js(drupal_get_path('module', 'asset_user') . '/myfunction.js');	
+	$status = getUserProfileStatus($user->uid);
+	$userData = getLoginUserDetailForAsset($user->uid);
+	
+	$directorate_list = getDirectorateListByRoleId($user->uid);
+	//print_r($directorate_list); exit;
+	
+	$district_list = getDistrictAllList();
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">General Service Details</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	 
+	 /*$form['fname'] = array(
+	  '#title' => t('Full Name'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#default_value' => !empty($userData['fname']) ? $userData['fname'] : '',
+	  '#attributes' => array('class'=>array('form-control'),'readonly'=>'readonly'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	$form['hrmsid'] = array(
+	  '#title' => t('HRMS ID'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#default_value' => !empty($userData['hrms_id']) ? $userData['hrms_id'] : '',
+	  '#attributes' => array('class'=>array('form-control'),'readonly'=>'readonly'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );*/
+	
+	$form['service_cadre'] = array(
+	  '#title' => t('Service/Cadre'),	
+	  '#type' => 'select',
+	  '#required' => TRUE,
+	  '#options' => array('1'=>t('WBES'),'2'=>t('WBLS'),'3'=>t('Others')),
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	$form['doj'] = array(
+	  '#title' => t('Date of Joining (DD-MM-YYYY)'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#default_value' => !empty($userData['doj']) ? date('d-m-Y',strtotime($userData['doj'])) : '',
+	  '#attributes' => array('class'=>array('form-control'),'readonly'=>'readonly'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	$form['confirmation_date'] = array(
+	  '#title' => t('Date of Confirmation (DD-MM-YYYY)'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  //'#default_value' => !empty($userData['doj']) ? date('d-m-Y',strtotime($userData['doj'])) : '',
+	  '#attributes' => array('class'=>array('form-control', 'servicedate'),'placeholder'=>'Date of Confirmation (DD-MM-YYYY)'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	$form['dob'] = array(
+	  '#title' => t('Date of Birth (DD-MM-YYYY)'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#default_value' => !empty($userData['dob']) ? date('d-m-Y',strtotime($userData['dob'])) : '',
+	  '#attributes' => array('class'=>array('form-control'),'readonly'=>'readonly'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	$form['recruitment_type'] = array(
+	  '#title' => t('Type of Recruitment'),	
+	  '#type' => 'select',
+	  '#ajax' => array(
+                      'callback' => '_reload_recruitment_type',
+                      //'wrapper' => 'dropdown_product_cat',
+                      //'effect' => 'fade',
+                      //'progress' => array('type' => '','message' => '',),
+                   ),
+	  '#required' => TRUE,
+	  '#options' => array('Direct'=>t('Direct'),'On Promotion'=>t('On Promotion')),
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	if(isset($form_state['values']['recruitment_type']) && trim($form_state['values']['recruitment_type'])=='On Promotion'){
+		$form['promotion_doj'] = array(
+		  '#title' => t('Promotion Date of Joining (DD-MM-YYYY)'),	
+		  '#type' => 'textfield',
+		  '#required' => TRUE,
+		  //'#default_value' => !empty($userData['doj']) ? date('d-m-Y',strtotime($userData['doj'])) : '',
+		  '#attributes' => array('class'=>array('form-control', 'datepiker'),'placeholder'=>'Promotion Date of Joining (DD-MM-YYYY)'),
+		  '#prefix' => '<div id="replace_promotion_doj_div"><div class="col-md-4">',
+		  '#suffix' => '</div></div>'
+		);
+	}else{
+		$form['promotion_doj'] = array(
+		  '#prefix' => '<div id="replace_promotion_doj_div">',
+		  '#suffix' => '</div>'
+		);
+	}
+	$form['gender'] = array(
+	  '#title' => t('Gender'),	
+	  '#type' => 'select',
+	  '#required' => TRUE,
+	  '#options' => array('1'=>t('Male'),'2'=>t('Female')),
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	
+	
+	/*$form['district'] = array(
+	  '#title' => t('District'),	
+	  '#type' => 'select',
+	  '#required' => TRUE,
+	  '#id'=>'district_name',
+	  '#options' => get_district_by_id(1),
+      '#value' => !empty($district_v) ? $district_v	:'',
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div id="ld_edit_emp_district_replace"><div class="col-md-4">',
+	  '#suffix' => '</div></div>',
+	  '#ajax'	=> array(
+							'event' 		=> 'change',
+							'effect' 		=> 'fade',			
+							'callback'		=> 'get_ajax_load',
+							'progress'		=>	array(
+								'type'		=>'throbber',
+								'message'	=>t('loading'),
+							),
+					   )
+    );
+	
+  $value_district	=	isset($form_state['values']['district']) ? $form_state['values']['district'] : '';	
+	
+  if(!empty($value_district) && $state_v == 1){
+	$form['subdivision'] = array(
+	  '#title' => t('Sub-Division'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#options' => common_custom_user_subdivisionlist_list_new($form_state['values']['district']),
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div id="ld_empsubdv_replace"><div class="col-md-4">',
+	  '#suffix' => '</div></div>'
+    );
+  }else{ 
+		
+		$form['subdivision'] = array(
+		   '#prefix' => '<div id="ld_empsubdv_replace">',
+		   '#suffix' => '</div>',
+		);
+  }*/
+  
+	$form['submit'] = array(
+	  '#type'=>'submit',
+	  '#value'=> t('Save'),
+	  '#attributes' => array('class'=>array('form-control btn btn-info')),
+	  '#prefix' => '<div class="col-md-12"><div class="input-group">',
+	  '#suffix' => '</div></div>'
+	);	
+		
+	
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	
+	return $form;
+
+}
+
+function _reload_recruitment_type($form, &$form_state){
+	$commands   = array();
+	$commands[] = ajax_command_replace('#replace_promotion_doj_div', '<div id="replace_promotion_doj_div">'.drupal_render($form['promotion_doj']).'</div>');
+	$commands[] = ajax_command_invoke(NULL, "myJqueryDatePiker", array('anyparametervalue') );
+ 	return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function service_record_monitoring_submit($form, &$form_state){
+	global $user;
+	
+	if($form_state['values']['gender'] = '1') {
+		  $gender = 'M';
+		}else { $gender = 'F'; }
+	
+	$service_info = array(
+							's_uid'				 => $user->uid,
+							'sfull_name'		 => trim($form_state['values']['fname']),
+							's_hrms_id'			 => trim($form_state['values']['hrmsid']),
+							'sservice_cadre'	 => trim($form_state['values']['service_cadre']),
+							's_doj'				 => format_date(strtotime($form_state['values']['doj']), 'custom', 'Y-m-d'),
+							's_promotion_doj'	 => format_date(strtotime($form_state['values']['promotion_doj']), 'custom', 'Y-m-d'),
+							's_dob'				 => format_date(strtotime($form_state['values']['dob']), 'custom', 'Y-m-d'),
+							's_gender'			 => trim($gender),
+							's_district'		 => 0,
+							's_subdivision'		 => 0,
+							's_confirmdate' 	 => format_date(strtotime($form_state['values']['confirmation_date']), 'custom', 'Y-m-d'),
+						 );
+		
+		$service_info_details = db_insert('a_service_info')->fields($service_info)->execute();
+		if($service_info_details){
+			 drupal_set_message('Your Record has been inserted successfully.');
+			 drupal_goto('servicerecord/eduqaulification');
+		}else{
+			drupal_set_message('Unable to insert your record. Please try again later.', $type='warning');
+		}
+}
+
+function eduqaul_form_entry($form, &$form_state){ 
+
+   	global $user;
+   	$status = getUserProfileStatus($user->uid);
+	$userData = getLoginUserDetailForAsset($user->uid);
+
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Educational Qualification</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	$form['qualification'] = array(
+	  '#title' => t('Exam Passed'),	
+	  '#type' => 'select',
+	  '#options' => array('Under Graduate'=>t('Under Graduate'),'Graduate'=>t('Graduate'),'Post Graduate'=>t('Post Graduate'),'PhD'=>t('PhD')),
+	  '#ajax' => array(
+                      'callback' => 'qualification_callback',
+                   ),
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	if(isset($form_state['values']['qualification']) && trim($form_state['values']['qualification'])=='Under Graduate'){
+		$form['under_graduate_type'] = array(
+		  '#title' => t('Under Graduate Type'),	
+		  '#type' => 'select',
+		  '#options' => array('Madhyamik or Equivalent'=>t('Madhyamik or Equivalent'),'Higher Secondary or Equivalent'=>t('Higher Secondary or Equivalent'),'Diploma'=>t('Diploma'),'Others'=>t('Others')),
+		  /*'#ajax' => array(
+						  'callback' => 'qualification_callback',
+					   ),*/
+		  '#required' => TRUE,
+		  '#attributes' => array('class'=>array('form-control')),
+		  '#prefix' => '<div id="replace_under_graduate_type"><div class="col-md-4">',
+		  '#suffix' => '</div></div>'
+		);
+	}else{
+		$form['under_graduate_type'] = array(
+		  '#prefix' => '<div id="replace_under_graduate_type">',
+		  '#suffix' => '</div>'
+		);
+	}
+	
+	if(isset($form_state['values']['qualification']) && (trim($form_state['values']['qualification'])=='Graduate') || (trim($form_state['values']['qualification'])=='Post Graduate')){
+		$form['graduate_type'] = array(
+		  '#title' => t('Graduate Type'),	
+		  '#type' => 'select',
+		  '#options' => array('Technical'=>t('Technical'),'Non-Technical'=>t('Non-Technical')),
+		  '#ajax' => array(
+						  'callback' => 'graduate_type_callback',
+					   ),
+		  '#required' => TRUE,
+		  '#attributes' => array('class'=>array('form-control')),
+		  '#prefix' => '<div id="replace_graduate_type"><div class="col-md-4">',
+		  '#suffix' => '</div></div>'
+		);
+	}else{
+		$form['graduate_type'] = array(
+		  '#prefix' => '<div id="replace_graduate_type">',
+		  '#suffix' => '</div>'
+		);
+	}
+	
+	if( isset($form_state['values']['qualification']) && (trim($form_state['values']['qualification'])=='Graduate' || trim($form_state['values']['qualification'])=='Post Graduate') && isset($form_state['values']['graduate_type']) && trim($form_state['values']['graduate_type'])=='Technical'){
+		$form['technical_type'] = array(
+		  '#title' => t('Technical Type'),	
+		  '#type' => 'select',
+		  '#options' => array('Engineering'=>t('Engineering'),'Medical'=>t('Medical'),'Management'=>t('Management'),'Others'=>t('Others')),
+		  /*'#ajax' => array(
+						  'callback' => 'graduate_type_callback',
+					   ),*/
+		  '#required' => TRUE,
+		  '#attributes' => array('class'=>array('form-control')),
+		  '#prefix' => '<div id="replace_technical_type"><div class="col-md-4">',
+		  '#suffix' => '</div></div>'
+		);
+	}else{
+		$form['technical_type'] = array(
+		  '#prefix' => '<div id="replace_technical_type">',
+		  '#suffix' => '</div>'
+		);
+	}
+	
+	if(isset($form_state['values']['qualification']) && (trim($form_state['values']['qualification'])=='Graduate' || trim($form_state['values']['qualification'])=='Post Graduate') && isset($form_state['values']['graduate_type']) && trim($form_state['values']['graduate_type'])=='Non-Technical'){
+		$form['non_technical_type'] = array(
+		  '#title' => t('Non-Technical Type'),	
+		  '#type' => 'select',
+		  '#options' => array('Science'=>t('Science'),'Arts'=>t('Arts'),'Commerce'=>t('Commerce')),
+		  /*'#ajax' => array(
+						  'callback' => 'graduate_type_callback',
+					   ),*/
+		  '#required' => TRUE,
+		  '#attributes' => array('class'=>array('form-control')),
+		  '#prefix' => '<div id="replace_non_technical_type"><div class="col-md-4">',
+		  '#suffix' => '</div></div>'
+		);
+	}else{
+		$form['non_technical_type'] = array(
+		  '#prefix' => '<div id="replace_non_technical_type">',
+		  '#suffix' => '</div>'
+		);
+	}
+	/*$form['madhyamik'] = array(
+	  '#title' => t('Madhyamik or Equivalent'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Madhyamik or Equivalent'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	$form['higher_secondary'] = array(
+	  '#title' => t('Higher Secondary or Equivalent'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Higher Secondary or Equivalent'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	$form['diploma'] = array(
+	  '#title' => t('Diploma'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Diploma'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	$form['others'] = array(
+	  '#title' => t('Others'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Others'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );*/
+	$form['universityins'] = array(
+	  '#title' => t('University/Institute'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	/*$form['subject'] = array(
+	  '#title' => t('Subject'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );*/
+	
+	$form['division'] = array(
+	  '#title' => t('Division'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	
+	$form['submit'] = array(
+	  '#type'=>'submit',
+	  '#value'=> t('Add'),
+	  '#attributes' => array('class'=>array('form-control btn btn-info')),
+	  '#prefix' => '<div class="col-md-12"><div class="input-group">',
+	  '#suffix' => '</div></div>'
+	);	
+	
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	
+	$form['edutable'] = array(
+	  '#prefix' => '<div class="col-md-4">'.edutable(),
+	  '#suffix' => '</div>'
+    );
+
+	return $form;
+}
+
+function qualification_callback($form, &$form_state){
+	$commands   = array();
+	$commands[] = ajax_command_replace('#replace_under_graduate_type', '<div id="replace_under_graduate_type">'.drupal_render($form['under_graduate_type']).'</div>');
+	$commands[] = ajax_command_replace('#replace_graduate_type', '<div id="replace_graduate_type">'.drupal_render($form['graduate_type']).'</div>');
+	$commands[] = ajax_command_replace('#replace_technical_type', '<div id="replace_technical_type">'.drupal_render($form['technical_type']).'</div>');
+	$commands[] = ajax_command_replace('#replace_non_technical_type', '<div id="replace_non_technical_type">'.drupal_render($form['non_technical_type']).'</div>');
+	//$commands[] = ajax_command_invoke(NULL, "myJqueryDatePiker", array('anyparametervalue') );
+ 	return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function graduate_type_callback($form, &$form_state){
+	$commands   = array();
+	$commands[] = ajax_command_replace('#replace_technical_type', '<div id="replace_technical_type">'.drupal_render($form['technical_type']).'</div>');
+	$commands[] = ajax_command_replace('#replace_non_technical_type', '<div id="replace_non_technical_type">'.drupal_render($form['non_technical_type']).'</div>');
+	//$commands[] = ajax_command_replace('#replace_graduate_type', '<div id="replace_graduate_type">'.drupal_render($form['graduate_type']).'</div>');
+	//$commands[] = ajax_command_invoke(NULL, "myJqueryDatePiker", array('anyparametervalue') );
+ 	return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+
+function edutable(){
+	global $user;
+	
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	$query = db_select('a_service_edu', 'ase');
+	$query ->leftJoin('a_service_info', 'asi', 'ase.s_uid = asi.s_uid'); 
+	$query ->fields('ase', array('s_edu_id', 's_qual', 's_univ', 's_subject', 's_division', 's_edu_status'));
+	$query->condition('ase.s_edu_status', 1, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	$output = '';
+	if(!empty($resultData)){
+  	$header = array(
+				array('data'=> 'Sl No.'),
+				array('data'=> 'Qualification '),
+				array('data'=> 'University/Institute'),
+				array('data'=> 'Subject'),
+				array('data'=> 'Division'),
+				array('data'=> 'Action'),
+			);
+			
+	$rows = array();
+	
+	
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+		 $editLink = l('<div class="hidden-sm hidden-xs action-buttons"><i class="ace-icon fa fa-pencil bigger-130"></i>', 'service/eduedit/'.$val->s_edu_id, array('html' => TRUE,'attributes'=>array('title' => 'Edit', 'class'=>array('green'))));	
+		$delLink = l('<i class="ace-icon fa fa-trash-o bigger-130"></i></div>','service/edudel/'.$val->s_edu_id,array('html' => TRUE,'attributes'=>array('title' => 'Delete','class'=>array('red'))));
+	  
+	  $rows [] = array(  
+	 		  $i,
+	  		  array('data' => t($val->s_qual)), 	
+			  array('data' => t($val->s_univ)), 
+			  array('data' => t($val->s_subject)),
+			  array('data' => t($val->s_division)),
+			  //array('data' => ($val->landacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->landacquistion_date))) : 'N/A'),
+			  array('data' => $editLink.' '.$delLink),			
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	}
+	return $output;	
+	
+	
+}
+
+function eduqaul_form_entry_submit($form, &$form_state){  
+
+    global $user;
+	
+	$eduqaul_info = array( 
+							's_uid' 	=> $user->uid,
+							's_qual' 	=> trim($form_state['values']['qualification']),
+							's_univ' 	=> trim($form_state['values']['universityins']),
+							's_subject' => trim($form_state['values']['subject']),
+							's_division'=> trim($form_state['values']['division']),
+						  );
+	
+	$eduqaul_info_details = db_insert('a_service_edu')->fields($eduqaul_info)->execute();
+		if($service_info_details){
+			 drupal_set_message('Your Record has been inserted successfully.');
+			 //drupal_goto('servicerecord/eduqaulification');
+		}/*else{
+			drupal_set_message('Unable to insert your record. Please try again later.', $type='warning');
+		}*/
+
+}
+
+
+function postingdetails_form_entry($form, &$form_state){  
+
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	$userData = getLoginUserDetailForAsset($user->uid);
+
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Posting Details</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	 
+	$form['designation'] = array(
+	  '#title' => t('Designation Level'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Designation Level'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	$form['orderno'] = array(
+	  '#title' => t('Order Number'),	
+	  '#type' => 'textfield',
+	  //'#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Order No'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	$form['orderdate'] = array(
+	  '#title' => t('Order Date'),	
+	  '#type' => 'textfield',
+	 //'#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control', 'servicedate'),'placeholder'=>'Order Date'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	$form['officeloc'] = array(
+	  '#title' => t('Office Name'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Name of The Office'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	$value_state = 1;
+	$form['district'] = array(
+	   '#title'=> 'Select District',
+	   '#type' => 'select', 
+	   '#required' => true,
+	   '#id'=>'district_name',
+	   //'#disabled' => TRUE,
+	   '#options' => get_district_by_id($value_state),
+	   //'#value' => !empty($district_v) ? $district_v : '',
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'District', 'autocomplete' => 'off'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							),
+	   '#prefix' => '<div class="col-md-4" id="ld_edit_emp_district_replace">',
+	   '#suffix' => '</div>'
+	);
+	
+	$value_district	=	isset($form_state['values']['district']) ? $form_state['values']['district'] : ''; 
+	 	
+	if(!empty($value_state) && !empty($value_district)){ 
+	   $form['subdivision'] = array(
+		   '#title'=> 'Select Subdivision',
+		   '#type' => 'select',
+		   '#required' => true,
+		   '#options' => common_custom_user_subdivisionlist_list_new($value_district), 
+		   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter subdivision', 'autocomplete' => 'off'),
+		   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+			'#ajax'				=> array(
+										'event' 		=> 'change',
+										'effect' 		=> 'fade',			
+										'callback'		=> 'get_ajax_load',
+										'progress'		=>	array(
+											'type'		=>'throbber',
+											'message'	=>t('loading'),
+										),
+								),
+		   '#prefix' => '<div class="col-md-4" id="ld_empsubdv_replace"><div class="selectpicker">',
+		   '#suffix' => '</div></div>'
+		);
+	 }else{ 
+			$form['subdivision'] = array(
+			   '#title'=> 'Select Subdivision',
+			   '#type' => 'select',
+			   '#required' => true,
+			   '#options' => array(''=>t('Select Sub-division')),
+			   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter subdivision', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+			   '#prefix' => '<div class="col-md-4" id="ld_empsubdv_replace">',
+			   '#suffix' => '</div>',
+			);
+	 }
+	/*$form['ministrydept'] = array(
+	  '#title' => t('Ministry Department'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	$form['exp'] = array(
+	  '#title' => t('Experience (Major/Minor)'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );*/
+	
+	$form['organisation'] = array(
+	  '#title' => t('Type Of Posting'),	
+	  '#type' => 'select',
+	  '#options' => array('Regular'=>'Regular','On Deputation'=>'On Deputation','Deputation to other Department'=>'Deputation to other Department'),
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	$form['expperiodfrom'] = array(
+	  '#title' => t('From'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control', 'servicedate')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	$form['expperiodto'] = array(
+	  '#title' => t('To'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control', 'servicedate')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	/*$form['duration'] = array(
+	  '#title' => t('Duration'),	
+	  '#type' => 'textfield',
+	  //'#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'readonly' => 'readonly'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );*/
+	 
+	 
+	 $form['submit'] = array(
+	  '#type'=>'submit',
+	  '#value'=> t('Add'),
+	  '#attributes' => array('class'=>array('form-control btn btn-info')),
+	  '#prefix' => '<div class="col-md-6"><div class="input-group">',
+	  '#suffix' => '</div></div>'
+	);	
+	
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	
+	$form['postingtable'] = array(
+	  '#prefix' => '<div class="col-md-4">'.postingtable(),
+	  '#suffix' => '</div>'
+    );
+	 
+	return $form;
+}
+
+function postingtable() {
+	
+	global $user;
+	
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	$query = db_select('a_posting_details', 'apd');
+	$query ->leftJoin('a_service_info', 'asi', 'apd.s_uid = asi.s_uid'); 
+	$query ->fields('apd', array('s_posting_id', 's_designation', 's_mindept', 's_office_loc', 's_organisation', 's_order_no', 's_order_date', 's_exp', 's_exp_from', 's_exp_to', 's_pstatus'));
+	$query->condition('apd.s_pstatus', 1, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	
+	$output = '';
+	if(!empty($resultData)){
+  	$header = array(
+				array('data'=> 'Sl No.'),
+				array('data'=> 'Designation Level '),
+				array('data'=> 'Ministry Department'),
+				array('data'=> 'Office Location'),
+				array('data'=> 'Organisation (Posting Type)'),
+				array('data'=> 'Order Number'),
+				array('data'=> 'Order Dat)'),
+				array('data'=> 'Experience (Major/Minor)'),
+				array('data'=> 'Experience Period From'),
+				array('data'=> 'Experience Period To'), 
+				array('data'=> 'Action'),
+			);
+			
+	$rows = array();
+	
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+		 $editLink = l('<div class="hidden-sm hidden-xs action-buttons"><i class="ace-icon fa fa-pencil bigger-130"></i>', 'service/postingedit/'.$val->s_posting_id, array('html' => TRUE,'attributes'=>array('title' => 'Edit', 'class'=>array('green'))));	
+		$delLink = l('<i class="ace-icon fa fa-trash-o bigger-130"></i></div>','service/postingdel/'.$val->s_posting_id,array('html' => TRUE,'attributes'=>array('title' => 'Delete','class'=>array('red'))));
+	  
+	  $rows [] = array(  
+	 		  $i,
+	  		  array('data' => t($val->s_designation)), 	
+			  array('data' => t($val->s_mindept)), 
+			  array('data' => t($val->s_office_loc)),
+			  array('data' => t($val->s_organisation)),
+			  array('data' => t($val->s_order_no)),
+			  array('data' => t($val->s_order_date)),
+			  array('data' => t($val->s_exp)),
+			  array('data' => t($val->s_exp_from)),
+			  array('data' => t($val->s_exp_to)),
+			  //array('data' => ($val->landacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->landacquistion_date))) : 'N/A'),
+			  array('data' => $editLink.' '.$delLink),			
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	}
+	return $output;	
+	
+	
+}
+
+function postingdetails_form_entry_submit($form, &$form_state){ 
+
+		global $user;
+	
+		$posting_info = array( 
+							's_uid' 			=> $user->uid,
+							's_designation' 	=> trim($form_state['values']['designation']),
+							's_mindept'			=> trim($form_state['values']['ministrydept']),
+							's_office_loc'		=> trim($form_state['values']['officeloc']),
+							's_organisation'	=> trim($form_state['values']['organisation']),
+							's_order_no'		=> trim($form_state['values']['orderno']),
+							's_order_date'		=> format_date(strtotime($form_state['values']['orderdate']), 'custom', 'Y-m-d'),
+							's_exp' 			=> trim($form_state['values']['exp']),
+							's_exp_from' 		=> format_date(strtotime($form_state['values']['expperiodfrom']), 'custom', 'Y-m-d'),
+							's_exp_to'			=> format_date(strtotime($form_state['values']['expperiodto']), 'custom', 'Y-m-d'),
+							's_pduration' 		=> 'NA',
+						  );
+						  
+			//print_r($posting_info); exit;			  
+	
+		$posting_info_details = db_insert('a_posting_details')->fields($posting_info)->execute();
+		if($posting_info_details){
+			 drupal_set_message('Your Record has been inserted successfully.');
+			 //drupal_goto('servicerecord/eduqaulification');
+		}/*else{
+			drupal_set_message('Unable to insert your record. Please try again later.', $type='warning');
+		}*/
+}
+
+function inservicetrainingdetails_form_entry($form, &$form_state){  
+	drupal_add_js(drupal_get_path('module', 'asset_user') . '/myfunction.js');	
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">In-Service / Domestic Training Details</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	
+	$form['trainingname'] = array(
+	  '#title' => t('Training Name'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Training Name'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );  
+	$form['yearfrom'] = array(
+	  '#title' => t('From'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('id'=>'yearfrom','class'=>array('form-control', 'servicedate'),'placeholder'=>'From Date (DD-MM-YYYY)'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	
+	$form['yearto'] = array(
+	  '#title' => t('To'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('id'=>'yearto','class'=>array('form-control', 'servicedate'),'placeholder'=>'To Date (DD-MM-YYYY)'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	$form['institute'] = array(
+	  '#title' => t('Institute'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Institute'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	
+	$form['country'] = array(
+	  '#title' => t('Country'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Country'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	$form['city'] = array(
+	  '#title' => t('City'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'City'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	
+	$form['duration'] = array(
+	  '#title' => t('Duration'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('id'=>'duration','class'=>array('form-control'),'placeholder'=>'Duration'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	 
+	$form['submit'] = array(
+	  '#type'=>'submit',
+	  '#value'=> t('Add'),
+	  '#attributes' => array('class'=>array('form-control btn btn-info')),
+	  '#prefix' => '<div class="col-md-12"><div class="input-group">',
+	  '#suffix' => '</div></div>'
+	);	
+	
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	
+	$form['inservicetraining'] = array(
+	  '#prefix' => '<div class="col-md-4">'.inservicetraining(),
+	  '#suffix' => '</div>'
+    );
+
+	return $form;
+}
+
+function inservicetraining() {
+
+global $user;
+	
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	$query = db_select('a_inservice_training', 'ait');
+	$query ->leftJoin('a_service_info', 'asi', 'ait.s_uid = asi.s_uid'); 
+	$query ->fields('ait', array('s_inserv_id', 's_training_from', 's_training_to', 's_training_name', 's_training_institute', 's_training_city', 's_training_duration', 's_training_status'));
+	$query->condition('ait.s_training_status', 1, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+
+	$output = '';
+	if(!empty($resultData)){
+  	$header = array(
+				array('data'=> 'Sl No.'),
+				array('data'=> 'In-Service Training Year From'),
+				array('data'=> 'In-Service Training Year To'),
+				array('data'=> 'Training Name'),
+				array('data'=> 'Institute'),
+				array('data'=> 'City'),
+				array('data'=> 'Duration'),
+				array('data'=> 'Action'),
+			);
+			
+	$rows = array();
+	
+	
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+		 $editLink = l('<div class="hidden-sm hidden-xs action-buttons"><i class="ace-icon fa fa-pencil bigger-130"></i>', 'service/inservedit/'.$val->s_inserv_id, array('html' => TRUE,'attributes'=>array('title' => 'Edit', 'class'=>array('green'))));	
+		$delLink = l('<i class="ace-icon fa fa-trash-o bigger-130"></i></div>','service/inservdel/'.$val->s_inserv_id,array('html' => TRUE,'attributes'=>array('title' => 'Delete','class'=>array('red'))));
+	  
+	  $rows [] = array(  
+	 		  $i,
+	  		  array('data' => t($val->s_training_from)), 	
+			  array('data' => t($val->s_training_to)), 
+			  array('data' => t($val->s_training_name)),
+			  array('data' => t($val->s_training_institute)),
+			  array('data' => t($val->s_training_city)),
+			  array('data' => t($val->s_training_duration)),
+			  //array('data' => ($val->landacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->landacquistion_date))) : 'N/A'),
+			  array('data' => $editLink.' '.$delLink),			
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	}
+	return $output;	
+}
+
+function inservicetrainingdetails_form_entry_submit($form, &$form_state){  
+
+		global $user;
+	
+		$inservicetrainingdetails_info = array( 
+							's_uid' 				=> $user->uid,
+							's_training_from' 		=> format_date(strtotime($form_state['values']['yearfrom']), 'custom', 'Y-m-d'),
+							's_training_to'			=> format_date(strtotime($form_state['values']['yearto']), 'custom', 'Y-m-d'),
+							's_training_name'		=> trim($form_state['values']['trainingname']),
+							's_training_institute'	=> trim($form_state['values']['institute']),
+							's_training_city'		=> trim($form_state['values']['city']),
+							's_training_duration'	=> trim($form_state['values']['duration']),
+							
+						  );
+						  
+		$inservicetrainingdetails_info_details = db_insert('a_inservice_training')->fields($inservicetrainingdetails_info)->execute();
+		if($inservicetrainingdetails_info_details){
+			 drupal_set_message('Your Record has been inserted successfully.');
+			 //drupal_goto('servicerecord/eduqaulification');
+		}/*else{
+			drupal_set_message('Unable to insert your record. Please try again later.', $type='warning');
+		}*/
+}
+
+function domestictrdetails_form_entry($form, &$form_state){  
+
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Domestic Training Details</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	 
+	$form['dtyear'] = array(
+	  '#title' => t('Year'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	
+	$form['dtname'] = array(
+	  '#title' => t('Name'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	
+	$form['dtsubject'] = array(
+	  '#title' => t('Subject'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	
+	$form['dtduration'] = array(
+	  '#title' => t('Duration'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	
+  $form['submit'] = array(
+	  '#type'=>'submit',
+	  '#value'=> t('Submit'),
+	  '#attributes' => array('class'=>array('form-control btn btn-info')),
+	  '#prefix' => '<div class="col-md-6"><div class="input-group">',
+	  '#suffix' => '</div></div>'
+	);	
+	
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	
+	$form['domestictraining'] = array(
+	  '#prefix' => '<div class="col-md-4">'.domestictraining(),
+	  '#suffix' => '</div>'
+    );
+
+	return $form;
+}
+
+function domestictraining(){
+	
+	global $user;
+	
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	$query = db_select('a_domestic_training', 'adt');
+	$query ->leftJoin('a_service_info', 'asi', 'adt.s_uid = asi.s_uid'); 
+	$query ->fields('adt', array('s_dtraining_id', 's_dtraining_year', 's_dtraining_name', 's_dtraining_subject', 's_dtraining_duration', 's_dtraining_status'));
+	$query->condition('adt.s_dtraining_status', 1, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+ 
+	$output = '';
+	if(!empty($resultData)){
+  	$header = array(
+				array('data'=> 'Sl No.'),
+				array('data'=> 'Year'),
+				array('data'=> 'Name'),
+				array('data'=> 'Subject'),
+				array('data'=> 'Duration'),
+				array('data'=> 'Action'),
+			);
+			
+	$rows = array();
+	
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+		 $editLink = l('<div class="hidden-sm hidden-xs action-buttons"><i class="ace-icon fa fa-pencil bigger-130"></i>', 'service/dtrainingedit/'.$val->s_dtraining_id, array('html' => TRUE,'attributes'=>array('title' => 'Edit', 'class'=>array('green'))));	
+		$delLink = l('<i class="ace-icon fa fa-trash-o bigger-130"></i></div>','service/dtrainingdel/'.$val->s_dtraining_id,array('html' => TRUE,'attributes'=>array('title' => 'Delete','class'=>array('red'))));
+	  
+	  $rows [] = array(  
+	 		  $i,
+	  		  array('data' => t($val->s_dtraining_year)), 	
+			  array('data' => t($val->s_dtraining_name)), 
+			  array('data' => t($val->s_dtraining_subject)),
+			  array('data' => t($val->s_dtraining_duration)),
+			  //array('data' => ($val->landacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->landacquistion_date))) : 'N/A'),
+			  array('data' => $editLink.' '.$delLink),			
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	}
+	return $output;	
+}
+
+function domestictrdetails_form_entry_submit($form, &$form_state){  
+
+		global $user;
+	
+		$domestictrdetails_info = array( 
+							's_uid' 				=> $user->uid,
+							's_dtraining_year' 		=> trim($form_state['values']['dtyear']),
+							's_dtraining_name'		=> trim($form_state['values']['dtname']),
+							's_dtraining_subject'	=> trim($form_state['values']['dtsubject']),
+							's_dtraining_duration'	=> trim($form_state['values']['dtduration']),						
+						  );
+						  
+		$domestictrdetails_info_details = db_insert('a_domestic_training')->fields($domestictrdetails_info)->execute();
+		if($domestictrdetails_info_details){
+			 drupal_set_message('Your Record has been inserted successfully.');
+			 //drupal_goto('servicerecord/eduqaulification');
+		}/*else{
+			drupal_set_message('Unable to insert your record. Please try again later.', $type='warning');
+		}*/
+}
+
+
+function foreigntrdetails_form_entry($form, &$form_state){  
+
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Foreign Training Details</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	 
+	/*$form['ftyear'] = array(
+	  '#title' => t('Year'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); */
+	
+	$form['ftname'] = array(
+	  '#title' => t('Name of Training'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Name of Training'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	$form['ftfrom'] = array(
+	  '#title' => t('From'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control','datepiker'),'placeholder'=>'From (DD-MM-YYYY)'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	$form['ftto'] = array(
+	  '#title' => t('To'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control','datepiker'),'placeholder'=>'To (DD-MM-YYYY)'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	
+	/*$form['ftsubject'] = array(
+	  '#title' => t('Subject'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); */
+	
+	$form['ftduration'] = array(
+	  '#title' => t('Duration'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Duration'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	
+	$form['ftcountry'] = array(
+	  '#title' => t('Country'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Country'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	$form['ftcity'] = array(
+	  '#title' => t('City'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'City'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	 
+	$form['ftinstitute'] = array(
+	  '#title' => t('Name of Institute'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Name of Institute'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	
+  $form['submit'] = array(
+	  '#type'=>'submit',
+	  '#value'=> t('Add'),
+	  '#attributes' => array('class'=>array('form-control btn btn-info')),
+	  '#prefix' => '<div class="col-md-12"><div class="input-group">',
+	  '#suffix' => '</div></div>'
+	);	
+	
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	
+	$form['foreigntraining'] = array(
+	  '#prefix' => '<div class="col-md-4">'.foreigntraining(),
+	  '#suffix' => '</div>'
+    );
+
+	return $form;
+}
+
+function foreigntraining(){
+	
+	global $user;
+	
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	$query = db_select('a_foreign_training', 'aft');
+	$query ->leftJoin('a_service_info', 'asi', 'aft.s_uid = asi.s_uid'); 
+	$query ->fields('aft', array('s_ftraining_id', 's_ftraining_year', 's_ftraining_name', 's_ftraining_subject', 's_ftraining_duration', 's_ftraining_country','s_ftraining_status'));
+	$query->condition('aft.s_ftraining_status', 1, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	$output = '';
+	if(!empty($resultData)){
+  	$header = array(
+				array('data'=> 'Sl No.'),
+				array('data'=> 'Year'),
+				array('data'=> 'Name'),
+				array('data'=> 'Subject'),
+				array('data'=> 'Duration'),
+				array('data'=> 'Country'),
+				array('data'=> 'Action'),
+			);
+			
+	$rows = array();
+	
+	$i = 0; 
+	
+	foreach($resultData as $val){
+		$i++;
+		 $editLink = l('<div class="hidden-sm hidden-xs action-buttons"><i class="ace-icon fa fa-pencil bigger-130"></i>', 'service/ftrainingedit/'.$val->s_ftraining_id, array('html' => TRUE,'attributes'=>array('title' => 'Edit', 'class'=>array('green'))));	
+		$delLink = l('<i class="ace-icon fa fa-trash-o bigger-130"></i></div>','service/ftrainingdel/'.$val->s_ftraining_id,array('html' => TRUE,'attributes'=>array('title' => 'Delete','class'=>array('red'))));
+	  
+	  $rows [] = array(  
+	 		  $i,
+	  		  array('data' => t($val->s_ftraining_year)), 	
+			  array('data' => t($val->s_ftraining_name)), 
+			  array('data' => t($val->s_ftraining_subject)),
+			  array('data' => t($val->s_ftraining_duration)),
+			  array('data' => t($val->s_ftraining_country)),
+			  //array('data' => ($val->landacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->landacquistion_date))) : 'N/A'),
+			  array('data' => $editLink.' '.$delLink),			
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	}
+	return $output;	
+}
+
+function foreigntrdetails_form_entry_submit($form, &$form_state){  
+
+		global $user;
+	
+		$ftraining_info = array( 
+							's_uid' 				=> $user->uid,
+							's_ftraining_year' 		=> trim($form_state['values']['ftyear']),
+							's_ftraining_name'		=> trim($form_state['values']['ftname']),
+							's_ftraining_subject'	=> trim($form_state['values']['ftsubject']),
+							's_ftraining_duration'	=> trim($form_state['values']['ftduration']),	
+							's_ftraining_country'	=> trim($form_state['values']['ftcountry']),						
+						  );
+						  
+		$ftraining_info_details = db_insert('a_foreign_training')->fields($ftraining_info)->execute();
+		if($ftraining_info_details){
+			 drupal_set_message('Your Record has been inserted successfully.');
+			 //drupal_goto('servicerecord/eduqaulification');
+		}/*else{
+			drupal_set_message('Unable to insert your record. Please try again later.', $type='warning');
+		}*/
+}
+
+function awardspubl_form_entry($form, &$form_state){  
+
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Name of the Awards/ Title of Publications</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	 
+	/*$form['aptype'] = array(
+	  '#title' => t('Type'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	
+	$form['aparea'] = array(
+	  '#title' => t('Area'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); */
+	
+	 
+	
+	$form['apname'] = array(
+	  '#title' => t('Name of The Award'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Name of The Award'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	$form['apgivername'] = array(
+	  '#title' => t('Awards Given By/Publishers Name'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Awards Given By/Publishers Name'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	$form['apyear'] = array(
+	  '#title' => t('Year'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Year (YYYY)'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	
+	$form['apdesc'] = array(
+	  '#title' => t('Description'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Description'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 
+	
+	
+	
+  /*$form['apsubject'] = array(
+	  '#title' => t('Subject'),	
+	  '#type' => 'textfield',
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 	*/
+	
+ $form['aplevel'] = array(
+	  '#title' => t('Level'),	
+	  '#type' => 'select',
+	  '#options' => array('Domestic'=>'Domestic','International'=>'International'),
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Level'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    ); 		
+	
+  $form['submit'] = array(
+	  '#type'=>'submit',
+	  '#value'=> t('Add'),
+	  '#attributes' => array('class'=>array('form-control btn btn-info')),
+	  '#prefix' => '<div class="col-md-6"><div class="input-group">',
+	  '#suffix' => '</div></div>'
+	);	
+	
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	
+	$form['sawards'] = array(
+	  '#prefix' => '<div class="col-md-4">'.sawards(),
+	  '#suffix' => '</div>'
+    );
+
+	return $form;
+}
+
+function sawards(){
+		
+	global $user;
+	
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	$query = db_select('a_service_awards', 'asa');
+	$query ->leftJoin('a_service_info', 'asi', 'asa.s_uid = asi.s_uid'); 
+	$query ->fields('asa', array('s_awards_id', 's_atype', 's_aarea', 's_ayear', 's_aname', 's_adesc', 's_agivenby', 's_asubject', 's_alevel', 's_astatus'));
+	$query->condition('asa.s_astatus', 1, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+ 
+	$output = '';
+	if(!empty($resultData)){
+  	$header = array(
+				array('data'=> 'Sl No.'),
+				array('data'=> 'Type'),
+				array('data'=> 'Area'),
+				array('data'=> 'Year'),
+				array('data'=> 'Name'),
+				array('data'=> 'Description'),
+				array('data'=> 'Awards Given By/Publishers Name'),
+				array('data'=> 'Subject'),
+				array('data'=> 'Level'),
+				array('data'=> 'Action'),
+			);
+			
+	$rows = array();
+	
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+		 $editLink = l('<div class="hidden-sm hidden-xs action-buttons"><i class="ace-icon fa fa-pencil bigger-130"></i>', 'service/sawardedit/'.$val->s_awards_id, array('html' => TRUE,'attributes'=>array('title' => 'Edit', 'class'=>array('green'))));	
+		$delLink = l('<i class="ace-icon fa fa-trash-o bigger-130"></i></div>','service/sawarddel/'.$val->s_awards_id,array('html' => TRUE,'attributes'=>array('title' => 'Delete','class'=>array('red'))));
+	  
+	  $rows [] = array(  
+	 		  $i,
+	  		  array('data' => t($val->s_atype)), 	
+			  array('data' => t($val->s_aarea)), 
+			  array('data' => t($val->s_ayear)),
+			  array('data' => t($val->s_aname)),
+			  array('data' => t($val->s_adesc)),
+			  array('data' => t($val->s_agivenby)),
+			  array('data' => t($val->s_asubject)),
+			  array('data' => t($val->s_alevel)),
+			  //array('data' => ($val->landacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->landacquistion_date))) : 'N/A'),
+			  array('data' => $editLink.' '.$delLink),			
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	}
+	return $output;	
+
+}
+
+
+function awardspubl_form_entry_submit($form, &$form_state){  
+
+		global $user;
+	
+		$sawards_info = array( 
+							's_uid' 		=> $user->uid,
+							's_atype' 		=> trim($form_state['values']['aptype']),
+							's_aarea'		=> trim($form_state['values']['aparea']),
+							's_ayear'		=> trim($form_state['values']['apyear']),
+							's_aname'		=> trim($form_state['values']['apname']),	
+							's_adesc'		=> trim($form_state['values']['apdesc']),
+							's_agivenby'	=> trim($form_state['values']['apgivername']),
+							's_asubject'	=> trim($form_state['values']['apsubject']),
+							's_alevel'		=> trim($form_state['values']['aplevel']),			
+						  );
+						  
+		$sawards_info_details = db_insert('a_service_awards')->fields($sawards_info)->execute();
+		if($sawards_info_details){
+			 drupal_set_message('Your Record has been inserted successfully.');
+			 //drupal_goto('servicerecord/eduqaulification');
+		}/*else{
+			drupal_set_message('Unable to insert your record. Please try again later.', $type='warning');
+		}*/
+}

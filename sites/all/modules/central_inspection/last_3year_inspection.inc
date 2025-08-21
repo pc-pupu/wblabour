@@ -509,7 +509,12 @@ function report_details_factories($est_id,$license_no){
 			"lic_no" => $license_no
 	  );
 	  
+<<<<<<< HEAD
 	$lc = 'https://wbfactories.gov.in/webservices/REST/inspection_report_3_yr';
+=======
+	//$lc = 'https://wbfactories.gov.in/webservices/REST/inspection_report_3_yr';
+	$lc = 'https://wbfactories.gov.in/api/rest/v2/inspection_report_3_yr';
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	$ch_lc = curl_init();
 	//curl_setopt($ch_lc, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
 	curl_setopt($ch_lc, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));

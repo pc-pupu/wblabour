@@ -43,6 +43,7 @@ function circular_menu(){
 	'page arguments' => array('edit_circular',2),
 	'access arguments' => array('cmscircular_per'),
   );
+<<<<<<< HEAD
 
   $items['cmsentry/circular/download/%'] = array(
   'title' => 'Download Circular File',
@@ -54,6 +55,8 @@ function circular_menu(){
 
 
 
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
   return $items;
 }
 
@@ -196,6 +199,7 @@ function circular_list_form($form, &$form_states){
 function circular_list_form_submit($form, &$form_state){
 	$form_state['rebuild'] = TRUE;
  }
+<<<<<<< HEAD
 
  function circular_file_download_callback($filename) {
   $safe_filename = basename($filename);
@@ -217,6 +221,8 @@ function circular_list_form_submit($form, &$form_state){
 }
 
 
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function circular_list($datefrom='',$dateto='',$circularsearch=''){
 	 global $base_root, $base_path;
@@ -262,12 +268,17 @@ function circular_list($datefrom='',$dateto='',$circularsearch=''){
 	 $i = 20*($p) + 1;
 	 foreach($cms_circular_query_result_data as $data){
 		
+<<<<<<< HEAD
 		// $aa=$base_root.$base_path.'sites/default/files/upload/circular/'.$data->circularfile;
 		// $link_s=l(t('View'), $aa, array('attributes' => array('target'=>'_blank'))) ;
 
 		$download_path = 'cmsentry/circular/download/' . $data->circularfile;
         $link_s = l(t('Download'), $download_path, array('attributes' => array('class' => array('download-link'))));
 
+=======
+		$aa=$base_root.$base_path.'sites/default/files/upload/circular/'.$data->circularfile;
+		$link_s=l(t('View'), $aa, array('attributes' => array('target'=>'_blank'))) ;
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 		$rows[] = array(
       				$i,
 					date('d-m-Y', strtotime($data->circulardate)),
@@ -360,6 +371,7 @@ function get_circular_list(){
     return '<div class="table-responsive statistics_box">'.$output.'</div>';
 }
 
+<<<<<<< HEAD
 // function validate_file_double_extension($form, &$form_state) {
 //   $fid = $form_state['values']['add_circular_pdf'];
 //   if ($fid && is_array($fid)) {
@@ -395,6 +407,10 @@ function add_circular($form, &$form_state){
 
    //drupal_add_js(drupal_get_path('module', 'circular') . '/myfunction.js');
 
+=======
+function add_circular($form, &$form_state){
+   global $base_root, $base_path;
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	 
    $form['add_circular_date'] = array(
 	 '#title'=>' Circular Date :',
@@ -417,6 +433,7 @@ function add_circular($form, &$form_state){
 	);
 		 
     $form['add_circular_pdf'] = array(
+<<<<<<< HEAD
 	  '#title' => t(' Upload a Circular Scanned file (JPG,PDF only)'),
 	  '#type' => 'managed_file',
 	  '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(10*1024*1024)),
@@ -427,6 +444,15 @@ function add_circular($form, &$form_state){
 	  '#suffix' => '<div id="file-error-msg" style="color:red; font-size:14px; margin-top:5px;"></div></div>',
 	);
 
+=======
+	   '#title' => t(' Upload an Circular Scanned file (JPG,PDF only)'),
+	   '#type' => 'managed_file',
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+	   '#upload_location' => 'public://upload/circular/',
+	   '#process' => array('import_my_file_element_process'),
+	   '#required' => TRUE,
+	);
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	
     $form['submit'] = array (
         '#type' => 'submit',
@@ -438,6 +464,7 @@ function add_circular($form, &$form_state){
 	return  $form;
 	 
  }
+<<<<<<< HEAD
 
 //  function add_circular_validate($form, &$form_state) {
 //   $fid = $form_state['values']['add_circular_pdf'];
@@ -512,6 +539,8 @@ function add_circular($form, &$form_state){
  
 
 
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function add_circular_submit($form, &$form_state){ 
 	$arr = array();
@@ -581,6 +610,7 @@ function edit_circular($form, &$form_state, $args=''){
        '#rows' => 4,
 	   '#type' => 'textarea',
 	   '#default_value' =>trim($result['circulardesc']),
+<<<<<<< HEAD
 	   '#required' => TRUE,
 	);
 	
@@ -629,11 +659,40 @@ function edit_circular($form, &$form_state, $args=''){
 		  );
 		}
 
+=======
+	   '#element_validate' => array('circular_textfield_validate'),
+	   '#required' => TRUE,
+	);
+	
+	$uri = 'public://upload/circular/'.trim($result['circularfile']);
+	
+	if (file_exists($uri)) {
+		$form['circular_file_up'] = array(
+        '#markup' => l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'),
+			     ''.$GLOBALS['base_url'].'/sites/default/files/upload/circular/'.$result['circularfile'], array('html' => TRUE,
+				 'attributes'=>array('target'=>'_blank' , 'class'=>array('pdfloc1')))),
+        );
+		$form['scan_file'] = array(
+        '#type' => 'hidden',
+		'#default_value' => trim($result['circularfile']),
+        );
+	}else{
+		$form['circular_file_up'] = array(
+        '#markup' => t('No File Exist'),
+		'#prefix' => '<div class="pdfnone">',
+	    '#suffix' => '</div>'
+        );
+	}
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 		 
     $form['edit_circular_pdf'] = array(
 	   '#title' => t(' Upload an Circular Scaned file (JPG,PDF only)'),
 	   '#type' => 'managed_file',
+<<<<<<< HEAD
 	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(10*1024*1024)),
+=======
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	   '#upload_location' => 'public://upload/circular/',
 	   '#process' => array('import_my_file_element_process'),
 	   //'#required' => TRUE,
@@ -653,6 +712,7 @@ function edit_circular($form, &$form_state, $args=''){
 	return  $form;
 	 
  } 
+<<<<<<< HEAD
 
  function edit_circular_validate($form, &$form_state) {
   $fid = $form_state['values']['edit_circular_pdf'];
@@ -696,6 +756,8 @@ function edit_circular($form, &$form_state, $args=''){
 }
 
 
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function edit_circular_submit($form, &$form_state){ 
 	$arr = array();

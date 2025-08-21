@@ -1,0 +1,170 @@
+div.dataTables_length {
+	float: left;
+	/*background-color: red;*/
+}
+
+div.dataTables_filter {
+	float: right;
+	/*background-color: green;*/
+}
+
+div.dataTables_info {
+	float: left;
+	/*background-color: olive;*/
+}
+
+div.dataTables_paginate {
+	float: right;
+	/*background-color: yellow;*/
+}
+
+div.dataTables_length,
+div.dataTables_filter,
+div.dataTables_paginate,
+div.dataTables_info {
+	padding: 6px;
+}
+
+
+
+
+table.pretty {
+	clear: both;
+}
+
+/* Self clearing - */
+div.dataTables_wrapper:after {
+	content: ".";
+	display: block;
+	clear: both;
+	visibility: hidden;
+	line-height: 0;
+	height: 0;
+}
+
+
+
+table.pretty {
+	width: 100%;
+	clear: both;
+}
+
+table.pretty td,
+table.pretty th {
+	padding: 5px !important;
+	border: 1px solid #2d5e79 !important;
+	font-size: 14px !important;
+}
+
+table.pretty thead th {
+	text-align: left;
+	
+}
+
+
+
+/* Body cells */
+table.pretty thead th {
+	background: #2d5e79 !important;
+	color:#fff;
+	
+	
+}
+	
+table.pretty tbody td {
+	text-align: left;
+	background: #d6e6f3;
+	color: #000;
+}
+		
+table.pretty tbody tr.odd td { 
+	background: #edf4f9;
+}
+
+
+/* Footer cells */	
+table.pretty tfoot th {
+	background: #b0cc7f;
+	text-align: left;
+	
+}
+	
+table.pretty tfoot td {
+	background: #d7e1c5;
+	text-align: center;
+	font-weight: bold;
+	
+}
+
+/*table.pretty thead th.sorting_asc {
+	background: #66A9BD url('images/sort_asc.png') no-repeat right center;
+}
+
+table.pretty thead th.sorting_desc {
+	background: #66A9BD url('images/sort_desc.png') no-repeat right center;
+}
+
+table.pretty thead th.sorting {
+	background: #66A9BD url('images/sort_both.png') no-repeat right center;
+}*/
+
+
+span.paginate_button,
+span.paginate_active {
+	display: inline-block;
+	background-color: #608995;
+	padding: 2px 6px;
+	margin-left: 2px;
+	cursor: pointer;
+	*cursor: hand;
+}
+
+span.paginate_active {
+	background-color: transparent;
+	border: 1px solid black;
+}
+
+span.paginate_button_disabled {
+	color: #3d6672;
+}
+
+div.dataTables_paginate span>span {
+	width: 15px;
+	text-align: center;
+}
+
+div.dataTables_info {
+	padding: 9px 6px 6px 6px;
+}
+
+.btn_new_Go{
+  background: #497693 none repeat scroll 0 0;
+    color: #fff;
+    font-family: Arial;
+    padding: 5px;
+    text-decoration: none;
+}
+
+#asdf2{
+	height:100px;
+}
+
+.inspectionD{
+    font-style: inherit;
+    padding:0;
+    text-align: center;
+}
+
+table.pretty tbody td a{ color:#083c63; }
+
+table.pretty thead th a{ color:#fff !important; }
+
+
+@media print {
+  a[href]:after {
+    content: none !important;
+  }
+}
+
+.year-list{background: #ededed;padding: 10px;border-radius: 10px;border: 1px solid #ccc;font-size: 19px;text-align: center;font-weight: bold; margin-bottom: 10px;line-height: 10px;}
+.year-list img{width: 17px; margin: 0 10px;}

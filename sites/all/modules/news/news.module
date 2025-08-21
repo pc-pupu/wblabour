@@ -41,6 +41,7 @@ function news_menu(){
 	'access arguments' => array('news_per'),
 	'file' => 'include/daily_session.inc',
   );
+<<<<<<< HEAD
     $items['cmsentry/news/download/%'] = array(
     'title' => 'Download News File',
     'page callback' => 'news_file_download_callback',
@@ -72,6 +73,11 @@ function news_file_download_callback($filename) {
 }
 
 
+=======
+  return $items;
+}
+
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 function news_list(){
 	 global $base_root, $base_path;
 	 $sort = 'DESC';
@@ -215,7 +221,11 @@ function add_news($form, &$form_state){
     $form['add_news_pdf'] = array(
 	   '#title' => t('Upload a Scanned file of the News (JPG,PDF only)'),
 	   '#type' => 'managed_file',
+<<<<<<< HEAD
 	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(10*1024*1024)),
+=======
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	   '#upload_location' => 'public://upload/news/',
 	   '#process' => array('import_my_file_element_process'),
 	   '#required' => TRUE,
@@ -231,6 +241,7 @@ function add_news($form, &$form_state){
 	return  $form;
 	 
  }
+<<<<<<< HEAD
 
  function add_news_validate($form, &$form_state) {
   $fid = $form_state['values']['add_news_pdf'];
@@ -274,6 +285,8 @@ function add_news($form, &$form_state){
   }
 }
 
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function add_news_submit($form, &$form_state){ 
 	$arr = array();
@@ -347,6 +360,7 @@ function edit_news($form, &$form_state, $args=''){
 	   '#required' => TRUE,
 	);
 	
+<<<<<<< HEAD
 	$uri = 'public://upload/news/' . trim($result['newsfile']);
 
 	if (file_exists(drupal_realpath($uri))) {
@@ -361,6 +375,21 @@ function edit_news($form, &$form_state, $args=''){
 	  );
 	}
 	else{
+=======
+	$uri = 'public://upload/news/'.trim($result['newsfile']);
+	
+	if (file_exists($uri)) {
+		$form['news_file_up'] = array(
+        '#markup' => l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'),
+			     ''.$GLOBALS['base_url'].'/sites/default/files/upload/news/'.$result['newsfile'], array('html' => TRUE,
+				 'attributes'=>array('target'=>'_blank' , 'class'=>array('pdfloc1')))),
+        );
+		$form['scan_file'] = array(
+        '#type' => 'hidden',
+		'#default_value' => trim($result['newsfile']),
+        );
+	}else{
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 		$form['news_file_up'] = array(
         '#markup' => t('No File Exist'),
 		'#prefix' => '<div class="pdfnone">',
@@ -371,7 +400,11 @@ function edit_news($form, &$form_state, $args=''){
     $form['edit_news_pdf'] = array(
 	   '#title' => t('Upload a Scanned file of the News (JPG,PDF only)'),
 	   '#type' => 'managed_file',
+<<<<<<< HEAD
 	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(10*1024*1024)),
+=======
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	   '#upload_location' => 'public://upload/news/',
 	   '#process' => array('import_my_file_element_process'),
 	   //'#required' => TRUE,
@@ -391,6 +424,7 @@ function edit_news($form, &$form_state, $args=''){
 	return  $form;
 	 
  } 
+<<<<<<< HEAD
 
  function edit_news_validate($form, &$form_state) {
   $fid = $form_state['values']['edit_news_pdf'];
@@ -434,6 +468,8 @@ function edit_news($form, &$form_state, $args=''){
   }
 }
 
+=======
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function edit_news_submit($form, &$form_state){ 
 	$arr = array();

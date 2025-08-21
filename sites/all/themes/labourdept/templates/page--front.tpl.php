@@ -86,14 +86,23 @@ function googleTranslateElementInit() {
 </style> -->
 </head>
 <body>
+<<<<<<< HEAD
   
+=======
+	
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 <header>
   <div class="whitebg1 navbar-static-top header">
     <div class="container">
       <div class="row clearfix">
         <div class="col-sm-6 col-md-6">
+<<<<<<< HEAD
           <div class="social_media">
               <i class="fa fa-twitter-square" aria-hidden="true"></i>
+=======
+        	<div class="social_media">
+            	<i class="fa fa-twitter-square" aria-hidden="true"></i>
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
                 <i class="fa fa-facebook-square" aria-hidden="true"></i>
                  <a href="<?php print $base_root.$base_path?>screen-reader-access" class="login_link" style="margin-top: 9px;float: right;margin-left: 10px;"><i class="fa fa-sign-in" aria-hidden="true"></i> Screen Reader Access</a>
             </div>
@@ -101,25 +110,44 @@ function googleTranslateElementInit() {
         </div>
         
         <div class="col-sm-6 col-md-4 pull-right">
+<<<<<<< HEAD
           <div class="register">
             <div class="login-panel">  
               <div class="total-visitor">
           <?php //print render($page['header']);?>
+=======
+        	<div class="register">
+            <div class="login-panel">  
+            	<div class="total-visitor">
+					<?php //print render($page['header']);?>
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
                  </div>
                 <?php if(user_is_logged_in()){?>
                 <i class="fa fa-sign-in" aria-hidden="true"></i> <a href="<?php print $base_root.$base_path?>user/logout" class="login_link">Logout</a>&nbsp;&nbsp;&nbsp;
                     <?php }else{?>
                     
+<<<<<<< HEAD
             <!--<i class="fa fa-sign-in" aria-hidden="true"></i> <a href="<?php print $base_root.$base_path?>enlogin" class="login_link">Login</a>&nbsp;&nbsp;&nbsp;-->
                        
+=======
+						<!--<i class="fa fa-sign-in" aria-hidden="true"></i> <a href="<?php print $base_root.$base_path?>enlogin" class="login_link">Login</a>&nbsp;&nbsp;&nbsp;-->
+                        <i class="fa fa-sign-in" aria-hidden="true"></i> <a href="<?php print $base_root.$base_path?>assetlogin" class="login_link">Employee Login</a>&nbsp;&nbsp;&nbsp;
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
                         <i class="fa fa-sign-in" aria-hidden="true"></i> <a href="<?php print $base_root.$base_path?>user" class="login_link">Admin Login</a>&nbsp;&nbsp;&nbsp;
                       <?php }?>  
                 </div>
                     <div class="text-icon">
+<<<<<<< HEAD
                     <a href="#" id="large"><img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/images/icon3.png"> </a>
                     <a href="#" id="small"><img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/images/icon4.png" ></a>
                     <a href="#" id="medium" class="selected"><img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/images/icon5.png"></a>
                     <a href="javascript:void(0)"><img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/images/icon6.png" onClick="backchng();"></a>
+=======
+                		<a href="#" id="large"><img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/images/icon3.png"> </a>
+                		<a href="#" id="small"><img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/images/icon4.png" ></a>
+                		<a href="#" id="medium" class="selected"><img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/images/icon5.png"></a>
+                 		<a href="javascript:void(0)"><img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/images/icon6.png" onClick="backchng();"></a>
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
                      </div>
                         
             </div>
@@ -133,8 +161,13 @@ function googleTranslateElementInit() {
       <div class="row">
         <div class="logobg clearfix">
           <div class="col-sm-6">
+<<<<<<< HEAD
             <div class="logo_new">
               <?php if ($logo): ?>
+=======
+          	<div class="logo_new">
+            	<?php if ($logo): ?>
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
                   <a href="<?php print $front_page; ?>" title="<?php print t('Department of Labour'); ?>" rel="home" id="logo">
                     <img src="<?php print $logo; ?>" alt="<?php print t('Department of Labour Logo'); ?>" class="logo-img" />
                   </a>
@@ -147,7 +180,11 @@ function googleTranslateElementInit() {
           <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/images/Awards_btm.gif" alt="Awards & Achievements"></a>
           </div>-->
           <div class="cm-pic">
+<<<<<<< HEAD
             <!-- <img src="<?php// print $base_root.$base_path?>sites/all/themes/labourdept/images/cm.png" alt="CM"> -->
+=======
+          	<!-- <img src="<?php// print $base_root.$base_path?>sites/all/themes/labourdept/images/cm.png" alt="CM"> -->
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
            </div>
             <div class="serach_padding">
             </div>
@@ -172,7 +209,11 @@ function googleTranslateElementInit() {
 
   <div class="custom-feedback">
 
+<<<<<<< HEAD
   <a href="<?php print $base_root.$base_path?>may-we-help-you/" class="feedback-btn" style="color: white!important; text-decoration: none!important;">Feedback</a>
+=======
+  <a href="https://wblabour.gov.in/may-we-help-you/" class="feedback-btn" style="color: white!important; text-decoration: none!important;">Feedback</a>
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
     
 
   </div>
@@ -180,6 +221,7 @@ function googleTranslateElementInit() {
   
   <div class="news-ticker-box">
     <div class="container">
+<<<<<<< HEAD
     <div class="row">
       <div class="col-xs-12 text-center">
       <div class="site-meta">
@@ -190,6 +232,19 @@ function googleTranslateElementInit() {
       </div>
     </div>
   </div>
+=======
+		<div class="row">
+			<div class="col-xs-12 text-center">
+			<div class="site-meta">
+				<!--<span class="blinking_bar" style="display: inline;">For any technical enquiry with respect to COVID19, you may kindly email on <strong><a href="mailto:technicalquery.covid19@gov.in">technicalquery.covid19@gov.in</a></strong> <a href="<?php print $base_root.$base_path?>sites/default/files/UpdatedTelesurveythrough1921.pdf" target="_BLANK" class="pl-80">Tele survey from <i class="fa fa-phone" aria-hidden="true"></i> 1921</a></span>-->
+               
+                <span class="blinking_bar" style="display: inline;">বিনামূল্যে সরকারি পরিষেবা পেতে চলুন <a href="https://bsk.wb.gov.in" target="_blank"><strong>বাংলা সহায়তা কেন্দ্রে</strong></a> অথবা লগ ইন করুন <a href="https://bsk.wb.gov.in" target="_blank"><strong>https://bsk.wb.gov.in</strong></a> </span>
+                <marquee style="color:red; background-color: yellow; font-size: x-large;"><b>Portal will be under maintenance w. e. f. 14th August 2025, 6:00 PM</b></marquee>
+			</div>
+			</div>
+		</div>
+	</div>
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
   </div>
   
   
@@ -244,7 +299,11 @@ function googleTranslateElementInit() {
 
                 <div class="region region-news-section">
                   <div id="block-slidernews-slidernews-block" class="block block-slidernews">
+<<<<<<< HEAD
                     <div class="content">
+=======
+                    <div class="content asd">
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
                     <?php print render($page['news_section']);?>
                     </div>
                   </div>
@@ -256,7 +315,11 @@ function googleTranslateElementInit() {
            
       </div>
 </div>
+<<<<<<< HEAD
   
+=======
+	
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 <div class="whitebg2"> 
     <div class="container">
       
@@ -265,7 +328,11 @@ function googleTranslateElementInit() {
         
         
            <div class="col-md-12">
+<<<<<<< HEAD
            <div class="relief_fund">
+=======
+         	 <div class="relief_fund">
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
    <div class="row">
     <div class="col-md-12 relief_fund_title">
      <h1>West Bengal State Emergency Relief Fund </h1>
@@ -325,6 +392,7 @@ function googleTranslateElementInit() {
      </div>
     </div>
    </div>
+<<<<<<< HEAD
         </div>
         
             <div class="col-md-12 notes-home">
@@ -388,11 +456,80 @@ function googleTranslateElementInit() {
                                   Power Point Presentation on Training on Compassionate Appointment
                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a></li>
                   <li class="news-item"><a href="#">Training Video (To be uploaded)</a></li>
+=======
+    		</div>
+        
+        	  <div class="col-md-12 notes-home">
+           <div class="notes-home-pad">
+        	<div class="panel panel-default">
+          	<div class="panel-heading"><span class="glyphicon glyphicon-list-alt"></span> <b>Training on Compassionate Appointment <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/newicon.gif" alt="New"></b></div>
+         	 <div class="panel-body">
+        
+                <ul class="news11" style="">
+                					<li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/142-Emp.pdf" target="_blank">
+									  Notification-142-Emp, dated 1st November, 2007
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+                                   <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/50-EMP.pdf" target="_blank">
+									 Notification-50-Emp/1M-25/98, Dated Kolkata, the 1st March, 2011
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+                                  <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/251-EMP.pdf" target="_blank">
+									  Notificaion-251 EMP, dated 3rd December, 2013
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+                                  <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/96-Emp.pdf" target="_blank">
+									  Notification-96 EMP, dated 28th April, 2015
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+                                  <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/No165-Emp.pdf" target="_blank">
+									  Notification-165 EMP, dated 4th June, 2015
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+                                  <li style="" class="news-item">
+								    <a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/26-Emp.pdf" target="_blank">
+									Notification-26 EMP, dated 1st March, 2016
+									<img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+                                 <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/WB-up-to-date-amendments.pdf" target="_blank">
+									  West Bengal Scheme for Compassionate Appointment, 2013 with up-to-date amendments, made by various Notification from time to time, till 31/03/2022
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+								  <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/SOP.pdf" target="_blank">
+									  Standard Operating Procedure (SOP) , on Compassionate Appointment
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+								  <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/FAQ.pdf" target="_blank">
+									  Frequently Asked Question (FAQ) , on Compassionate Appointment
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+								  <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/CommonChecklist.pdf" target="_blank">
+									  Common Checklist to be used for processing an application for employment on compassionate ground vide Memorandum No Labr/63/EMP(EC), dated 06.04.22.
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+                                  <li class="news-item"><a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/Training-on-Compassionate-Appointment.pptx_08_04_22.pdf" target="_blank">
+                                  Power Point Presentation on Training on Compassionate Appointment
+                                   <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a></li>
+ 								  <li class="news-item"><a href="#">Training Video (To be uploaded)</a></li>
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
                       </ul>  
                                  
               
           </div>
+<<<<<<< HEAD
             </div>
+=======
+          	</div>
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
             </div>
             </div>
           <div class="col-md-4">
@@ -411,7 +548,11 @@ function googleTranslateElementInit() {
                   <p>Employment</p>
                   </li>
                    <li class="boxbgcolor3">
+<<<<<<< HEAD
                    <a href="https://wbfactories.gov.in/" data-toggle="tooltip"   target="_blank" title="">
+=======
+                   <a href="http://factories.wb.gov.in" data-toggle="tooltip"   target="_blank" title="">
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/images/4.png" alt="Factories"  class=" boxbgcolor1sub animated bounce"></a>
                     <p>Factories</p>
                    </li>
@@ -460,8 +601,13 @@ function googleTranslateElementInit() {
              <?php //print render($page['from_the_desk_of']); ?>
           </div>
           
+<<<<<<< HEAD
      
   
+=======
+		 
+	
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
           
           <!--<div class="panel-footer"> <ul class="pagination pull-right" style="margin: 0px;">
             <li><a href="#" class="prev"><span class="glyphicon glyphicon-chevron-down"></span></a>
@@ -478,14 +624,20 @@ function googleTranslateElementInit() {
 </div>
 
 
+<<<<<<< HEAD
       <!--<div class="col-md-4">
            <?php //print render($page['from_the_desk_of_new']); ?>
+=======
+			<!--<div class="col-md-4">
+        	 <?php //print render($page['from_the_desk_of_new']); ?>
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
           </div>--!>
         </div>
       </div>
       
     </div>
   </div>
+<<<<<<< HEAD
   
 <div class="count-bar">
       <div class="container">
@@ -712,14 +864,348 @@ function googleTranslateElementInit() {
     
 <div class="grybg">
   <div class="container">
+=======
+	
+<div class="count-bar">
+			<div class="container">
+				
+			<div class="row">
+				
+			
+				
+			<div class="col-md-8">
+				<h3>Online e-Services</h3>
+				<div class="row">
+			<div class="col-lg-3">
+				<div class="count-box">	
+				  <span class="counter">7101</span>
+				  <p class="count-text ">Contractor License<br/>Under CLRA</p>
+				</div>	
+			</div>
+
+			<div class="col-lg-3">
+			  <div class="count-box">			
+				  <span class="counter">2004</span>
+				  <p class="count-text "> Establishment Regn <br/> Under BOCWA</p>
+			  </div>	  
+			</div>
+
+			<div class="col-lg-3">
+				<div class="count-box">			
+				 <span class="counter">12245</span>
+				 <p class="count-text ">Boilers <br/>Registered</p> 
+				</div>	
+			</div>
+			
+			<div class="col-lg-3">
+				<div class="count-box">			
+				 <span class="counter">17803</span>
+				 <p class="count-text ">Factories <br/>Registered</p>
+				</div>	
+			</div>
+					
+				</div>
+				
+			</div>
+				
+			<div class="col-md-4">
+				
+ 			 <a href="<?php print $base_root.$base_path?>daily-session">
+				<div class="graph-widget">
+    
+				<div class="section section-graph">
+				  <div class="graph-info">
+					<i class="fa fa-flag"></i>
+					<span class="graph-info-big">Infographic</span>
+				  </div>
+				  <div id="graph"></div>
+				</div>
+
+
+			  </div>
+			</a>
+			</div>		
+				
+				
+			</div>
+	</div>	
+ </div>
+	
+
+<!--<div class="testimonial">
+<div class="container">
+	<div class="row">
+		<div class="col-sm-12">
+			<h2>See What <b>Entrepreneur</b> Say About Us</h2>
+			<div id="myCarousel" class="carousel slide" data-ride="carousel">
+				<ol class="carousel-indicators">
+					<li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+					<li data-target="#myCarousel" data-slide-to="1"></li>
+					<li data-target="#myCarousel" data-slide-to="2"></li>
+				</ol>   
+				<div class="carousel-inner">
+					<div class="item carousel-item active">
+						<div class="row">
+							<div class="col-sm-6">
+								<div class="testimonial-wrapper">
+									<div class="testimonial"><span class="laquo">&nbsp;</span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam eu sem tempor, varius quam at, luctus dui. Mauris magna metus, dapibus nec turpis vel, semper malesuada ante, commodo iacul viverra. <span class="raquo">&nbsp;</span></div>
+									<div class="media">
+										<div class="media-body">
+											<div class="overview">
+												<div class="name"><b>User Name</b></div>
+												<div class="star-rating">
+													<ul class="list-inline">
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star-half-o"></i></li>
+													</ul>
+												</div>
+											</div>										
+										</div>
+									</div>
+								</div>								
+							</div>
+							<div class="col-sm-6">
+								<div class="testimonial-wrapper">
+									<div class="testimonial"><span class="laquo">&nbsp;</span> Vestibulum quis quam ut magna consequat faucibus. Pellentesque eget mi suscipit tincidunt. Utmtc tempus dictum. Pellentesque virra. Quis quam ut magna consequat faucibus, metus id mi gravida. <span class="raquo">&nbsp;</span></div>
+									<div class="media">
+										<div class="media-body">
+											<div class="overview">
+												<div class="name"><b>User Name</b></div>
+												<div class="star-rating">
+													<ul class="list-inline">
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star-o"></i></li>
+													</ul>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>								
+							</div>
+						</div>			
+					</div>
+					<div class="item carousel-item">
+						<div class="row">
+							<div class="col-sm-6">
+								<div class="testimonial-wrapper">
+									<div class="testimonial"><span class="laquo">&nbsp;</span> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam eu sem tempor, varius quam at, luctus dui. Mauris magna metus, dapibus nec turpis vel, semper malesuada ante, commodo iacul viverra. <span class="raquo">&nbsp;</span></div>
+									<div class="media">
+										<div class="media-body">
+											<div class="overview">
+												<div class="name"><b>User Name</b></div>	
+												<div class="star-rating">
+													<ul class="list-inline">
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star-o"></i></li>
+													</ul>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>								
+							</div>
+							<div class="col-sm-6">
+								<div class="testimonial-wrapper">
+									<div class="testimonial"><span class="laquo">&nbsp;</span> Vestibulum quis quam ut magna consequat faucibus. Pellentesque eget mi suscipit tincidunt. Utmtc tempus dictum. Pellentesque virra. Quis quam ut magna consequat faucibus, metus id mi gravida. <span class="raquo">&nbsp;</span></div>
+									<div class="media">
+										<div class="media-body">
+											<div class="overview">
+												<div class="name"><b>User Name</b></div>
+												<div class="star-rating">
+													<ul class="list-inline">
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star-o"></i></li>
+													</ul>
+												</div>
+											</div>										
+										</div>
+									</div>
+								</div>								
+							</div>
+						</div>			
+					</div>
+					<div class="item carousel-item">
+						<div class="row">
+							<div class="col-sm-6">
+								<div class="testimonial-wrapper">
+									<div class="testimonial"><span class="laquo">&nbsp;</span> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam eu sem tempor, varius quam at, luctus dui. Mauris magna metus, dapibus nec turpis vel, semper malesuada ante, commodo iacul viverra. <span class="raquo">&nbsp;</span></div>
+									<div class="media">
+										<div class="media-body">
+											<div class="overview">
+												<div class="name"><b>User Name</b></div>
+												<div class="star-rating">
+													<ul class="list-inline">
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star-o"></i></li>
+													</ul>
+												</div>
+											</div>										
+										</div>
+									</div>
+								</div>								
+							</div>
+							<div class="col-sm-6">
+								<div class="testimonial-wrapper">
+									<div class="testimonial"><span class="laquo">&nbsp;</span> Vestibulum quis quam ut magna consequat faucibus. Pellentesque eget mi suscipit tincidunt. Utmtc tempus dictum. Pellentesque virra. Quis quam ut magna consequat faucibus, metus id mi gravida. <span class="raquo">&nbsp;</span></div>
+									<div class="media">
+										<div class="media-body">
+											<div class="overview">
+												<div class="name"><b>User Name</b></div>
+												<div class="star-rating">
+													<ul class="list-inline">
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star"></i></li>
+														<li class="list-inline-item"><i class="fa fa-star-o"></i></li>
+													</ul>
+												</div>
+											</div>										
+										</div>
+									</div>
+								</div>								
+							</div>
+						</div>			
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</div>-->
+		
+<div class="grybg">
+	<div class="container">
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
   <?php print render($page['body_area']);?>
     </div>
   </div>
   
+<<<<<<< HEAD
 
   
 <div class="bottom_carousel">
     <div class="container">
+=======
+<div class="whitebg2">
+  	<div class="container">
+    	<div class="row clearfix">
+        	<div class="col-lg-2">
+            	<div class="labour_glance">
+                	<h3>Labour Department Statistics at a Glance</h3>
+                </div>
+            </div>
+            <div class="col-md-2">
+            	<div class="green">
+                	
+                    <h4 style="text-align:center;" class="wow bounceInLeft" style="visibility: visible; animation-name: bounceInLeft;"><span class="element1">Labour Commissionerate (LC)|Principal Employees Under CLRA|
+Contractor License Under CLRA|Renewal of License Under CLRA|Establishment Regn Under BOCWA|Trade Union Registered|Inspection Note</span></h4>
+                    <p class="wow bounceInRight" style="visibility: visible; padding: 36px 10px 0 0;
+  text-align: right;
+  position:absolute;
+  right:17px;
+  top:75px; animation-name: bounceInRight;"><span class="element1">
+  <?php
+  	$service_url 	= 	"https://wblc.gov.in/labourdept/eservices/viewAllReport";
+	$ch 			= 	curl_init();
+	$headers		=	array();
+	$curl_post_data = 	array();
+	$tmp 			=	array();
+	$headers[]		=	'Accept: application/json';
+	$headers[]		=	'Content-Type: application/json';
+	$headers[] 		= 	'charset=utf-8';
+	curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+	curl_setopt($ch, CURLOPT_URL, $service_url);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode( $curl_post_data ) );
+	curl_setopt($ch, CURLOPT_POST, true);
+	$results		=	curl_exec($ch);
+	$errors			=	curl_error($ch);
+	curl_close($ch);
+	$x				=	json_encode( $results );
+	$tmp 			= 	json_decode(json_decode(trim($x)), TRUE);
+	//print_r($tmp); exit;
+	if(!empty($tmp['content'])){
+		//total_license_renewal_application
+		echo "&nbsp;".$tmp['content']['total_lc_reg_license']."|".$tmp['content']['total_clra_application']."|".$tmp['content']['total_license_application']."|".$tmp['content']['total_license_renewal_application']."|".$tmp['content']['total_bocwa_application']."|".$tmp['content']['total_tu_registration']."|".$tmp['content']['total_inspection_reports'];
+	}
+  ?></span></p>
+                   
+                   
+                     
+                    
+                </div>
+            </div>
+            <div class="col-md-2">
+            	<div class="green2">
+  
+                        <h4 style="text-align:center;" class="wow bounceInLeft" style="animation-name: bounceInLeft;"><span class="element2">Shops & Establishment|Registration of <br> Shops & Establishment|
+Transport Workers Beneficiary Regn</span></h4>
+                    <p class="wow bounceInRight" style="visibility: visible; padding: 36px 10px 0 0;
+  text-align: right;
+  position:absolute;
+  right:17px;
+  top:75px; animation-name: bounceInRight;"><span class="element2">&nbsp;|215|1,267</span></p>
+                    
+                </div>
+            </div>
+            <div class="col-md-2">
+            	<div class="green3">
+                	<h4 style="text-align:center;" class="wow bounceInLeft" style="visibility: visible; animation-name: bounceInLeft;"><span class="element3">Directorate <br> of <br> Employment|Job seekers enrolled in Employment Bank|Yuvasree identified (Cumulative)|Yuvasree benefitted (Cumulative)|Domestic workers trained</span></h4>
+                   <p class="wow bounceInRight" style="visibility: visible;padding: 36px 10px 0 0;
+  text-align: right;
+  position:absolute;
+  right:17px;
+  top:75px; animation-name: bounceInRight;"><span class="element3">&nbsp;|23,09,813|2,19,986|1,31,624|10,143</span></p>
+                </div>
+            </div>
+            <div class="col-md-2">
+            	<div class="green4">
+                    <h4 style="text-align:center;" class="wow bounceInLeft" style="visibility: visible; animation-name: bounceInLeft;"><span class="element4">Directorate <br> of <br> Boilers|Boilers Registered|Renewal Boilers|Economiser Registered|Renewal Economiser</span></h4>
+                   <p class="wow bounceInRight" style="visibility: visible;padding: 36px 10px 0 0;
+  text-align: right;
+  position:absolute;
+  right:17px;
+  top:75px; animation-name: bounceInRight;"><span class="element4">&nbsp;|12,245|8,205|206|60</span></p>
+                    
+                </div>
+            </div>
+            <div class="col-md-2">
+            	<div class="green5">
+                	<h4 style="text-align:center;" class="wow bounceInLeft" style="visibility: visible; animation-name: bounceInLeft;"><span class="element5">Directorate <br> of <br> Factories|Factories Registered|
+Employment in Regd. Factories</span></h4>
+                    <p class="wow bounceInRight" style="visibility: visible;padding: 36px 10px 0 0;
+  text-align: right;
+  position:absolute;
+  right:17px;
+  top:75px; animation-name: bounceInRight;"><span class="element5">&nbsp;|17,803|11,33,090</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+  
+<div class="bottom_carousel">
+  	<div class="container">
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 <div class="col-xs-12">
     <div class="carousel slide" id="myCarousel">
         <div class="carousel-inner">
@@ -739,7 +1225,11 @@ function googleTranslateElementInit() {
   </div>
 
 <footer>
+<<<<<<< HEAD
   
+=======
+	
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 <div class="footer-top-wrapper">
     <div class="container">
     <?php print render($page['labour_footer']);?>
@@ -788,6 +1278,7 @@ function googleTranslateElementInit() {
         </button>
        <div class="col-md-12 notes-home">
            <div class="notes-home-pad">
+<<<<<<< HEAD
           <div class="panel panel-default">
             <div class="panel-heading"><span class="glyphicon glyphicon-list-alt"></span> <b>Training on Compassionate Appointment <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/newicon.gif" alt="New"></b></div>
            <div class="panel-body">
@@ -847,11 +1338,76 @@ function googleTranslateElementInit() {
                                         Power Point Presentation on Training on Compassionate Appointment
                                             <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a></li>
                   <li class="news-item"><a href="#">Training Video (To be uploaded)</a></li>
+=======
+        	<div class="panel panel-default">
+          	<div class="panel-heading"><span class="glyphicon glyphicon-list-alt"></span> <b>Training on Compassionate Appointment <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/newicon.gif" alt="New"></b></div>
+         	 <div class="panel-body">
+        
+                <ul class="news11" style="">
+                					<li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/142-Emp.pdf" target="_blank">
+									  Notification-142-Emp, dated 1st November, 2007
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+                                   <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/50-EMP.pdf" target="_blank">
+									 Notification-50-Emp/1M-25/98, Dated Kolkata, the 1st March, 2011
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+                                  <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/251-EMP.pdf" target="_blank">
+									  Notificaion-251 EMP, dated 3rd December, 2013
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+                                  <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/96-Emp.pdf" target="_blank">
+									  Notification-96 EMP, dated 28th April, 2015
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+                                  <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/No165-Emp.pdf" target="_blank">
+									  Notification-165 EMP, dated 4th June, 2015
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+                                  <li style="" class="news-item">
+								    <a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/26-Emp.pdf" target="_blank">
+									Notification-26 EMP, dated 1st March, 2016
+									<img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+                                 <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/WB-up-to-date-amendments.pdf" target="_blank">
+									  West Bengal Scheme for Compassionate Appointment, 2013 with up-to-date amendments, made by various Notification from time to time, till 31/03/2022
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+								  <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/SOP.pdf" target="_blank">
+									  Standard Operating Procedure (SOP) , on Compassionate Appointment
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+								  <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/FAQ.pdf" target="_blank">
+									  Frequently Asked Question (FAQ) , on Compassionate Appointment
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+								  <li style="" class="news-item">
+                                  	<a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/CommonChecklist.pdf" target="_blank">
+									  Common Checklist to be used for processing an application for employment on compassionate ground vide Memorandum No Labr/63/EMP(EC), dated 06.04.22.
+                                    <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a>
+								  </li>
+                                  <li class="news-item"><a href="<?php print $base_root.$base_path?>sites/default/files/upload/edu/Training-on-Compassionate-Appointment.pptx_08_04_22.pdf" target="_blank">
+                                  			Power Point Presentation on Training on Compassionate Appointment
+                                            <img src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/img/important.gif" alt="important"></a></li>
+ 								  <li class="news-item"><a href="#">Training Video (To be uploaded)</a></li>
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
                       </ul>  
                                  
               
           </div>
+<<<<<<< HEAD
             </div>
+=======
+          	</div>
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
             </div>
             </div>
       </div>
@@ -875,7 +1431,11 @@ function googleTranslateElementInit() {
                 <p>
                 <section>
                     <div class="lead evaluation">
+<<<<<<< HEAD
                       <div class="myerr_msg" style="display:none"></div>
+=======
+                    	<div class="myerr_msg" style="display:none"></div>
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
                         <div id="colorstar" class="starrr ratable" ></div>
                         <span id="count">0</span> star - <span id="meaning"></span><br>
                             <div class='indicators' style="display:none">
@@ -929,10 +1489,17 @@ function googleTranslateElementInit() {
 
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 <script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/jquery.min.js"></script> 
+<<<<<<< HEAD
 <!--charts--> 
 <script src='<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/highcharts.js'></script>
 <script  src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/index.js"></script> 
   
+=======
+<!--charts-->	
+<script src='<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/highcharts.js'></script>
+<script  src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/index.js"></script>	
+	
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 <script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/jquery.auto-text-rotating.min.js"></script>
 <!--- js for text resize-->
 <script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/textresize.js"></script> 
@@ -949,7 +1516,11 @@ function googleTranslateElementInit() {
 <!----slide_menu----->
 <script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/jasny-bootstrap.min.js"></script>
 <script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/main.js"></script>
+<<<<<<< HEAD
   
+=======
+	
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 <!--counter-->
 <script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/jquery.waypoints.min.js"></script>
 <script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/jquery.countup.js"></script>
@@ -963,15 +1534,24 @@ $('.counter').countUp();
         jQuery('#myModal').modal('show');
     });
 </script>
+<<<<<<< HEAD
   
 <!--testimonial-->  
+=======
+	
+<!--testimonial--> 	
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 <script>
 $(document).ready(function() {
   $('#quote-carousel').carousel({
     pause: true,
     interval: 4000,
   });
+<<<<<<< HEAD
 }); 
+=======
+});	
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 </script>
 
 <!-- sticky header starts-->
@@ -994,6 +1574,7 @@ $(window).scroll(function() {
 <script>
 jQuery(document).ready(function(){
     jQuery('[data-toggle="tooltip"]').tooltip();  
+<<<<<<< HEAD
   
   /*jQuery('.boxbgcolor1sub').each(function() {
         animationHover(this, 'bounce');
@@ -1060,6 +1641,74 @@ $('.boilers').atrotating({
   type: 'html',
 });
   
+=======
+	
+	/*jQuery('.boxbgcolor1sub').each(function() {
+        animationHover(this, 'bounce');
+		animationClick(this, 'bounce');
+		
+    }); */
+	
+	
+
+$('.element1').atrotating({
+	type: 'html',
+	animation: 'fade',
+	animationSpeed: 2000,
+	animationEasing: 'swing',
+	animationType: 'full',
+
+	delay: 5000,
+	delayStart: 5000,
+});
+
+$('.element2').atrotating({
+	type: 'html',
+	animation: 'fade',
+	animationSpeed: 2000,
+	animationEasing: 'swing',
+	animationType: 'full',
+
+	delay: 5000,
+	delayStart: 5000,
+});
+
+$('.element3').atrotating({
+	type: 'html',
+	animation: 'fade',
+	animationSpeed: 2000,
+	animationEasing: 'swing',
+	animationType: 'full',
+
+	delay: 5000,
+	delayStart: 5000,
+});
+$('.element4').atrotating({
+	type: 'html',
+	animation: 'fade',
+	animationSpeed: 2000,
+	animationEasing: 'swing',
+	animationType: 'full',
+
+	delay: 5000,
+	delayStart: 5000,
+});
+$('.element5').atrotating({
+	type: 'html',
+	animation: 'fade',
+	animationSpeed: 2000,
+	animationEasing: 'swing',
+	animationType: 'full',
+
+	delay: 5000,
+	delayStart: 5000,
+});
+	
+$('.boilers').atrotating({
+	type: 'html',
+});
+	
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 });
 
 </script>
@@ -1067,11 +1716,19 @@ $('.boilers').atrotating({
 <script>
 wow = new WOW(
   {
+<<<<<<< HEAD
   animateClass: 'animated',
   offset:       100,
   callback:     function(box) {
     console.log("WOW: animating <" + box.tagName.toLowerCase() + ">")
   }
+=======
+	animateClass: 'animated',
+	offset:       100,
+	callback:     function(box) {
+	  console.log("WOW: animating <" + box.tagName.toLowerCase() + ">")
+	}
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
   }
 );
 wow.init();
@@ -1081,6 +1738,7 @@ document.getElementById('moar').onclick = function() {
   this.parentNode.insertBefore(section, this);
 };
 function backchng(){
+<<<<<<< HEAD
   var bgcolor = String($("body").css("background-color"));
     if(bgcolor.length==18){
         $("body").css("background-color","#000000");
@@ -1119,6 +1777,46 @@ function backchng(){
       $(".footer_box p").css("color", "#696969");
       $(".dropdown-menu").css("background-color","#696969");
     }
+=======
+	var bgcolor = String($("body").css("background-color"));
+		if(bgcolor.length==18){
+	  		$("body").css("background-color","#000000");
+			$("h1").css("color","#fffa2f");
+			$("h2").css("color","#fffa2f");
+			$("h3").css("color","#fffa2f");
+			$("h4").css("color","#fffa2f");
+			$("h5").css("color","#fffa2f");
+			$("h6").css("color","#fffa2f");
+			$("a.login_link").css("color", "#fffa2f");
+			$("table").css("color", "#fffa2f");
+			$("label.radios").css("color", "#fffa2f");
+			$("input").css("color", "#fffa2f");
+			$("tr.even").css("background-color","#000000");
+			$("tr.odd").css("background-color","#000000");
+			$("label").css("color", "#fffa2f");
+			$("a").css("color", "#fffa2f");
+			$(".footer_box p").css("color", "#fffa2f");
+			$(".dropdown-menu").css("background-color","#000000");
+		}else{
+			$("body").css("background-color","#ffffff");
+			$("h1").css("color","#696969");
+			$("h2").css("color","#696969");
+			$("h3").css("color","#008bbb");
+			$("h4").css("color","#696969");
+			$("h5").css("color","#696969");
+			$("h6").css("color","#696969");
+			$("a.login_link").css("color", "#696969");
+			$("table").css("color", "#696969");
+			$("label.radios").css("color", "#696969");
+			$("input").css("color", "#696969");
+			$("tr.even").css("background-color","#696969");
+			$("tr.odd").css("background-color","#696969");
+			$("label").css("color", "#696969");
+			$("a").css("color", "#696969");
+			$(".footer_box p").css("color", "#696969");
+			$(".dropdown-menu").css("background-color","#696969");
+		}
+>>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 }
 </script>
 

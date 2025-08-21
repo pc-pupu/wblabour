@@ -1,0 +1,6808 @@
+<?php
+function add_employee($form, &$form_state){
+	global $user;
+	drupal_add_js(drupal_get_path('module', 'asset_user') . '/myfunction.js');
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	#$directorate_list = getDirectorateListByRoleId($user->uid);
+	#$district_list = getDistrictListByRoleId($user->uid);
+	$mydata = getUserInfoByUid($user->uid);
+	//print_r($mydata); exit;
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Add Employee</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	$form['directorate_code'] = array(
+	  '#title' => t('Directorate Code'),	
+	  '#type' => 'hidden',
+	  '#required' => TRUE,
+	  '#default_value' => $mydata['directorate_code'],
+	  //'#attributes' => array('class'=>array('form-control')),
+	  //'#prefix' => '<div class="col-md-4">',
+	  //'#suffix' => '</div>'
+    );
+	$form['district_code'] = array(
+	  '#title' => t('Select District'),	
+	  '#type' => 'select',
+	  '#ajax'=>array(
+					'callback'	=> 'ajax_add_employee_office_callback',
+					'event' 	=> 'change',
+					'effect' 	=> 'fade',			
+					'progress'	=>	array(
+						'type'		=>'throbber',
+						'message'	=>t('loading'),
+					),
+			),
+	  '#required' => TRUE,
+	  '#options' => getDistrictAllList(),
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+    );
+	if(isset($form_state['values']['district_code']) && trim($form_state['values']['district_code']) != '' && trim($form_state['values']['district_code']) != '0'){
+			//die($form_state['values']['district_code']); exit;
+			//$d = getOfficeListByDistrict($form_state['values']['district_code'],$mydata['directorate_code']);
+			//print_r($d); exit;
+			$form['office_id'] = array(
+			  '#title' => t('Select Office'),	
+			  '#type' => 'select',
+			  /*'#ajax'=>array(
+					'callback'	=> 'ajax_office_callback',
+					'event' 	=> 'change',
+					'effect' 	=> 'fade',			
+					'progress'	=>	array(
+						'type'		=>'throbber',
+						'message'	=>t('loading'),
+					),
+			  ),*/
+			  //'#multiple' => TRUE,
+			  '#required' => TRUE,
+			  '#options' => getOfficeListByDistrict($form_state['values']['district_code'],$mydata['directorate_code']),
+			  '#attributes' => array('class'=>array('form-control')),
+			  '#prefix' => '<div id="office_id_replace_div" class="col-md-4">',
+			  '#suffix' => '</div>'
+			);
+	}else{
+		$form['office_id_blank'] = array(
+			'#type'=>'select',
+			'#title' => t('Select Office'),
+			'#options' => array(),
+			'#required' => TRUE,
+			'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Select Office'),
+			'#prefix' => '<div id="office_id_replace_div"><div class="col-md-4">',
+			'#suffix' => '</div></div>'
+		);
+	}
+	$form['hrms_id'] = array(
+	  '#type'=>'textfield',
+	  '#title' => t('HRMS ID'),
+	  '#default_value'=>"",
+	  '#required' => TRUE,
+	  '#maxlength' => 10, 
+	  '#element_validate' => 	array('MANDETORY_TEXTBOX_TEXT_VALIDATE'),
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'HRMS ID','autocomplete'=>'off'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+	);
+	$form['fname'] = array(
+	  '#type'=>'textfield',
+	  '#title' => t('Full Name'),
+	  '#default_value'=>"",
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Full Name','autocomplete'=>'off'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+	);
+	$form['designation'] = array(
+	  '#type'=>'textfield',
+	  '#title' => t('Designation'),
+	  '#default_value'=>"",
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Designation','autocomplete'=>'off'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+	);
+	$form['pay_scale'] = array(
+	  '#type'=>'textfield',
+	  '#title' => t('Pay Scale / Grade Pay'),
+	  '#default_value'=>"",
+	  //'#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Pay Scale / Grade Pay','autocomplete'=>'off'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+	);
+	$form['mobile'] = array(
+	  '#type'=>'textfield',
+	  '#title' => t('Mobile'),
+	  '#maxlength' => 10, 
+	  '#element_validate' => 	array('MANDETORY_TEXTBOX_TEXT_VALIDATE'),
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Mobile','autocomplete'=>'off'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+	);
+	$form['email'] = array(
+	  '#type'=>'textfield',
+	  '#title' => t('Email'),
+	  '#default_value'=>"",
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Email','autocomplete'=>'off'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+	);
+	$form['emp_group'] = array(
+	  '#type'=>'select',
+	  '#title' => t('Group'),
+	  '#options' => array('A'=>'A','B'=>'B','C'=>'C'),
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Group'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+	);
+	$form['dob'] = array(
+	  '#type' => 'textfield',
+	  '#title' => t('Date of Birth'),
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control','datepiker'),'placeholder'=>'Date of Birth','autocomplete'=>'off'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+	);
+	$form['doj'] = array(
+	  '#type' => 'textfield',
+	  '#title' => t('Date of Joining'),
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control','datepiker'),'placeholder'=>'Date of Joining','autocomplete'=>'off'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+	);
+	$form['dor'] = array(
+	  '#type' => 'textfield',
+	  '#title' => t('Date of Retirement'),
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control','datepiker'),'placeholder'=>'Date of Retirement','autocomplete'=>'off'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+	);
+	$form['asset_received_manner'] = array(
+	  '#type'=>'textfield',
+	  '#title' => t('Asset Received Manner'),
+	  '#default_value'=>"",
+	  //'#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Asset Received Manner','autocomplete'=>'off'),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+	);
+	$form['direct_promotee'] = array(
+	  '#type'=>'select',
+	  '#title' => t('Direct / Promoted'),
+	  '#ajax'=>array(
+						'callback'	=> 'ajax_direct_promotee_callback',
+						'event' 	=> 'change',
+						'effect' 	=> 'fade',			
+						'progress'	=>	array(
+							'type'		=>'throbber',
+							'message'	=>t('loading'),
+						),
+				  ),
+	  '#options' => array('DIRECT'=>'DIRECT','PROMOTED'=>'PROMOTED'),
+	  //'#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-4">',
+	  '#suffix' => '</div>'
+	);
+	if(isset($form_state['values']['direct_promotee']) && trim($form_state['values']['direct_promotee']) == 'PROMOTED'){
+		$form['promotion_date_empgroupa'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Date of Promotion'),
+			//'#required' => TRUE,
+			'#attributes' => array('class'=>array('form-control','doc_name_clear','datepiker'),'placeholder'=>'Date of Promotion','autocomplete'=>'off'),
+			'#prefix' => '<div id="promotion_date_replace_div" class="col-md-4">',
+			'#suffix' => '</div>'
+		);
+	}else{
+		$form['promotion_date_empgroupa_blank'] = array(
+			'#prefix' => '<div id="promotion_date_replace_div">',
+			'#suffix' => '</div>'
+		);
+	}
+	$form['submit'] = array(
+	  '#type'=>'submit',
+	  '#value'=> t('Add'),
+	  '#attributes' => array('class'=>array('form-control btn btn-info')),
+	  '#prefix' => '<div class="col-md-12"><div class="input-group">',
+	  '#suffix' => '</div></div>'
+	);	
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	return $form;
+}
+
+function add_employee_validate($form, &$form_state){
+	$email = trim($form_state['values']['email']);
+	 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+		form_set_error('email', t('Please enter a Valid Email Id.')); 
+	 }
+	$fname = trim($form_state['values']['fname']);
+	if (!preg_match('/[A-Za-z]+$/', $fname)) {  
+		form_set_error('fname', t('Name should be text only.'));
+	 }	 
+	$userData = array();
+	$query = db_select('a_user_details', 'ud');
+	$query->leftJoin('a_user_details_service', 'uds', 'ud.uid = uds.uid'); 
+	$query->fields('ud', array('fname','mobile','email','dob','doj','dor','hrms_id'));
+	$query->fields('uds', array('directorate_code','district_code','designation','office_id'));
+	$query->condition('ud.hrms_id', trim($form_state['values']['hrms_id']), '=');
+	$result = $query->execute();
+	$userData = $result->fetchAssoc();
+	if(!empty($userData)){
+		form_set_error('hrms_id', t('HRMS id is already taken by someone.')); 
+	}
+}
+
+function add_employee_submit($form, &$form_state){
+	$uniq = db_query("SELECT MAX(uid) as max_id FROM users")->fetchCol();
+		  $uname = trim($line[1]).$uniq[0];
+		  $newUser = array(
+			'name' => trim($form_state['values']['hrms_id']),
+			'pass' => trim($form_state['values']['hrms_id']), 
+			'mail' => trim($form_state['values']['email']),
+			'status' => 1,
+			'init' => trim($form_state['values']['email']),
+		);
+		
+		user_save(null, $newUser);
+		$id = db_query("SELECT MAX(uid) as max_id FROM users")->fetchCol();
+		
+		$usinfo = array( 'uid' => $id['0'],
+				'rid' => 8,
+			);
+		db_insert('users_roles')->fields($usinfo)->execute();
+		
+		$projectinfo = array( 'uid' => $id['0'],
+            'fname' => trim($form_state['values']['fname']),
+			'dob' => date('Y-m-d',strtotime(trim($form_state['values']['dob']))),
+			'doj' => date('Y-m-d',strtotime(trim($form_state['values']['doj']))),
+			'dor' => date('Y-m-d',strtotime(trim($form_state['values']['dor']))),
+			'mobile' => trim($form_state['values']['mobile']),
+			'email' => trim($form_state['values']['email']),
+			'pass' => trim($form_state['values']['hrms_id']),
+			'hrms_id' => trim($form_state['values']['hrms_id'])
+      	);
+		$rs = db_insert('a_user_details')->fields($projectinfo)->execute();
+		
+		
+		$userDetailsService = array( 'uid' => $id['0'],
+            'directorate_code' => trim($form_state['values']['directorate_code']),
+			'district_code' => trim($form_state['values']['district_code']),
+			'designation' => trim($form_state['values']['designation']),
+			'pay_scale' => trim($form_state['values']['pay_scale']),
+			'emp_group' => trim($form_state['values']['emp_group']),
+			'direct_promotee' => trim($form_state['values']['direct_promotee']),
+			'promotion_date_empgroupa' => date('Y-m-d',strtotime(trim($form_state['values']['promotion_date_empgroupa']))),
+			'asset_received_manner' => trim($form_state['values']['asset_received_manner']),
+			'subdivision' => '',
+			'office_id' => trim($form_state['values']['office_id']),
+			'joining_date' => date('Y-m-d',strtotime(trim($form_state['values']['doj'])))
+      	);
+		$rsu = db_insert('a_user_details_service')->fields($userDetailsService)->execute();
+		
+		send_sms(trim($form_state['values']['mobile']),'Please submit your Asset Declaration for the year '.date('Y').', within 30th September, '.date('Y').' . Please ignore if already submitted. Labour Department, WB','1107161492287251098');
+		send_sms(trim($form_state['values']['mobile']),'Please use your HRMS ID to login, update profile and track status of your asset declaration statement from the provided link https://wblabour.gov.in/assetlogin Labour Department, WB','1107161492291641072');
+		drupal_set_message(t('Employee has been added successfully.'));
+}
+
+function ajax_direct_promotee_callback($form,&$form_state){
+	$commands = array();
+	if(isset($form_state['values']['direct_promotee']) && trim($form_state['values']['direct_promotee']) == 'PROMOTED'){
+		$commands[] = ajax_command_replace('#promotion_date_replace_div', '<div id="promotion_date_replace_div">'.drupal_render($form['promotion_date_empgroupa']).'</div>');
+		$commands[] = ajax_command_invoke(NULL, "myJqueryDatePiker", array('anyparametervalue') );
+	}else{
+		$commands[] = ajax_command_replace('#promotion_date_replace_div', '<div id="promotion_date_replace_div">'.drupal_render($form['promotion_date_empgroupa_blank']).'</div>');
+	}
+	return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function ajax_add_employee_office_callback($form,&$form_state){
+	$commands = array();
+	if(isset($form_state['values']['district_code']) && trim($form_state['values']['district_code']) != '' && trim($form_state['values']['district_code']) != '0'){
+		$commands[] = ajax_command_replace('#office_id_replace_div', '<div id="office_id_replace_div">'.drupal_render($form['office_id']).'</div>');
+	}else{
+		$commands[] = ajax_command_replace('#office_id_replace_div', '<div id="office_id_replace_div">'.drupal_render($form['office_id_blank']).'</div>');
+	}
+	return array('#type' => 'ajax', '#commands' => $commands);
+}
+function user_list_by_nodal(){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	$user_info = getAllUidInfoFromPid($user->uid);
+	//print_r($user_info); exit;
+	
+	
+	$output = '';
+	$header = array(
+				array('data'=> 'HRMS ID'),
+				array('data'=> 'Name'),
+				array('data'=> 'Designation'),
+				array('data'=> 'Role'),
+				array('data'=> 'Office Name'),
+				array('data'=> 'Status'),
+				array('data'=> 'Last Access'),
+				array('data'=> 'Created On'),
+				array('data'=> 'Action')
+				//array('data'=> 'Status'),
+			);
+	$rows = array();
+	$roles = array();
+	$roles[] = 'administrator';
+	$roles[] = 'cmsmanager';
+	$roles[] = 'maptrackuser';
+	$roles[] = 'adminmanager';
+	$roles[] = 'investor';
+	$roles[] = 'assetadmin';
+	$roles[] = 'assetadmin';
+	$roles[] = 'nodal';
+	
+	
+	
+	
+	$query = db_select('users', 'u');
+	$query->leftJoin('users_roles', 'ur', 'u.uid = ur.uid');  
+	$query->leftJoin('role', 'r', 'ur.rid = r.rid'); 
+	$query->leftJoin('a_user_details', 'ud', 'u.uid = ud.uid');
+	$query->leftJoin('a_user_details_service', 'us', 'u.uid = us.uid');
+	$query->leftJoin('a_office_master', 'o', 'us.office_id = o.office_id');
+	$query->fields('u', array('uid','name','access','created','status'));
+	$query->fields('o', array('office_name'));
+	$query->fields('ud', array('fname'));
+	 $query->fields('us', array('designation'));
+  	$query->addField('r', 'name', 'rolename');
+	$query->condition('us.directorate_code', $user_info['directorate_code'], '=');
+	//$query->condition('us.district_code', $user_info['district_code'], '=');
+	$query->condition('us.office_id', '0', '!=');
+	$query->condition('r.name', $roles, 'NOT IN');
+	
+  	$query->orderBy("r.name", "ASC");
+  	$result = $query->execute();
+  	$rsData = $result->fetchAll();
+	
+	//print_r($rsData); exit;
+	
+	foreach($rsData as $record=>$val) {
+		
+		$userEdit = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/edit.png">'), 'profile-edit/edit/'
+		       .$val->uid, array('html' => TRUE,'attributes'=>array('title' => 'Edit')));
+			   
+		if($val->status == 1){
+			 $status = 'Active';
+		 }else{
+			 $status = 'Blocked';
+		 }
+		$rows[] = array(
+					array('data' => $val->name),
+					array('data' => $val->fname),
+					array('data' => $val->designation),
+					array('data' => $val->rolename),
+					array('data' => $val->office_name),
+					array('data' => $status),
+					array('data' => format_date($val->access, 'custom', 'd-m-Y H:i:s')),
+					array('data' => format_date($val->created, 'custom', 'd-m-Y H:i:s')),
+					array('data' => $userEdit ), 
+		);
+  }
+  
+   $output .= theme('datatable', array(
+        'header' => $header,
+        'rows' => $rows,
+        'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+        'sticky' => true,
+        'caption' => '<h3>List of User </h3>',
+        'colgroups' => array(),
+        'empty' => t("No data found!") // The message to be displayed if table is empty
+      )
+    ).theme('pager');
+  
+/*  $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>List of User</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+*/
+  // Returning the output
+  return '<div class="formdvider viewlist">'.$output.'</div>';		
+}
+
+function profile_edit_by_nodal($form, &$form_state, $args='') {
+	
+	global $user,$base_root,$base_path;
+		
+	$query = db_select('a_user_details', 'aud');
+	$query->leftJoin('a_user_details_service', 'auds', 'aud.uid = auds.uid');  
+	$query->fields('aud', array('uid','hrms_id','fname','mobile','email'));
+	$query->fields('auds', array('designation','district_code','office_id','subdivision','service_status'));
+	$query->condition('service_status',1,'=');
+	$query->condition('aud.uid',$args,'=');
+  	$result1 = $query->execute();
+  	$result = $result1->fetchAssoc();
+	
+	$form['#attributes']['class'][] = 'form-vertical';
+    $form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Update Profile By Nodal Officer</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	 
+	 $form['uid'] = array(
+		'#type' => 'hidden',
+		'#title' => t('UID'),
+		'#required' => TRUE,
+		'#default_value' => isset($result['uid']) ? $result['uid'] : '',
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'UID','readonly'=>'readonly'),
+		/*'#prefix' => '<div class="col-md-4">',
+		'#suffix' => '</div>'*/
+	 );
+	 
+	$form['hrms_id'] = array(
+		'#type' => 'textfield',
+		'#title' => t('HRMS ID'),
+		'#required' => TRUE,
+		'#default_value' => isset($result['hrms_id']) ? $result['hrms_id'] : '',
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'HRMS ID','readonly'=>'readonly'),
+		'#prefix' => '<div class="col-md-4">',
+		'#suffix' => '</div>'
+	 ); 
+	 
+	 $form['fname'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Full Name'),
+		'#required' => TRUE,
+		'#default_value' => isset($result['fname']) ? $result['fname'] : '',
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Full Name'),
+		'#prefix' => '<div class="col-md-4">',
+		'#suffix' => '</div>'
+	 );
+	 
+	 $form['mobile'] = array(
+	   '#title'=>t('Mobile No'),
+	   '#type' => 'textfield',
+	   '#required' => TRUE,
+	   '#default_value' => isset($result['mobile']) ? $result['mobile'] : '',
+	   '#maxlength' => 10,
+	   '#attributes' => array('class'=>array('form-control'), 'placeholder'=>'Mobile Number', 'autocomplete' => 'off'),
+	   '#prefix' => '<div class="col-md-4">',
+	   '#suffix' => '</div>'
+	);
+	
+	 $form['email'] = array(
+	   '#title'=>t('Email Id'),
+	   '#type' => 'textfield',
+	   '#required' => TRUE,
+	   '#default_value' => isset($result['email']) ? $result['email'] : '',
+	   '#attributes' => array('class'=>array('form-control'), 'placeholder'=>'Email Id', 'autocomplete' => 'off'),
+	   '#prefix' => '<div class="col-md-4">',
+	   '#suffix' => '</div>'
+	);
+	
+	 $form['designation'] = array(
+	   '#title'=>t('Designation'),
+	   '#type' => 'textfield',
+	   '#required' => TRUE,
+	   '#default_value' => isset($result['designation']) ? $result['designation'] : '',
+	   //'#attributes' => array('class'=>array('form-control'), 'placeholder'=>'Designation', 'autocomplete' => 'off','readonly'=>'readonly'),
+	   '#attributes' => array('class'=>array('form-control'), 'placeholder'=>'Designation', 'autocomplete' => 'off'),
+	   '#prefix' => '<div class="col-md-4">',
+	   '#suffix' => '</div>'
+	);
+	
+	$form['submit'] = array(
+    	'#type' => 'submit',
+		'#value' => 'Verify & Update',
+		'#attributes' => array('class'=>array('form-control btn btn-info')),
+		'#prefix' => '<div class="col-md-12"><div class="input-group">',
+		'#suffix' => '</div></div>'
+	); 
+	 
+    $form['form_end'] = array(
+         '#type' => 'markup',
+         '#markup' => '</div>',
+		 '#suffix' => '</div></div>'
+    );
+	
+	return $form;
+ }
+ 
+function profile_edit_by_nodal_submit($form, &$form_state) {
+	
+	global $user,$base_root,$base_path;
+	
+	    $query = db_update('a_user_details');
+		$query->fields(array('fname' => $form_state['values']['fname'],
+							 'mobile' => $form_state['values']['mobile'],
+							 'email'  => $form_state['values']['email'],
+							));
+		$query->condition('uid', $form_state['values']['uid']);
+		$rs = $query->execute();
+		
+		$query = db_update('a_user_details_service');
+		$query->fields(array('designation' => $form_state['values']['designation'],
+							 
+							));
+		$query->condition('uid', $form_state['values']['uid']);
+		$rs = $query->execute();
+		
+		send_sms($form_state['values']['mobile'],'Dear, '.$form_state['values']['fname'].' your mobile number has been updated successfully in Labour Department\'s Declaration of Asset Management System Labour Department, WB','1107161492294770465');
+		send_sms($form_state['values']['email'],'Dear, '.$form_state['values']['fname'].' your email id has been updated successfully in Labour Department\'s Declaration of Asset Management System Labour Department, WB','1107161492297624709');
+		send_sms($form_state['values']['designation'],'Dear, '.$form_state['values']['fname'].' your designation has been updated successfully in Labour Department\'s Declaration of Asset Management System Labour Department, WB','1107161492300621139');
+		
+		drupal_set_message(t('Your profile has been updated successfully.'));
+		drupal_goto('listuserbynodal');
+		
+		
+}
+
+ 
+function asset_office_list(){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');	
+	
+	$user_info = getAllUidInfoFromPid($user->uid);
+	
+	$query = db_select('a_office_master','o');
+	$query->fields('o', array('office_id','office_name','directorate_code','district_code')); 
+	$query->condition('o.directorate_code', $user_info['directorate_code'], '=');
+	$query->condition('o.district_code', $user_info['district_code'], '=');
+	// $query->orderBy('dm.id','ASC');
+	$result = $query->execute();
+	$rsData = $result->fetchAll();
+	
+	$header = array();
+	$rows   = array();
+	$output = '';
+	
+	
+	
+	$header = array(  
+	  array('data' => t('<b>Sl No </b>')),	
+	  array('data' => t('<b>Office Name </b>')),	
+	  //array('data' => t('<b>Office Address  </b>')),
+	);
+	 $i=1;
+	  foreach($rsData as $data){
+		//$i++;
+		
+		
+		$rows[] = array( 
+		  $i++,	
+		  array('data' => t($data->office_name)),	
+		  //array('data' => t($data->office_address)),
+		);
+	  }
+	
+	
+	 $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>Office List </h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+}
+
+function add_office($form, &$form_state){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	$directorate_list = getDirectorateListByRoleId($user->uid);
+	$district_list = getDistrictListByRoleId($user->uid);
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Add Field Office</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	 $form['directorate_code'] = array(
+	  '#title' => t('Select Directorate'),	
+	  '#type' => 'select',
+	  '#required' => TRUE,
+	  '#options' => $directorate_list,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-12">',
+	  '#suffix' => '</div>'
+    );
+	$form['district_code'] = array(
+	  '#title' => t('Select District'),	
+	  '#type' => 'select',
+	  '#required' => TRUE,
+	  '#options' => $district_list,
+	  '#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-12">',
+	  '#suffix' => '</div>'
+    );
+	$form['office_name'] = array(
+	  '#type'=>'textfield',
+	  '#title' => t('Office Name'),
+	  '#default_value'=>array(0=>""),
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Enter Office Name'),
+	  '#prefix' => '<div class="col-md-12">',
+	  '#suffix' => '</div>'
+	);
+	/*$form['office_address'] = array(
+	  '#type'=>'textarea',
+	  '#title' => t('Office Address'),
+	  '#default_value'=>array(0=>""),
+	  '#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Enter Office Address'),
+	  '#prefix' => '<div class="col-md-12">',
+	  '#suffix' => '</div>'
+	);*/
+	$form['submit'] = array(
+	  '#type'=>'submit',
+	  '#value'=> t('Add'),
+	  '#attributes' => array('class'=>array('form-control btn btn-info')),
+	  '#prefix' => '<div class="col-md-6"><div class="input-group">',
+	  '#suffix' => '</div></div>'
+	);	
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	return $form;
+}
+
+function add_office_submit($form, &$form_state){
+	$officerInfo		=	array(		
+										'office_name'			=>  $form_state['values']['office_name'],
+										'directorate_code'		=> 	$form_state['values']['directorate_code'],
+										'district_code'			=>  $form_state['values']['district_code'],
+										//'office_address'		=>	trim($form_state['values']['office_address']),
+								);
+   $id = db_insert('a_office_master')->fields($officerInfo)->execute();
+   if($id){
+		drupal_set_message('Office has been successfully created');
+		drupal_goto('office-list');
+	}else{
+		drupal_set_message('There is some problem. Please try after sometime');
+		drupal_goto('add-office');
+	}
+}
+
+
+
+
+function project_list($form, &$form_state){
+	$form['form_begin'] = array(
+		'#type' => 'markup',
+		'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">User List</h4></div><div class="widget-main">',
+	 );
+	$form['user_list_details'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_user_list(),
+	  '#prefix' => '<div class="col-md-12">',
+	  '#suffix' => '</div>'
+    );		
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );
+	return $form;
+}
+
+
+
+function get_user_list(){
+  global $user;
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');		
+  $output = '';
+  $header = array(
+				array('data'=> 'HRMS ID'),
+				array('data'=> 'User Full Name'),
+				array('data'=> 'Directorate'),
+				array('data'=> 'Designation'),
+				array('data'=> 'Emp Group'),
+				array('data'=> 'Role'),
+				array('data'=> 'Status'),
+				array('data'=> 'Last Access'),
+				array('data'=> 'Created On'),
+			);
+  $rows = array();
+  $roles = array();
+  $roles[] = 'administrator';
+  $roles[] = 'cmsmanager';
+  $roles[] = 'maptrackuser';
+  $roles[] = 'adminmanager';
+  $roles[] = 'investor';
+  $roles[] = 'assetadmin';
+  	
+  
+  //$roles = array('administrator');
+  
+ $query = db_select('users', 'u');
+  $query->leftJoin('users_roles', 'ur', 'u.uid = ur.uid');  
+  $query->leftJoin('role', 'r', 'ur.rid = r.rid'); 
+  $query->leftJoin('a_user_details', 'ud', 'u.uid = ud.uid');
+  $query->leftJoin('a_user_details_service', 'auds', 'auds.uid = u.uid'); 
+  $query->leftJoin('a_directorate_mst', 'adm', 'adm.directorate_code = auds.directorate_code'); 
+  $query->fields('auds', array('directorate_code','designation','emp_group'));    
+  $query->fields('adm', array('directorate_name')); 
+  $query->fields('ud', array('fname'));
+  $query->fields('u', array('uid','name','access','created','status'));
+  $query->addField('r', 'name', 'rolename');
+  $query->condition('r.name', $roles, 'NOT IN');
+  $query->orderBy('r.name', 'ASC');
+  $result = $query->execute();
+  //print_r($result); exit;
+  $rsData = $result->fetchAll();
+  
+  /*$i = 0;
+  $myNewArray = array();
+  for($i=0; $i<sizeof($rsData);){
+	  if(!in_array($rsData[$i]->uid, $myNewArray)){
+		  $myNewArray[$rsData[$i]->uid]['name'] = $rsData[$i]->name;
+		  $myNewArray[$rsData[$i]->uid]['access'] = $rsData[$i]->access;
+		  $myNewArray[$rsData[$i]->uid]['created'] = $rsData[$i]->created;
+		  $myNewArray[$rsData[$i]->uid]['status'] = $rsData[$i]->status;
+		  $myNewArray[$rsData[$i]->uid]['rolename'] = $rsData[$i]->rolename;
+	  }
+	 $i++; 
+  }*/
+  //print_r($myNewArray);
+  //exit;
+ 	
+ foreach($rsData as $record=>$val) {
+	 
+	/* $query_p = db_select('project_mst', 'pm');
+	 $query_p->leftJoin('project_user_map', 'pum', 'pum.pid = pm.pid'); 
+	 $query_p->fields('pm', array('project_name'));
+	 $query_p->condition('pum.uid', $record, '=');
+	 //$query_p->condition('pum.status', '1', '=');
+	 $result_p = $query_p->execute();
+  	 $resultProjectData = $result_p->fetchAll();
+	 
+	 if(!empty($resultProjectData)){
+		 $project_name = '<ul style="text-align:left">';
+		 foreach($resultProjectData as $p){
+			$project_name .= '<li>'.$p->project_name.'</li>';
+		 }
+		 $project_name .='</ul>';
+	 }else{
+		 $project_name = 'N/A';
+	 }*/
+	 
+	 
+	 if($val->status == 1){
+		 $status = 'Active';
+	 }else{
+		 $status = 'Blocked';
+	 }
+	 
+	 
+	 /*$user_role = '<ul style="text-align:left">';
+	 foreach($val['rolename'] as $rl){
+		  $user_role .= '<li>'.$rl.'</li>';
+	 }
+	 $user_role .='</ul>';*/
+	 
+	 $viewLink = l('<div class="hidden-sm hidden-xs action-buttons"><i class="ace-icon fa fa-pencil bigger-130"></i>','edit-user/'.$val->uid,array('html' => TRUE,'attributes'=>array('title' => 'Edit','class'=>'green'))); 
+	 $delLink = l('<i class="ace-icon fa fa-trash-o bigger-130"></i></div>', 'delete-user/'.$val->uid, array('html' => TRUE,'attributes'=>array('title' => 'Delete', 'class'=>'red')));
+	 
+	 if($val->access == 0){
+		$access = 'Never' ; 
+	  }else{
+		$access = format_date($val->access, 'custom', 'd-m-Y H:i:s'); 
+	  }
+	  
+	  $rows[] = array( 
+					array('data' => $val->name),
+					array('data' => $val->fname),
+					array('data' => $val->directorate_name),
+					array('data' => $val->designation),
+					array('data' => $val->emp_group),
+					array('data' => $val->rolename),
+					array('data' => $status),
+					array('data' => $access),
+					array('data' => format_date($val->created, 'custom', 'd-m-Y H:i:s')),
+					//array('data' => $viewLink.' '.$delLink)
+		);
+  }
+  
+   $output .= theme('datatable', array(
+        'header' => $header,
+        'rows' => $rows,
+        'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+        'sticky' => true,
+        'caption' => '',
+        'colgroups' => array(),
+        'empty' => t("No data found!") // The message to be displayed if table is empty
+      )
+    ).theme('pager');
+  
+ /* $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');*/
+
+  // Returning the output
+  return '<div class="formdvider viewlist">'.$output.'</div>';		
+
+}
+
+function not_acceptable_form($form, &$form_state){
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => 'You are not allowed to access this functionality',
+	 );	
+	return $form;
+}
+
+function acknowledgement_received_form($form, &$form_state){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	
+	$current_month = date('m');
+	if($current_month>=05 && $current_month<=12){
+		drupal_goto('not-acceptable');
+		exit;
+	}
+	
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Receive Asset Declaration</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	$form['decission'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Decission'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Decission'),
+		'#prefix' => '<div id="decission_map"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );  
+	 
+	$form['fname'] = array(
+		'#type' => 'textfield',
+		'#autocomplete_path' => 'getassetuser/autocomplete',
+		'#ajax' => array('event' => 'blur',
+                      'callback' => '_reload_mem_order_list',
+                      //'wrapper' => 'dropdown_product_cat',
+                      'effect' => 'fade',
+                      'progress' => array('type' => '','message' => '',),
+                   ),
+		'#title' => t('Enter Officers Name'),
+		'#description'=>t('Please type and select auto fetch data from mouse click, Do not use tab key from keyboard'),
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Enter Officers Name'),
+		'#prefix' => '<div class="col-md-12">',
+		'#suffix' => '</div>'
+	 ); 
+	$form['uid'] = array(
+		'#type' => 'hidden',
+		'#title' => t('User Id'),
+		//'#id' =>'order_no_map',
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('doc_name_clear','form-control'),'placeholder'=>'User Id'),
+		'#prefix' => '<div id="order_no_map"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	$form['emp_group'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Emp Group'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Emp Group'),
+		'#prefix' => '<div id="emp_group_map"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 ); 
+	  
+	$form['designation'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Designation'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Designation'),
+		'#prefix' => '<div id="designation_map"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 ); 
+	$form['district'] = array(
+		'#type' => 'hidden',
+		'#title' => t('District'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'District'),
+		'#prefix' => '<div id="district_map"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	$form['directorate'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Directorate'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Directorate'),
+		'#prefix' => '<div id="directorate_map"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );  
+	 $form['fetch_data'] = array(
+		'#prefix' => '<div id="fetch_data_map"><div class="col-md-12">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	 /*$form['submit_btn'] = array(
+		'#prefix' => '<div id="fetch_data_map_submit"><div class="col-md-12">',
+		'#suffix' => '</div></div>'
+	 );*/
+	  $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Accept',
+		//'#attributes' => array('class'=>array('btn btn-primary')),
+		/*'#prefix' => '<div class="col-md-12">',  
+        '#suffix' => '</div>',*/
+		//'#attributes' => array('class'=>array('btn btn-success pull-left'),'onclick' => 'this.form.target="_blank";return true;'),
+		'#attributes' => array('class'=>array('btn btn-success pull-left')),
+		'#prefix' => '<div id="frmbtn" style="display:none"><div class="col-md-3">',
+  		'#suffix' => '</div></div>',
+     ); 
+	 
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	return $form; 
+}
+
+function getUserData($userinfoarr){
+	$user_arr = explode('-',$form_state['values']['fname']);
+ 	$mydata = getUserInfoByUid($user_arr[1]);
+	return $mydata['directorate_code'];
+}
+
+function acknowledgement_received_form_submit($form, &$form_state){ 
+	global $user;
+	if(trim($form_state['values']['decission']=='INSERT')){
+	$officerInfo		=	array(
+										'uid'						=> 	$form_state['values']['uid'],
+										'declaration_yr'			=>	date('Y'),
+										'designation'				=>  $form_state['values']['designation'],
+										'directorate_code'			=>  $form_state['values']['directorate'],
+										'district_code'				=>	!empty($form_state['values']['district'])?trim($form_state['values']['district']):'',
+										'document_no'  				=>  '',
+										'created_date' 			 	=>  date('Y-m-d H:i:s'), 
+										'status'  					=>  '1',
+										'operator_uid'  			=>  $user->uid,
+								);
+   
+
+   db_insert('a_asset_mst')->fields($officerInfo)->execute();
+	}else if(trim($form_state['values']['decission']=='UPDATE')){
+		
+		$query = db_update('a_asset_mst');
+		$query->fields(array('created_date' =>  date('Y-m-d H:i:s'), 'status'  =>  '1', 'operator_uid'  =>  $user->uid));
+		$query->condition('uid', trim($form_state['values']['uid']), '=');
+		$query->condition('declaration_yr', date('Y'), '=');
+		$rs = $query->execute();
+	}
+   
+   $user_info = getLoginUserDetailForAsset($form_state['values']['uid']);
+   
+  	if($form_state['values']['directorate'] == 'DB'){
+		$directorate_name = 'Directorate of Boilers';
+	}elseif($form_state['values']['directorate'] == 'LC'){
+		$directorate_name = 'Labour Commissionerate';
+	}elseif($form_state['values']['directorate'] == 'DE'){
+		$directorate_name = 'Directorate of Employment';
+	}elseif($form_state['values']['directorate'] == 'DF'){
+		$directorate_name = 'Directorate of Factories';
+	}elseif($form_state['values']['directorate'] == 'ESI'){
+		$directorate_name = 'Directorate of ESI (MB) Scheme';
+	}elseif($form_state['values']['directorate'] == 'LWB'){
+		$directorate_name = 'Labour Welfare Board';
+	}elseif($form_state['values']['directorate'] == 'DEC'){
+		$directorate_name = 'Directorate of Employees Compensation';
+	}elseif($form_state['values']['directorate'] == 'DIT'){
+		$directorate_name = 'Directorate of Industrial Tribunal';
+	}elseif($form_state['values']['directorate'] == 'LD'){
+		$directorate_name = 'Labour Department';
+	}
+   
+   send_sms($user_info['mobile'],'Your Asset Statement for the year '.date('Y').' has been received by the '.$directorate_name.'. To check your status and download the asset acknowledgement please login into your account https://wblabour.gov.in/assetlogin Labour Department, WB','1107161492276931987');
+   
+   $ackpdf = acknowledgement_print_form_save_to_db($form_state['values']['uid'],date('Y'));
+   
+   drupal_set_message('Application for officer '.$form_state['values']['fname'].' has been successfully accepted. '.l('<strong> Print Acknowledgement</strong>','ack-file/'.$form_state['values']['uid'].'/'.date('Y'), array('html' => TRUE,'attributes'=>array('target'=>'_blank'))));
+   //drupal_goto('acknowledgement-print');
+   
+}
+
+function ack_file_display($arg,$year){
+	if($arg != 0){
+		$query = db_select('a_asset_mst','am');
+		$query->fields('am', array('id','uid','declaration_yr','designation','directorate_code','status','created_date','operator_uid','ackpdfname','ackpdf'));
+		$query->condition('am.uid', $arg, '='); 
+		$query->condition('am.declaration_yr', $year, '='); 
+		$result = $query->execute();
+		$result_data = $result->fetchAssoc();
+		//print_r($result_data); exit;
+		header("Content-Type: application/pdf");
+		header('Content-Disposition: inline; filename="'.$result_data['ackpdfname'].'"');
+		echo $result_data['ackpdf'];
+		exit();
+	}else{
+		drupal_set_message('Unable to open file');
+	}
+}
+
+function myfun_qrcode_save_for_db($text , $qrpath) {
+	//echo "inside"; exit;
+  // Including the qrcode library and generating the code
+  require_once("sites/all/libraries/phpqrcode/qrlib.php");
+  QRcode::png($text, $qrpath);
+
+  return $qrpath;
+}
+
+function generate_acknowledgement_received_form($form, &$form_state){
+  $query = db_select('a_asset_mst','am');
+  $query->leftJoin('users', 'u', 'u.uid = am.uid');  
+  $query->leftJoin('a_user_details', 'ud', 'ud.uid = u.uid');  
+  $query->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = am.directorate_code');  
+  $query->fields('am', array('id','uid','declaration_yr','designation','directorate_code','status','created_date','operator_uid'));
+  $query->fields('u', array('uid','name','access','created','status'));
+  $query->fields('ud', array('uid','fname'));
+  $query->fields('dm', array('directorate_name'));
+  $query->condition('am.status', '1', '=');
+  $query->orderBy('am.id', 'ASC');
+  $result = $query->execute();
+  $rsData = $result->fetchAll();
+ /* foreach($rsData as $val){
+	 
+  }*/ //acknowledgement_print_form_save_to_db('2959','2022');
+
+  acknowledgement_print_form_save_to_db('3956','2022');
+}
+function acknowledgement_print_form_save_to_db($args,$year){ 
+
+  require_once('mpdf/mpdf.php');
+  global $user, $base_root, $base_path;
+	
+	
+  $query = db_select('a_asset_mst','am');
+  $query->leftJoin('users', 'u', 'u.uid = am.uid');  
+  $query->leftJoin('a_user_details', 'ud', 'ud.uid = u.uid');  
+  $query->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = am.directorate_code');  
+  $query->fields('am', array('id','uid','declaration_yr','designation','directorate_code','status','created_date','operator_uid'));
+  $query->fields('u', array('uid','name','access','created','status'));
+  $query->fields('ud', array('uid','fname'));
+  $query->fields('dm', array('directorate_name'));
+  $query->condition('am.uid', $args, '=');
+  $query->condition('am.declaration_yr', $year, '=');
+  $result = $query->execute();
+  $rsData = $result->fetchAssoc();
+  
+  $operatorInfo = getLoginUserDetailForAsset($rsData['operator_uid']); 
+  //print_r($operatorInfo); exit;
+  
+  $delaydate = strtotime($rsData['created_date']);
+  $min_date = strtotime(date('01-05-2019'));
+  $max_date = strtotime(date('31-05-2019'));
+  $received_date = date('d-m-Y H:i:s',strtotime($rsData['created_date']));
+  if(trim($delaydate) >= $min_date &&  trim($delaydate) <= $max_date){
+	  $delay = 'Received "DECLARATION OF ASSETS AS THEY STOOD ON 01/01/'.$rsData['declaration_yr'].'" 
+						in sealed envelope from <strong style="color:#2e4b90;">'.$rsData['fname'].', '.$rsData['designation'].', '.$rsData['directorate_name'].'
+						<strong style="color:red;">**</strong></strong>';
+      $footer_star_msg = '<strong style="color:red;">**</strong> <strong>NB : Submitted after due date</strong>';
+	  $received_delaydate = ''.$received_date.' <strong style="color:red;">**</strong>';				
+  }else { 
+	 $delay = 'Received "DECLARATION OF ASSETS AS THEY STOOD ON 01/01/'.$rsData['declaration_yr'].'" 
+						in sealed envelope from <strong style="color:#2e4b90;">'.$rsData['fname'].', '.$rsData['designation'].', '.$rsData['directorate_name'].'</strong>';
+	 $received_delaydate = ''.$received_date.'';
+  }
+  
+  $stamp_link = '';
+  
+  if($operatorInfo['directorate_code'] == 'DB'){
+		$directorate_name = 'Directorate of Boilers';
+		$daddress = 'New Secretariat Buildings (8th Floor), ‘A’–Block <br/> 1, K.S Roy Road, Kolkata – 700001';
+		$stamp_link = 'bd_stamp.jpg';
+	}elseif($operatorInfo['directorate_code'] == 'LC'){
+		//$directorate_name = 'Labour Commissionerate';
+		//$daddress = 'New Secretariat Buildings (11th Floor), ‘A’–Block <br/> 1, K.S Roy Road, Kolkata – 700001';
+		//$stamp_link = 'lc_stamp.jpg';
+		$office_address = getOfficeAddress($office_id);
+		if($operatorInfo['office_id'] == 0){
+			$operator_office_id = '117';
+		}else{
+			$operator_office_id = $operatorInfo['office_id'];
+		}
+		//echo $operatorInfo['office_id']."<br>"; exit;
+		//print_r($office_address); exit;
+		foreach($office_address as $val){
+			//echo "-->".$operatorInfo['office_id']."-->".$val->office_id;
+			if($operator_office_id == $val->office_id){
+				if($operator_office_id == '117'){
+					$directorate_name = 'Labour Commissionerate';
+				}else{
+					$directorate_name = $val->office_name;
+				}
+				$daddress = $val->office_address;
+				
+				//echo $directorate_name; exit;
+			}
+			//break;
+		}
+		//exit;
+		
+		$stamp_link = 'lc_stamp.jpg';
+	}elseif($operatorInfo['directorate_code'] == 'DE'){
+		$directorate_name = 'Directorate of Employment';
+		$daddress = '67, Bentinck Street, Kolkata – 700069';
+		$stamp_link = 'de_stamp.jpg';
+	}elseif($operatorInfo['directorate_code'] == 'DF'){
+		$directorate_name = 'Directorate of Factories';
+		$daddress = 'New Secretariat Buildings (8th Floor), ‘A’–Block <br/> 1, K.S Roy Road, Kolkata – 700001';
+		$stamp_link = 'df_stamp.jpg';
+	}elseif($operatorInfo['directorate_code'] == 'ESI'){
+		$directorate_name = 'Directorate of ESI (MB) Scheme';
+		$daddress = 'Block - G.B. Sector - III, Salt Lake, Kolkata - 700097';
+		$stamp_link = 'esi_stamp.jpg';
+	}elseif($operatorInfo['directorate_code'] == 'LD'){
+		$directorate_name = 'Labour Department';
+		$daddress = 'New Secretariat Buildings (12th Floor), ‘A’–Block <br/> 1, K.S Roy Road, Kolkata – 700001';
+		$stamp_link = 'ld_stamp.jpg';
+	}elseif($operatorInfo['directorate_code'] == 'DIT'){
+		$directorate_name = 'Directorate of Industrial Tribunal';
+		$daddress = 'New Secretariat Buildings (2nd Floor), ‘A’–Block <br/> 1, K.S Roy Road, Kolkata – 700001';
+		$stamp_link = 'dit_stamp.jpg';
+	}elseif($operatorInfo['directorate_code'] == 'EIC'){
+		$directorate_name = 'Employees Insurance Court';
+		$daddress = 'New Secretariat Buildings (9th Floor), ‘B’–Block <br/> 1, K.S Roy Road, Kolkata – 700001';
+		$stamp_link = 'eic_stamp.jpg';
+	}elseif($operatorInfo['directorate_code'] == 'DEC'){
+		$directorate_name = 'Directorate of Employees Compensation';
+		$daddress = 'New Secretariat Buildings (12th Floor), ‘A’–Block <br/> 1, K.S Roy Road, Kolkata – 700001';
+		$stamp_link = 'dec_stamp.jpg';
+	}
+  
+	
+	if(1){ 
+	
+	$qrpath = variable_get('file_public_path', conf_path() . '/files') . "/qrcode/ASSET-".$rsData['declaration_yr']."-".$rsData['uid']."-".$rsData['id'].'.png'; 
+	$text = $rsData['fname'].', '.$rsData['designation'].', '.$rsData['directorate_name'].', '.$rsData['declaration_yr'].', '.$rsData['created_date'];
+	if (!file_exists($qrpath)) {
+		$qrpath =  myfun_qrcode_save_for_db($text , $qrpath);
+	}
+
+	$output = '';
+	$content = '';
+	$header = '<!DOCTYPE html>
+			  <html>
+			  <head>
+				<meta charset="utf-8">
+				<title>Acknowledgement</title>
+				<link rel="stylesheet" href="'.$base_root.$base_path.'sites/all/modules/common_pdf_generator/includes/mpdfstyletables.css" media="all" />
+			  </head>
+			  <body>
+				 <table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tbody>
+					 <tr>
+						<td align="right" width="55%">
+						<img src="./sites/all/modules/common_pdf_generator/includes/logo.png" style="width:120px;">
+						</td>
+						<td align="right" width="40%" style="padding-top:30px;">
+						<img src="./'.$qrpath.'" style="width:120px; height=120px;">
+						</td>
+					  </tr>
+					 <tr>
+						<td colspan="2" align="center" style="font-size:22px;margin: 0;padding: 0;color:#2e4b90;">Government of West Bengal<br/>
+<strong>'.$directorate_name.'</strong></td>
+					  </tr>
+
+					  <tr>
+						<td colspan="2" align="center" style="font-size:16px;margin: 0;padding:0 0 20px;color:#676767;">'.$daddress.'</td>
+					  </tr>
+					  <tr>
+						<td colspan="2" align="center" style="background:#2e4b90;padding:2px;"></td>
+					  </tr>
+					  <tr>
+						<td colspan="2" style="font-size:20px;color:#0e783d;padding:40px 0 0;" align="center"><strong>ACKNOWLEDGEMENT</strong></td>
+					  </tr>
+					  <tr>
+						<!--<td colspan="2" style="font-size:16px;padding:40px 0;">Received "DECLARATION OF ASSETS AS THEY STOOD ON 01/01/'.$rsData['declaration_yr'].'"
+						 in sealed envelope from <strong style="color:#2e4b90;">'.$rsData['fname'].', '.$rsData['designation'].', '.$rsData['directorate_name'].'</strong></td>-->
+						 <td colspan="2" style="font-size:16px;padding:40px 0;">'.$delay.'</td>
+					  </tr>
+					  
+	';
+	
+	$signature ='<tr>
+						<td colspan="2">
+						<table width="900" border="0" cellspacing="0" cellpadding="0">
+						  <tr>
+							<td style="background-color: #f2f2f2;font-size:16px;border: 1px solid #ddd;padding: 8px;">Received By :</td>
+							<td style="background-color: #f2f2f2;font-size:16px;border: 1px solid #ddd;padding: 8px;">'.$operatorInfo['fname'].'</td>
+						  </tr>
+						  <tr>
+							<td style="font-size:16px;border: 1px solid #ddd;padding: 8px;">Designation :</td>
+							<td style="font-size:16px;border: 1px solid #ddd;padding: 8px;">'.$operatorInfo['designation'].'</td>
+						  </tr>
+						  <tr>
+							<td style="background-color: #f2f2f2;font-size:16px;border: 1px solid #ddd;padding: 8px;">Date and Time :</td>
+							<td style="background-color: #f2f2f2;font-size:16px;border: 1px solid #ddd;padding: 8px;">'.$received_delaydate.'</td>
+						  </tr> 
+						  
+						   <tr>
+							<td colspan="2" style="font-size:16px;padding:40px 0;">'.$footer_star_msg.'</td>
+					  	 </tr>   
+						  
+						</table>
+						</td>
+						<tr>
+						<td colspan="2" align="center" style="padding-top:100px;"><img src="./sites/all/modules/common_pdf_generator/includes/'.$stamp_link.'" style="width:250px; opacity:0.5;"></td>
+					  </tr>
+					  </tr>
+					 </tbody> 
+				</table>
+	';
+	
+	$last_footer ='<hr width="100%">
+	<table width="100%">
+	<tr>
+	<td align="center" style="font-size:13; padding:10px 0;"><strong>Note:</strong> This is a system generated document. No signature required.</td>
+	</tr>
+	</table>
+	';
+	$footer = '
+	</body>
+	</html>';
+
+	$output = $header.$signature;
+	//return pdf_using_mpdf_api($output);
+	$mpdf = new mPDF('utf-8', 'A4', '', '', 10, 10, 10, 8, 0, 0);
+	/*$mpdf->SetDisplayMode('fullpage');
+	
+	$mpdf->list_indent_first_level = 1;*/
+	$mpdf->SetHTMLFooter($last_footer);
+	
+	$mpdf->SetWatermarkText('Asset Declaration',0.1);
+	$mpdf->showWatermarkText = true;
+	//$mpdf->SetWatermarkImage('./sites/all/modules/common_pdf_generator/includes/stamp.png');
+	//$mpdf->showWatermarkImage = true;
+	
+	/*$mpdf->debug = true;*/
+	$mpdf->showImageErrors = true;
+	
+	$mpdf->WriteHTML($output);
+	
+	$directory_path	=	file_default_scheme().'://upload/acknowledge/'.$rsData['declaration_yr'].'-'.$rsData['id'].'.pdf';
+	$mpdf->Output($directory_path);
+	
+	
+   	$pd = file_get_contents($directory_path);
+	
+	$query = db_update('a_asset_mst');
+	$query->fields(array('ackpdfname'=>	$rsData['declaration_yr'].'-'.$rsData['id'],'ackpdf'	=>	$pd));
+	$query->condition('uid', $args, '=');
+	$query->condition('declaration_yr', $year, '=');
+	$rs = $query->execute();
+	
+	}else{
+		drupal_set_message('Still Now PDF is not generated. Please generate PDF first.', $type='warning');
+		//drupal_goto('grn/list');
+	}
+ }
+
+function get_asset_user_backlog($string=''){
+	
+	global $user;
+	
+	$direc_code = getLoginUserDetailForAsset($user->uid);  
+	
+	$matches = array();
+	$query = db_select('users', 'u');
+	$query->leftJoin('users_roles', 'ur', 'u.uid = ur.uid');  
+	$query->leftJoin('role', 'r', 'ur.rid = r.rid'); 
+	$query->leftJoin('a_user_details', 'ud', 'u.uid = ud.uid');
+	
+	$query->leftJoin('a_user_details_service', 'us', 'u.uid = us.uid'); 
+	$query->fields('us', array('designation','district_code','directorate_code')); 
+	
+	//$query->fields('ur', array('uid')); 
+	$query->fields('u', array('uid','name','access','created','status'));
+	$query->fields('ud', array('fname'));
+	$query->addField('r', 'name', 'rolename');
+	$query->condition('ud.fname', '%' . trim($string) . '%', 'LIKE');
+	if($user->uid != 1486){
+		$query->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+	}
+	
+	if(in_array(variable_get('field', 11), array_keys($user->roles))){
+		$query->condition('us.emp_group','A','!=');
+		$query->condition('us.office_id',$direc_code['office_id'],'=');
+	}
+	
+	$query->condition('ud.status',0,'=');
+	$query->orderBy("r.name", "ASC");
+	$query->range(0,10);
+	$result = $query->execute();
+	//$rsData = $result->fetchAll();
+	
+
+    // save the query to matches
+    foreach ($result as $row) {
+	  $matches[$row->fname."-".$row->uid] = check_plain($row->fname."-".$row->designation);
+    }
+	
+    // Return the result to the form in json
+    drupal_json_output($matches);
+}
+
+
+function get_asset_user_backlog_all($string=''){
+	
+	global $user;
+	
+	$direc_code = getLoginUserDetailForAsset($user->uid);  
+	
+	$matches = array();
+	$query = db_select('users', 'u');
+	$query->leftJoin('users_roles', 'ur', 'u.uid = ur.uid');  
+	$query->leftJoin('role', 'r', 'ur.rid = r.rid'); 
+	$query->leftJoin('a_user_details', 'ud', 'u.uid = ud.uid');
+	
+	$query->leftJoin('a_user_details_service', 'us', 'u.uid = us.uid'); 
+	$query->fields('us', array('designation','district_code','directorate_code')); 
+	
+	//$query->fields('ur', array('uid')); 
+	$query->fields('u', array('uid','name','access','created','status'));
+	$query->fields('ud', array('fname'));
+	$query->addField('r', 'name', 'rolename');
+	$query->condition('ud.fname', '%' . trim($string) . '%', 'LIKE');
+	if($user->uid != 1486){
+		$query->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+	}
+	
+	if(in_array(variable_get('field', 11), array_keys($user->roles))){
+		//$query->condition('us.emp_group','A','!=');
+		$query->condition('us.office_id',$direc_code['office_id'],'=');
+	}
+	
+	$query->condition('ud.status',0,'=');
+	$query->orderBy("r.name", "ASC");
+	$query->range(0,10);
+	$result = $query->execute();
+	//$rsData = $result->fetchAll();
+	
+
+    // save the query to matches
+    foreach ($result as $row) {
+	  $matches[$row->fname."-".$row->uid] = check_plain($row->fname."-".$row->designation);
+    }
+	
+    // Return the result to the form in json
+    drupal_json_output($matches);
+}
+
+
+
+function get_asset_user($string=''){
+	
+	global $user;
+	
+	$direc_code = getLoginUserDetailForAsset($user->uid);  
+	
+	$matches = array();
+	$query = db_select('users', 'u');
+	$query->leftJoin('users_roles', 'ur', 'u.uid = ur.uid');  
+	$query->leftJoin('role', 'r', 'ur.rid = r.rid'); 
+	$query->leftJoin('a_user_details', 'ud', 'u.uid = ud.uid');
+	
+	$query->leftJoin('a_user_details_service', 'us', 'u.uid = us.uid'); 
+	$query->fields('us', array('designation','district_code','directorate_code')); 
+	
+	//$query->fields('ur', array('uid')); 
+	$query->fields('u', array('uid','name','access','created','status'));
+	$query->fields('ud', array('fname'));
+	$query->addField('r', 'name', 'rolename');
+	$query->condition('ud.fname', '%' . trim($string) . '%', 'LIKE');
+	$query->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+	
+	if(in_array(variable_get('field', 11), array_keys($user->roles))){
+		$query->condition('us.emp_group','A','!=');
+		$query->condition('us.office_id',$direc_code['office_id'],'=');
+	}
+	
+	$query->condition('ud.status',0,'=');
+	$query->orderBy("r.name", "ASC");
+	$query->range(0,10);
+	$result = $query->execute();
+	//$rsData = $result->fetchAll();
+	
+
+    // save the query to matches
+    foreach ($result as $row) {
+	  $matches[$row->fname."-".$row->uid] = check_plain($row->fname."-".$row->designation);
+    }
+	
+    // Return the result to the form in json
+    drupal_json_output($matches);
+}
+
+function getUserInfoByUid($uid){
+	$query = db_select('users', 'u');
+	//$query->leftJoin('users_roles', 'ur', 'u.uid = ur.uid');  
+	//$query->leftJoin('role', 'r', 'ur.rid = r.rid'); 
+	$query->leftJoin('a_user_details', 'ud', 'u.uid = ud.uid');
+	
+	$query->leftJoin('a_user_details_service', 'us', 'u.uid = us.uid'); 
+	$query->fields('us', array('designation','district_code','directorate_code','emp_group'));
+	
+	$query->leftJoin('a_directorate_mst', 'd', 'd.directorate_code = us.directorate_code'); 
+	$query->fields('d', array('directorate_name')); 
+	
+	$query->leftJoin('district_master', 'dis', 'dis.district_code = us.district_code'); 
+	$query->fields('dis', array('district_name')); 
+	
+	//$query->fields('ur', array('uid')); 
+	$query->fields('u', array('uid','name','access','created','status'));
+	$query->fields('ud', array('fname','hrms_id'));
+	//$query->addField('r', 'name', 'rolename');
+	$query->condition('u.uid', $uid, '=');
+	$result = $query->execute();
+	$userData = $result->fetchAssoc();
+	return $userData;
+}
+
+function getVerifyByUidYear($uid,$currentYear){
+  $rsData = array();	
+  $query = db_select('a_asset_mst','am');
+  $query->fields('am', array('uid','declaration_yr','designation','directorate_code','status','created_date'));
+  $query->condition('am.uid', $uid, '=');
+  $query->condition('am.declaration_yr', $currentYear, '=');
+  $result = $query->execute();
+  $rsData = $result->fetchAssoc();
+  return $rsData;
+}
+
+function _reload_mem_order_list($form, $form_state) {
+ drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+ $commands   = array();
+ //echo $form_state['values']['emp_group']; exit;
+ $user_arr = explode('-',$form_state['values']['fname']);
+ 
+ $verify = getVerifyByUidYear($user_arr[1],date('Y'));
+ 
+	$header = array();
+	$rows   = array();
+	
+	$header = array(  
+	  array('data' => t('Employee Information'),'colspan' => 6),  
+	);
+ 
+ if(!empty($verify) && $verify['status']==1){
+	 
+	 $rows[] = array( 
+	  array('data' => t('You have already submitted asset for this year'),'colspan' => 5),
+	);
+	 
+	 $rows[] = array( 
+	  array('data' => l('<strong class="btn btn-danger print-btn"> Print Acknowledgement</strong>','ack-file/'.$user_arr[1].'/'.$verify['declaration_yr'], array('html' => TRUE,'attributes'=>array('target'=>'_blank'))) ,'colspan' => 5),
+	);
+	 
+	
+ }else{
+	 $mydata = array();
+	 $mydata = getUserInfoByUid($user_arr[1]);
+ 
+	 $form['uid']['#value'] = $user_arr[1];
+	 $form['designation']['#value'] = $mydata['designation'];
+	 $form['emp_group']['#value'] = $mydata['emp_group'];
+	 $form['directorate']['#value'] = $mydata['directorate_code'];
+	 $form['district']['#value'] = $mydata['district_code'];
+	 if(!empty($verify) && $verify['status']==0){
+		 $form['decission']['#value'] = 'UPDATE';
+	 }else{
+		 $form['decission']['#value'] = 'INSERT';
+	 }
+	 
+	 
+	 
+		
+	
+	$rows[] = array(  
+	  array('data' => t('<b>HRMS ID  </b>')),
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Officers Designation </b>')),
+	  array('data' => t('<b>Officers Group </b>')),
+	  array('data' => t('<b>Directorate Name  </b>')),
+	  array('data' => t('<b>District Name  </b>')),
+	);
+	if($mydata['hrms_id']!=""){
+		$rows[] = array( 
+		  array('data' => t($mydata['hrms_id'])),	
+		  array('data' => t($mydata['fname'])),
+		  array('data' => t($mydata['designation'])),
+		  array('data' => t($mydata['emp_group'])), 	 
+		  array('data' => t($mydata['directorate_name'])), 
+		  array('data' => t($mydata['district_name'])),
+		);
+	}else{
+		$rows[] = array( 
+		  array('data' => t('No Data Found'), 'colspan'=>5),	
+		);
+	}
+ }
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => ' ',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+ //$commands[] = ajax_command_invoke('.doc_name_clear', 'val', array($form['values']['fname']));
+ $commands[] = ajax_command_replace('#order_no_map', '<div id="order_no_map">'.drupal_render($form['uid']).'</div>');
+ $commands[] = ajax_command_replace('#designation_map', '<div id="designation_map">'.drupal_render($form['designation']).'</div>');
+ $commands[] = ajax_command_replace('#directorate_map', '<div id="directorate_map">'.drupal_render($form['directorate']).'</div>');
+  $commands[] = ajax_command_replace('#emp_group_map', '<div id="emp_group_map">'.drupal_render($form['emp_group']).'</div>');
+ $commands[] = ajax_command_replace('#district_map', '<div id="district_map">'.drupal_render($form['district']).'</div>');
+ $commands[] = ajax_command_replace('#fetch_data_map', '<div id="fetch_data_map"><div class="col-md-12">'.$output.'</div></div>');
+ $commands[] = ajax_command_replace('#decission_map', '<div id="decission_map">'.drupal_render($form['decission']).'</div>');
+//print_r($commands);
+ if(!empty($verify) && $verify['status']==1){
+	$commands[] = ajax_command_invoke('#frmbtn', 'hide');
+ }elseif($mydata['hrms_id']==""){
+	$commands[] = ajax_command_invoke('#frmbtn', 'hide'); 
+ }else{
+ 	$commands[] = ajax_command_invoke('#frmbtn', 'show');
+ }
+ 
+ return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function asset_received_list(){
+  global $user;
+  $status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+  	
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+
+	
+ $direc_code = getLoginUserDetailForAsset($user->uid);  
+	
+  $query = db_select('a_asset_mst','am');
+  $query->leftJoin('users', 'u', 'u.uid = am.uid');  
+  $query->leftJoin('a_user_details', 'ud', 'ud.uid = am.uid');  
+  $query->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = am.directorate_code');  
+  $query->leftJoin('a_user_details_service', 'us', 'am.uid = us.uid'); 
+  $query->fields('am', array('uid','declaration_yr','designation','directorate_code','status','created_date'));
+  $query->fields('u', array('name','access','created'));
+  $query->fields('ud', array('fname','status'));
+  $query->fields('dm', array('id','directorate_name'));
+  $query->fields('us', array('designation','district_code','directorate_code','emp_group')); 
+  if(in_array(variable_get('field', 11), array_keys($user->roles))){
+		$query->condition('us.emp_group','A','!=');
+		$query->condition('us.office_id',$direc_code['office_id'],'=');
+	}
+  $query->condition('am.declaration_yr',date('Y'),'=');	
+  $query->condition('am.status',1,'=');
+  $query->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+  $query->condition('ud.status',0,'=');
+  $query->condition('us.service_status',1,'=');
+  $query->orderBy('ud.fname','ASC');
+ // $query->orderBy('dm.id','ASC');
+  //$query1 = $query->extend('TableSort')->extend('PagerDefault')->limit(20);
+  //$result = $query1->execute();
+  $result = $query->execute();
+  $rsData = $result->fetchAll();
+	
+	$header = array();
+	$rows   = array();
+	$output = '';
+	
+	
+	
+	$header = array(  
+	  array('data' => t('<b>Sl No. </b>')),		
+	  array('data' => t('<b>Declaration Year  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Officers Designation </b>')),
+	  array('data' => t('<b>Group  </b>')),
+	  array('data' => t('<b>Date of Acceptance  </b>')),
+	  array('data' => t('<b>Status </b>')),
+	  array('data' => t('<b>View </b>')),
+	);
+	 $i=0;
+	  foreach($rsData as $data){
+		$i++;
+		if($data->status == 1){
+			$status = "Submitted";
+			/*$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));*/
+						 
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));		 
+						 
+						 
+		}else{
+			$status = "Not Submitted";
+			$link = "";
+		}
+		
+		
+		
+		$rows[] = array( 
+		  $i,	
+		  array('data' => t($data->declaration_yr)),	
+		  array('data' => t($data->fname)),
+		  array('data' => t($data->designation)), 	 
+		  array('data' => t($data->emp_group)), 
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->created_date)))),
+		  array('data' => t($status)),
+		  array('data' => t($link)),
+		);
+	  }
+	  
+   $output .= theme('datatable', array(
+							  'header' => $header,
+							  'rows' => $rows,
+							  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+							  'sticky' => true,
+							  'caption' => '<h3>DoA Received List </h3>',
+							  'colgroups' => array(),
+							  'empty' => t("No data found!") // The message to be displayed if table is empty
+							)
+						  ).theme('pager');	  
+	
+	
+	/* $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>DoA Received List </h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');*/
+
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+	  
+ }
+ 
+ 
+ 
+ function asset_pending_list(){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}  
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+  
+	
+  $direc_code = getLoginUserDetailForAsset($user->uid);
+  /*$q1 = db_select('a_asset_mst','am');
+  $q1->fields('am', array('uid'));
+  $q1->condition('am.status','1','=');*/
+  
+ /* $querypending = db_select('a_user_details','ud');
+  $querypending->leftJoin('a_asset_mst', 'am', 'am.uid = ud.uid');   
+  $querypending->leftJoin('users', 'u', 'u.uid = ud.uid');  
+  $querypending->leftJoin('a_user_details_service', 'uds', 'uds.uid = ud.uid');  
+  $querypending->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = uds.directorate_code');  
+  $querypending->fields('ud', array('fname','uid'));
+  $querypending->fields('u', array('name','access','created'));
+  $querypending->fields('am', array('uid','declaration_yr','directorate_code','status','created_date'));
+  $querypending->fields('uds', array('designation','emp_group'));
+  $querypending->fields('dm', array('id','directorate_name'));
+  if(in_array(variable_get('field', 11), array_keys($user->roles))){
+		$querypending->condition('uds.emp_group','A','!=');
+		$querypending->condition('uds.office_id',$direc_code['office_id'],'=');
+	}
+  $querypending->condition('am.status',0,'=');
+  $querypending->condition('uds.directorate_code',$direc_code['directorate_code'],'=');
+  $querypending->orderBy('ud.fname','ASC');
+  $result1 = $querypending->execute();
+  $pendingData = $result1->fetchAll(); */
+  
+  
+  
+  
+  
+  /*$querypending = db_select('a_asset_mst','am');
+  $querypending->leftJoin('users', 'u', 'u.uid = am.uid');  
+  $querypending->leftJoin('a_user_details', 'ud', 'ud.uid = am.uid');  
+  $querypending->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = am.directorate_code');  
+  $querypending->leftJoin('a_user_details_service', 'us', 'am.uid = us.uid'); 
+  $querypending->fields('am', array('uid','declaration_yr','designation','directorate_code','status','created_date'));
+  $querypending->fields('u', array('name','access','created'));
+  $querypending->fields('ud', array('fname','status'));
+  $querypending->fields('dm', array('id','directorate_name'));
+  $querypending->fields('us', array('designation','district_code','directorate_code','emp_group')); 
+  if(in_array(variable_get('field', 11), array_keys($user->roles))){
+		$querypending->condition('us.emp_group','A','!=');
+		$querypending->condition('us.office_id',$direc_code['office_id'],'=');
+	}
+  $querypending->condition('am.status',0,'=');
+  $querypending->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+  $querypending->condition('ud.status',0,'=');
+  $querypending->orderBy('ud.fname','ASC');
+ // $query->orderBy('dm.id','ASC');
+  //$query1 = $query->extend('TableSort')->extend('PagerDefault')->limit(20);
+  //$result = $query1->execute();
+  $result1 = $querypending->execute();
+  $pendingData = $result1->fetchAll();*/
+  
+  $querypending = db_select('a_user_details','ud');
+	$querypending->leftJoin('a_user_details_service', 'us', 'ud.uid = us.uid');
+	$querypending->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = us.directorate_code'); 
+	$querypending->fields('ud', array('uid','fname','doj','dor','status'));
+	$querypending->fields('dm', array('id','directorate_name'));
+	$querypending->fields('us', array('designation','directorate_code','district_code','service_status','emp_group','office_id'));
+	$querypending->condition('ud.status',0,'=');
+	$querypending->condition('us.service_status',1,'=');
+	if(in_array(variable_get('field', 11), array_keys($user->roles))){
+		$querypending->condition('us.emp_group','A','!=');
+		$querypending->condition('us.office_id',$direc_code['office_id'],'=');
+	}
+	$querypending->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+	$querypending->orderBy('ud.fname','ASC');
+	$result1 = $querypending->execute();
+	$pendingData = $result1->fetchAll();
+  
+   //print_r($pendingData); exit;
+  
+	$header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Sl No. </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Officers Designation </b>')),
+	  array('data' => t('<b>Group </b>')),
+	  //array('data' => t('<b>Date of Acceptance  </b>')),
+	  array('data' => t('<b>Status </b>')),
+	  //array('data' => t('<b>View </b>')),
+	);
+	 $i=0;
+	  foreach($pendingData as $data){
+		
+		$pending = array();
+		$pending = yearWiseIndividualUserDataSubmitted(array(date('Y')),$data->uid);
+		
+		if(empty($pending)){
+			$i++;
+			$status = "Not Submitted";
+			
+		/*if($data->status == 1){
+			$status = "Submitted";
+			//$link = l('ACKNOWLEDGEMENT','ack-file/'.$data->uid, array('html' => TRUE,'attributes'=>array('target'=>'_blank')));
+		}else{
+			$status = "Not Submitted";
+			//$link = "";
+		}*/
+		
+		$rows[] = array( 
+		  $i,	
+		  array('data' => t($data->fname)),
+		  array('data' => t($data->designation)), 	 
+		  array('data' => t($data->emp_group)), 
+		  //array('data' => t(date('d-m-Y H:i:s', strtotime($data->created_date)))),
+		  array('data' => t($status)),
+		 // array('data' => t($link)),
+		);
+	   }
+	  }
+	  
+	  
+   $output .= theme('datatable', array(
+							  'header' => $header,
+							  'rows' => $rows,
+							  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+							  'sticky' => true,
+							  'caption' => '<h3>DoA Pending List </h3>',
+							  'colgroups' => array(),
+							  'empty' => t("No data found!") // The message to be displayed if table is empty
+							)
+						  ).theme('pager');	  
+	
+	
+	/* $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>DoA Pending List </h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');*/
+
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+	  
+ }
+ 
+ 
+ 
+ function all_group_a_officer_list() {
+  global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}	
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+  $direc_code = getLoginUserDetailForAsset($user->uid);
+	 
+  
+  	$querynodal = db_select('a_user_details','ud');
+	$querynodal->leftJoin('a_user_details_service', 'us', 'ud.uid = us.uid');
+	$querynodal->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = us.directorate_code'); 
+	$querynodal->fields('ud', array('uid','fname','doj','dor','dob','status'));
+	$querynodal->fields('dm', array('id','directorate_name'));
+	$querynodal->fields('us', array('designation','directorate_code','district_code','service_status','emp_group','office_id'));
+	$querynodal->condition('ud.status',0,'=');
+	$querynodal->condition('us.service_status',1,'=');
+	$querynodal->condition('us.emp_group','A','=');
+	//$querynodal->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+	$querynodal->orderBy('ud.fname','ASC');
+	$result1 = $querynodal->execute();
+	$querynodalfinal = $result1->fetchAll();
+  
+	//print_r($querynodalfinal); exit;
+	 
+	$header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Sl No.  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Officers Designation </b>')),
+	  array('data' => t('<b>Directorate Name  </b>')),
+	  array('data' => t('<b>Date of Retirement  </b>')),
+	  array('data' => t('<b>Date of Birth  </b>')),
+	  array('data' => t('<b>'.date('Y').'</b>')),
+	  array('data' => t('<b>'.(date('Y')-1).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-2).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-3).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-4).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-5).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-6).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-7).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-8).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-9).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-10).'</b>')),
+	);
+	
+	$years = array_combine(range(date('Y'),date('Y')-10), range(date('Y'),date('Y')-10));
+	 $i=0;
+	 foreach($querynodalfinal as $data){
+		$i++;
+		$submitted_yr = array();
+		$rs = array();
+		$rs = yearWiseIndividualUserDataSubmitted(array($years),$data->uid);
+		
+		$doj_year = date('Y',strtotime($data->doj));
+		
+		if(!empty($rs)){
+			foreach($rs as $v){
+				if($data->uid == $v->uid){
+					$submitted_yr[] = $v->declaration_yr;
+				}
+			}
+		}
+		
+		if(in_array(date('Y'),$submitted_yr)){
+			$link19 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.date('Y'), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')){
+			$link19 = 'N/A';
+		}else{
+			$link19 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		} 
+		if(in_array(date('Y')-1,$submitted_yr)){
+			$link18 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-1), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-1){
+			$link18 = 'N/A';
+		}else{
+			$link18 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		} 
+		if(in_array(date('Y')-2,$submitted_yr)){
+			$link17 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-2), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-2){
+			$link17 = 'N/A';
+		}else{
+			$link17 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-3,$submitted_yr)){
+			$link16 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-3), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-3){
+			$link16 = 'N/A';
+		}else{
+			$link16 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-4,$submitted_yr)){
+			$link15 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-4), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-4){
+			$link15 = 'N/A';
+		}else{
+			$link15 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-5,$submitted_yr)){
+			$link14 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-5), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-5){
+			$link14 = 'N/A';
+		}else{
+			$link14 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-6,$submitted_yr)){
+			$link13 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-6), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-6){
+			$link13 = 'N/A';
+		}else{
+			$link13 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-7,$submitted_yr)){
+			$link12 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-7), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-7){
+			$link12 = 'N/A';
+		}else{
+			$link12 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-8,$submitted_yr)){
+			$link11 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-8), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-8){
+			$link11 = 'N/A';
+		}else{
+			$link11 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-9,$submitted_yr)){
+			$link10 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-9), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-9){
+			$link10 = 'N/A';
+		}else{
+			$link10 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-10,$submitted_yr)){
+			$link09 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-10), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-10){
+			$link09 = 'N/A';
+		}else{
+			$link09 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		
+		//$dord = $data->dor('d-m-Y');
+		//date('d-m-Y H:i:s', strtotime($data->created_date))
+		$dob_year = date('d-m-Y',strtotime($data->dob));
+		$dor_year = date('d-m-Y',strtotime($data->dor));
+		
+		$rows[] = array( 
+		  $i,
+		  //array('data' => t($data->fname)),
+		  array('data' => l(t($data->fname), 'all-year-list/'.$data->uid, array('html' => TRUE,'attributes'=>array('title' => 'List','target' => '_blank')))),
+		  array('data' => t($data->designation)), 	 
+		  array('data' => t($data->directorate_name)), 
+		  array('data' => t($dor_year)), 
+		  array('data' => t($dob_year)), 
+		  array('data' => t($link19)),
+		  array('data' => t($link18)),
+		  array('data' => t($link17)),
+		  array('data' => t($link16)),
+		  array('data' => t($link15)),
+		  array('data' => t($link14)),
+		  array('data' => t($link13)),
+		  array('data' => t($link12)),
+		  array('data' => t($link11)),
+		  array('data' => t($link10)),
+		  array('data' => t($link09)),
+		);
+	  }
+	//print_r($rs); exit;
+	
+  $output .= theme('datatable', array(
+							  'header' => $header,
+							  'rows' => $rows,
+							  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+							  'sticky' => true,
+							  'caption' => '<h3>DoA Yearly Received of Group A Officers</h3>',
+							  'colgroups' => array(),
+							  'empty' => t("No data found!") // The message to be displayed if table is empty
+							)
+						  ).theme('pager');	  	
+	
+
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+	 
+}
+
+
+ function all_group_b_officer_list() {
+  global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}	
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+  $direc_code = getLoginUserDetailForAsset($user->uid);
+	 
+  
+  	$querynodal = db_select('a_user_details','ud');
+	$querynodal->leftJoin('a_user_details_service', 'us', 'ud.uid = us.uid');
+	$querynodal->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = us.directorate_code'); 
+	$querynodal->fields('ud', array('uid','fname','doj','dor','status'));
+	$querynodal->fields('dm', array('id','directorate_name'));
+	$querynodal->fields('us', array('designation','directorate_code','district_code','service_status','emp_group','office_id'));
+	$querynodal->condition('ud.status',0,'=');
+	$querynodal->condition('us.service_status',1,'=');
+	$querynodal->condition('us.emp_group','B','=');
+	//$querynodal->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+	$querynodal->orderBy('ud.fname','ASC');
+	$result1 = $querynodal->execute();
+	$querynodalfinal = $result1->fetchAll();
+  
+	//print_r($querynodalfinal); exit;
+	 
+	$header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Sl No.  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Officers Designation </b>')),
+	  array('data' => t('<b>Directorate Name  </b>')),
+	  array('data' => t('<b>'.date('Y').'</b>')),
+	  array('data' => t('<b>'.(date('Y')-1).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-2).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-3).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-4).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-5).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-6).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-7).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-8).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-9).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-10).'</b>')),
+	);
+	
+	$years = array_combine(range(date('Y'),date('Y')-10), range(date('Y'),date('Y')-10));
+	 $i=0;
+	 foreach($querynodalfinal as $data){
+		$i++;
+		$submitted_yr = array();
+		$rs = array();
+		$rs = yearWiseIndividualUserDataSubmitted(array($years),$data->uid);
+		
+		$doj_year = date('Y',strtotime($data->doj));
+		
+		if(!empty($rs)){
+			foreach($rs as $v){
+				if($data->uid == $v->uid){
+					$submitted_yr[] = $v->declaration_yr;
+				}
+			}
+		}
+		
+		if(in_array(date('Y'),$submitted_yr)){
+			$link19 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.date('Y'), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')){
+			$link19 = 'N/A';
+		}else{
+			$link19 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		} 
+		if(in_array(date('Y')-1,$submitted_yr)){
+			$link18 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-1), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-1){
+			$link18 = 'N/A';
+		}else{
+			$link18 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		} 
+		if(in_array(date('Y')-2,$submitted_yr)){
+			$link17 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-2), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-2){
+			$link17 = 'N/A';
+		}else{
+			$link17 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-3,$submitted_yr)){
+			$link16 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						'ack-file/'.$data->uid.'/'.(date('Y')-3), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-3){
+			$link16 = 'N/A';
+		}else{
+			$link16 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-4,$submitted_yr)){
+			$link15 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-4), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-4){
+			$link15 = 'N/A';
+		}else{
+			$link15 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-5,$submitted_yr)){
+			$link14 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						'ack-file/'.$data->uid.'/'.(date('Y')-5), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-5){
+			$link14 = 'N/A';
+		}else{
+			$link14 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-6,$submitted_yr)){
+			$link13 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-6), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-6){
+			$link13 = 'N/A';
+		}else{
+			$link13 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-7,$submitted_yr)){
+			$link12 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						'ack-file/'.$data->uid.'/'.(date('Y')-7), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-7){
+			$link12 = 'N/A';
+		}else{
+			$link12 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-8,$submitted_yr)){
+			$link11 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-8), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-8){
+			$link11 = 'N/A';
+		}else{
+			$link11 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-9,$submitted_yr)){
+			$link10 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-9), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-9){
+			$link10 = 'N/A';
+		}else{
+			$link10 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-10,$submitted_yr)){
+			$link09 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-10), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-10){
+			$link09 = 'N/A';
+		}else{
+			$link09 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		
+		
+		$rows[] = array( 
+		  $i,
+		  //array('data' => t($data->fname)),
+		  array('data' => l(t($data->fname), 'all-year-list/'.$data->uid, array('html' => TRUE,'attributes'=>array('title' => 'List','target' => '_blank')))),
+		  array('data' => t($data->designation)), 	 
+		  array('data' => t($data->directorate_name)), 
+		  array('data' => t($link19)),
+		  array('data' => t($link18)),
+		  array('data' => t($link17)),
+		  array('data' => t($link16)),
+		  array('data' => t($link15)),
+		  array('data' => t($link14)),
+		  array('data' => t($link13)),
+		  array('data' => t($link12)),
+		  array('data' => t($link11)),
+		  array('data' => t($link10)),
+		  array('data' => t($link09)),
+		);
+	  }
+	//print_r($rs); exit;
+	
+  $output .= theme('datatable', array(
+							  'header' => $header,
+							  'rows' => $rows,
+							  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+							  'sticky' => true,
+							  'caption' => '<h3>DoA Yearly Received of Group B Officers </h3>',
+							  'colgroups' => array(),
+							  'empty' => t("No data found!") // The message to be displayed if table is empty
+							)
+						  ).theme('pager');	  	
+	
+
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+	 
+}
+
+ function all_group_c_officer_list() {
+  global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}	
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+  $direc_code = getLoginUserDetailForAsset($user->uid);
+	 
+  
+  	$querynodal = db_select('a_user_details','ud');
+	$querynodal->leftJoin('a_user_details_service', 'us', 'ud.uid = us.uid');
+	$querynodal->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = us.directorate_code'); 
+	$querynodal->fields('ud', array('uid','fname','doj','dor','status'));
+	$querynodal->fields('dm', array('id','directorate_name'));
+	$querynodal->fields('us', array('designation','directorate_code','district_code','service_status','emp_group','office_id'));
+	$querynodal->condition('ud.status',0,'=');
+	$querynodal->condition('us.service_status',1,'=');
+	$querynodal->condition('us.emp_group','C','=');
+	//$querynodal->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+	$querynodal->orderBy('ud.fname','ASC');
+	$result1 = $querynodal->execute();
+	$querynodalfinal = $result1->fetchAll();
+  
+	//print_r($querynodalfinal); exit;
+	 
+	$header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Sl No.  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Officers Designation </b>')),
+	  array('data' => t('<b>Directorate Name  </b>')),
+	  array('data' => t('<b>'.date('Y').'</b>')),
+	  array('data' => t('<b>'.(date('Y')-1).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-2).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-3).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-4).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-5).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-6).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-7).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-8).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-9).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-10).'</b>')),
+	);
+	
+	$years = array_combine(range(date('Y'),date('Y')-10), range(date('Y'),date('Y')-10));
+	 $i=0;
+	 foreach($querynodalfinal as $data){
+		$i++;
+		$submitted_yr = array();
+		$rs = array();
+		$rs = yearWiseIndividualUserDataSubmitted(array($years),$data->uid);
+		
+		$doj_year = date('Y',strtotime($data->doj));
+		
+		if(!empty($rs)){
+			foreach($rs as $v){
+				if($data->uid == $v->uid){
+					$submitted_yr[] = $v->declaration_yr;
+				}
+			}
+		}
+		
+		if(in_array(date('Y'),$submitted_yr)){
+			$link19 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.date('Y'), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')){
+			$link19 = 'N/A';
+		}else{
+			$link19 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		} 
+		if(in_array(date('Y')-1,$submitted_yr)){
+			$link18 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-1), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-1){
+			$link18 = 'N/A';
+		}else{
+			$link18 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		} 
+		if(in_array(date('Y')-2,$submitted_yr)){
+			$link17 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-2), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-2){
+			$link17 = 'N/A';
+		}else{
+			$link17 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-3,$submitted_yr)){
+			$link16 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-3), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-3){
+			$link16 = 'N/A';
+		}else{
+			$link16 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-4,$submitted_yr)){
+			$link15 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						'ack-file/'.$data->uid.'/'.(date('Y')-4), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-4){
+			$link15 = 'N/A';
+		}else{
+			$link15 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-5,$submitted_yr)){
+			$link14 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-5), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-5){
+			$link14 = 'N/A';
+		}else{
+			$link14 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-6,$submitted_yr)){
+			$link13 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-6), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-6){
+			$link13 = 'N/A';
+		}else{
+			$link13 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-7,$submitted_yr)){
+			$link12 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-7), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-7){
+			$link12 = 'N/A';
+		}else{
+			$link12 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-8,$submitted_yr)){
+			$link11 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-8), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-8){
+			$link11 = 'N/A';
+		}else{
+			$link11 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-9,$submitted_yr)){
+			$link10 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-9), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-9){
+			$link10 = 'N/A';
+		}else{
+			$link10 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-10,$submitted_yr)){
+			$link09 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-10), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-10){
+			$link09 = 'N/A';
+		}else{
+			$link09 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		
+		
+		$rows[] = array( 
+		  $i,
+		  //array('data' => t($data->fname)),
+		  array('data' => l(t($data->fname), 'all-year-list/'.$data->uid, array('html' => TRUE,'attributes'=>array('title' => 'List','target' => '_blank')))),
+		  array('data' => t($data->designation)), 	 
+		  array('data' => t($data->directorate_name)), 
+		  array('data' => t($link19)),
+		  array('data' => t($link18)),
+		  array('data' => t($link17)),
+		  array('data' => t($link16)),
+		  array('data' => t($link15)),
+		  array('data' => t($link14)),
+		  array('data' => t($link13)),
+		  array('data' => t($link12)),
+		  array('data' => t($link11)),
+		  array('data' => t($link10)),
+		  array('data' => t($link09)),
+		);
+	  }
+	//print_r($rs); exit;
+	
+  $output .= theme('datatable', array(
+							  'header' => $header,
+							  'rows' => $rows,
+							  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+							  'sticky' => true,
+							  'caption' => '<h3>DoA Yearly Received of Group C Officers </h3>',
+							  'colgroups' => array(),
+							  'empty' => t("No data found!") // The message to be displayed if table is empty
+							)
+						  ).theme('pager');	  	
+	
+
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+	 
+}
+ 
+ function nodal_officer_list() {
+  global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}	
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+  $direc_code = getLoginUserDetailForAsset($user->uid);
+	 
+  /*$querynodal = db_select('a_asset_mst','am');
+  $querynodal->leftJoin('users', 'u', 'u.uid = am.uid');  
+  $querynodal->leftJoin('a_user_details', 'ud', 'ud.uid = am.uid');  
+  $querynodal->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = am.directorate_code');  
+  $querynodal->leftJoin('a_user_details_service', 'uds', 'am.uid = uds.uid');  
+  $querynodal->fields('am', array('uid','declaration_yr','designation','directorate_code','status','created_date'));
+  $querynodal->fields('u', array('name','access','created'));
+  $querynodal->fields('ud', array('fname'));
+  $querynodal->fields('dm', array('id','directorate_name'));
+   if(in_array(variable_get('field', 11), array_keys($user->roles))){
+		$querynodal->condition('uds.emp_group','A','!=');
+		$querynodal->condition('uds.office_id',$direc_code['office_id'],'=');
+	}
+  $querynodal->condition('uds.directorate_code',$direc_code['directorate_code'],'=');
+ // $query->orderBy('dm.id','ASC');
+  //$querynodal = $query->extend('TableSort')->extend('PagerDefault')->limit(20);
+  $result1 = $querynodal->execute();
+  $querynodalfinal = $result1->fetchAll();*/
+  
+  $querynodal = db_select('a_user_details','ud');
+	$querynodal->leftJoin('a_user_details_service', 'us', 'ud.uid = us.uid');
+	$querynodal->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = us.directorate_code'); 
+	$querynodal->fields('ud', array('uid','fname','doj','dor','status'));
+	$querynodal->fields('dm', array('id','directorate_name'));
+	$querynodal->fields('us', array('designation','directorate_code','district_code','service_status','emp_group','office_id'));
+	$querynodal->condition('ud.status',0,'=');
+	$querynodal->condition('us.service_status',1,'=');
+	//$query->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+	//$query->condition('us.office_id',$fdata->office_id,'=');
+	//$query->condition('us.emp_group',array('B','C'),'IN');
+	if(in_array(variable_get('field', 11), array_keys($user->roles))){
+		$querynodal->condition('us.emp_group','A','!=');
+		$querynodal->condition('us.office_id',$direc_code['office_id'],'=');
+	}
+	$querynodal->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+	$querynodal->orderBy('ud.fname','ASC');
+	$result1 = $querynodal->execute();
+	$querynodalfinal = $result1->fetchAll();
+  
+	/*$querynodal = db_select('a_user_details','ud');
+	$querynodal->leftJoin('a_user_details_service', 'us', 'ud.uid = us.uid');
+	$querynodal->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = us.directorate_code'); 
+	$querynodal->fields('ud', array('uid','fname','status'));
+	$querynodal->fields('dm', array('id','directorate_name'));
+	$querynodal->fields('us', array('designation','directorate_code','district_code','service_status','emp_group','office_id'));
+	$querynodal->condition('ud.status',0,'=');
+	$querynodal->condition('us.service_status',1,'=');
+	//$query->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+	//$query->condition('us.office_id',$fdata->office_id,'=');
+	//$query->condition('us.emp_group',array('B','C'),'IN');
+	if(in_array(variable_get('field', 11), array_keys($user->roles))){
+		$querynodal->condition('us.emp_group','A','!=');
+		$querynodal->condition('us.office_id',$direc_code['office_id'],'=');
+	}
+	$querynodal->condition('us.directorate_code',$direc_code['directorate_code'],'=');
+	$result1 = $querynodal->execute();
+	$querynodalfinal = $result1->fetchAll();*/
+	
+	//print_r($querynodalfinal); exit;
+	 
+	$header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Sl No.  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Officers Designation </b>')),
+	  array('data' => t('<b>Officers Group</b>')),
+	  array('data' => t('<b>'.date('Y').'</b>')),
+	  array('data' => t('<b>'.(date('Y')-1).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-2).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-3).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-4).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-5).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-6).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-7).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-8).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-9).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-10).'</b>')),
+	);
+	
+	/*$years = array(
+	  '2018' => t('2018'),
+	  '2017' => t('2017'), 
+	  '2016' => t('2016'),
+	  '2015' => t('2015'),
+	  '2014' => t('2014'),
+	  '2013' => t('2013'),
+	  '2012' => t('2012'),
+	  '2011' => t('2011'),
+	  '2010' => t('2010'),
+	  '2009' => t('2009'),
+	);*/
+	$years = array_combine(range(date('Y'),date('Y')-10), range(date('Y'),date('Y')-10));
+	 $i=0;
+	 foreach($querynodalfinal as $data){
+		$i++;
+		$submitted_yr = array();
+		$rs = array();
+		$rs = yearWiseIndividualUserDataSubmitted(array($years),$data->uid);
+		
+		$doj_year = date('Y',strtotime($data->doj));
+		
+		if(!empty($rs)){
+			foreach($rs as $v){
+				if($data->uid == $v->uid){
+					$submitted_yr[] = $v->declaration_yr;
+				}
+			}
+		}
+		
+		if(in_array(date('Y'),$submitted_yr)){
+			$link19 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.date('Y'), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')){
+			$link19 = 'N/A';
+		}else{
+			$link19 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		} 
+		if(in_array(date('Y')-1,$submitted_yr)){
+			$link18 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-1), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-1){
+			$link18 = 'N/A';
+		}else{
+			$link18 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		} 
+		if(in_array(date('Y')-2,$submitted_yr)){
+			$link17 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-2), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-2){
+			$link17 = 'N/A';
+		}else{
+			$link17 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-3,$submitted_yr)){
+			$link16 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-3), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-3){
+			$link16 = 'N/A';
+		}else{
+			$link16 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-4,$submitted_yr)){
+			$link15 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-4), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-4){
+			$link15 = 'N/A';
+		}else{
+			$link15 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-5,$submitted_yr)){
+			$link14 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-5), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-5){
+			$link14 = 'N/A';
+		}else{
+			$link14 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-6,$submitted_yr)){
+			$link13 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-6), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-6){
+			$link13 = 'N/A';
+		}else{
+			$link13 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-7,$submitted_yr)){
+			$link12 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-7), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-7){
+			$link12 = 'N/A';
+		}else{
+			$link12 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-8,$submitted_yr)){
+			$link11 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-8), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-8){
+			$link11 = 'N/A';
+		}else{
+			$link11 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-9,$submitted_yr)){
+			$link10 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-9), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-9){
+			$link10 = 'N/A';
+		}else{
+			$link10 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-10,$submitted_yr)){
+			$link09 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-10), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-10){
+			$link09 = 'N/A';
+		}else{
+			$link09 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		/*if($data->declaration_yr == 2019 && $data->status==1){
+			$link19 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Submitted')));
+		}else{
+			$link19 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		} 
+		
+		 if ($data->declaration_yr == 2018 && $data->status==1) {
+			$link18 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Submitted')));
+	  	}
+		else {
+			$link18 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		    }
+		
+		if ($data->declaration_yr == 2017 && $data->status==1) {
+			$link17 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Submitted')));
+	  	}
+		else {
+			$link17 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+			 }
+		
+		if ($data->declaration_yr == 2016 && $data->status==1) {
+			$link16 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Submitted')));
+	  	}
+		else {
+			$link16 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+			 }
+		
+		if ($data->declaration_yr == 2015 && $data->status==1) {
+			$link15 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Submitted')));
+	  	}
+		else {
+			$link15 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+			 }*/
+		
+		
+		$rows[] = array( 
+		  $i,
+		  array('data' => t($data->fname)),
+		  array('data' => t($data->designation)), 	 
+		  array('data' => t($data->emp_group)), 
+		  array('data' => t($link19)),
+		  array('data' => t($link18)),
+		  array('data' => t($link17)),
+		  array('data' => t($link16)),
+		  array('data' => t($link15)),
+		  array('data' => t($link14)),
+		  array('data' => t($link13)),
+		  array('data' => t($link12)),
+		  array('data' => t($link11)),
+		  array('data' => t($link10)),
+		  array('data' => t($link09)),
+		);
+	  }
+	//print_r($rs); exit;
+	
+  $output .= theme('datatable', array(
+							  'header' => $header,
+							  'rows' => $rows,
+							  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+							  'sticky' => true,
+							  'caption' => '<h3>DoA Yearly Received </h3>',
+							  'colgroups' => array(),
+							  'empty' => t("No data found!") // The message to be displayed if table is empty
+							)
+						  ).theme('pager');	  	
+	
+	/* $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>DoA Yearly Received</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');*/
+
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+	 
+	 }
+	 
+function all_year_list($form, &$form_state,$args=''){
+	
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+  drupal_add_js(drupal_get_path('module', 'asset_user') . '/myfunction.js');
+  
+ 	 $submittedYear = array();
+	 $user_arr = $args;
+	 
+	 $userData = getLoginUserDetailForAsset($user_arr);
+	 $doj = date('Y',strtotime($userData['doj']));
+	 $years = array_combine(range(date('Y'),$doj), range(date('Y'),$doj));
+
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">List of Assets From Start of Service of ' .$userData['fname'].'</h4></div><div class="widget-main">',
+	 );
+	 
+	 foreach($years as $k=>$y){
+		 //echo "-->>".$k; die();
+		 $getInfo = array();
+		 $getInfo = getAssetDataWithYearStatusUID($k,$user_arr,'1');
+		 if(!empty($getInfo)){
+			 $submittedYear[] = $k; 
+			 unset($years[$k]);
+		 }
+		 
+		
+		 if(in_array($y,$submittedYear)){
+			$link = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 'ack-file/'.$user_arr.'/'.$y,
+						  array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj>date('Y')){
+			$link = 'N/A';
+		}else{
+			$link = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		} 
+		 
+		 $form['backlogdate_'.$y] = array(
+			'#type' => 'markup',
+			'#markup' => $y.$link,
+			'#prefix' => '<div class="col-md-1"><div class="year-list">',
+			'#suffix' => '</div></div>'
+		);
+	 }
+	
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	
+	return $form;
+		
+}
+
+function backlog_accept_list($form, &$form_state) {
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	 
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+  $direc_code = getLoginUserDetailForAsset($user->uid);
+  
+  $allOfficer = individualAllofficer_list(0);
+  
+  //print_r($allOfficer); exit;
+  
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Declaration Year  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Group</b>')),
+	  array('data' => t('<b>Directorate Name  </b>')),
+	  array('data' => t('<b>Date of Acceptance  </b>')),
+	  array('data' => t('<b>Status </b>')),
+	  array('data' => t('<b>View </b>')),
+	
+	);
+	
+	$i=0;
+	  foreach($allOfficer as $data){
+		$i++;
+		if($data->status == 1){
+			$status = "Submitted";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}else{
+			$status = "Not Submitted";
+			$link = "";
+		}
+		
+		$rows[$data->uid.'_'.$data->declaration_yr.'_'.$data->id.'_'.$data->directorate_code] = array( 
+		  array('data' => t($data->declaration_yr)),	
+		  array('data' => t($data->fname)),
+		  array('data' => t($data->emp_group)),
+		  array('data' => t($data->directorate_name)),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->created_date)))),
+		  array('data' => t($status)),
+		  array('data' => t($link)),
+		);
+	  }
+	  
+  $form['table_heading'] = array(
+  			'#prefix' => '<div class="col-md-12"><h3>Backlog Accepted DoA to be Forwarded to Directorate</h3>',
+			'#suffix' => '</div>'
+  );
+  	  
+
+  $form['table_data'] = array(
+			'#type' => 'tableselect',
+			'#required' => TRUE,
+			'#header' => $header,
+			'#options' => $rows,
+			'#empty' => t('No users found'),
+			'#attributes' => array('class' => array('table pretty table-bordered table-hover sticky-enabled')),
+			'#prefix' => '<div class="col-md-12">',
+			'#suffix' => '</div>'
+		);
+		
+		$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => 'Forward to Directorate',
+			'#attributes' => array('class'=>array('form-control btn btn-success')),
+			'#prefix' => '<div class="col-md-3">',
+			'#suffix' => '</div>'
+		);
+	return $form;
+}	 
+
+function backlog_accept_list_validate($form, &$form_state){
+	$validation_flag = true;
+	foreach($form_state['values']['table_data'] as $k=>$val){
+		if($val!=0){
+			$validation_flag = false;
+			break;
+		}
+	}
+	if($validation_flag){
+		drupal_set_message('Please select atleast one officer.',$type = 'error');
+	}
+}
+
+function backlog_accept_list_submit($form, &$form_state) { 
+	global $user;
+	//$loginuser_code = getLoginUserDetailForAsset($user->uid);
+	$asset_user_id = "";
+	$asset_id = "";
+	$print_id = array();
+	
+	/****************************************Validation part**************************************************************/
+	$validation_flag = true;
+	$cnt = 0;
+	$msg = '';
+	//print_r($form_state['values']['table_data']); exit;
+	foreach($form_state['values']['table_data'] as $k=>$val){
+		/*if($val!=0){
+			$validation_flag = false;
+			break;
+		}*/
+		if($k==$val){
+			$cnt++;
+		}
+	}
+	if($cnt==0){
+		$msg = 'Please select atleast one officer.';
+		$validation_flag = false;
+		//break;
+	}else if($cnt>20){
+		$msg = 'More than 20 officers cannot be selected.';
+		$validation_flag = false;
+		//break;
+	}
+	
+	//echo $cnt; exit;
+	if($validation_flag==false){
+		drupal_set_message($msg,$type = 'error');
+		drupal_goto('backlog-accept-list-from-department');
+	}
+	/****************************************Validation part End**************************************************************/
+	
+	//print_r($form_state['values']['table_data']); exit;
+	
+	foreach($form_state['values']['table_data'] as $k=>$v){
+		if($k==$v){
+	
+			$d_arr = explode('_',$v);
+			
+			$print_id[] = $d_arr[0];
+			
+			$asset_user_id .= ",".$d_arr[0];
+			$asset_id .= ",".$d_arr[2];
+			
+			
+			$user_info = getLoginUserDetailForAsset($d_arr[0]);
+			send_sms($user_info['mobile'],'Your Asset Statement for the year '.$d_arr[1].' has been accepted by the Labour Department. Labour Department, WB','1107161492303882676');
+		}
+	}
+	
+	$asset_user_id = ltrim($asset_user_id,",");
+	$asset_id = ltrim($asset_id,",");
+	//print_r($print_id); exit;
+	$print_id = base64_encode(serialize($print_id));
+	
+	$number = forwarding_id();
+	$number = $number +1;
+	$forwarding_no = 'DOA-'.str_pad($number, 4, "0", STR_PAD_LEFT).'-'.$d_arr[3].'-'.$d_arr[1];
+	
+	$query1 = db_insert('a_transaction_history');
+	$query1->fields(array(
+					'uid' => $user->uid,
+					'asset_user_id' => $asset_user_id,
+					'status' => 'A',
+					'remarks'  => '',
+					'transaction_date'  => date('Y-m-d H:i:s'),
+					'asset_id' => $asset_id,
+					'declaration_year' =>  $d_arr[1],
+					'buld_pdf_link' => $print_id,
+					'directorate_code' => $d_arr[3],
+					'forwarding_no' => $forwarding_no
+			));
+	$transaction_id = $query1->execute();
+
+
+	$myarr = array();
+	foreach($form_state['values']['table_data'] as $key=>$val){
+		
+		if($key==$val){
+
+			$myarr = explode('_',$val);
+			
+					
+			$query = db_update('a_asset_mst');
+	  		$query->fields(array(
+	  						'forward_status' => 'A',
+							'transaction_id' => $transaction_id
+					));
+			$query->condition('id',$myarr[2],'=');
+  			$rs = $query->execute();
+			
+			
+			
+		}
+	}
+	
+   //$login_user_info = getLoginUserDetailForAsset($user->uid);  bulkacknowledgement-print
+   //send_sms($login_user_info['mobile'],'Your Asset Statement for the year '.$d_arr[1].' has been forwarded to the Labour Department.');
+
+	drupal_set_message('The Selected DoA of officers have been sucessfully accepted by the Labour Department! '.l('PRINT FORWARDING LETTER',
+	'bulkacknowledgement-received/'.$print_id.'/'.$d_arr[1], array('html' => TRUE,'attributes'=>array('target'=>'_blank'))));	
+	
+}
+
+function backlog_outbox_accept_list(){
+	
+    global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}	
+		 
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+  $direc_code = getLoginUserDetailForAsset($user->uid);
+
+  $ApprovedList = directorateForwardedList('A',$direc_code['directorate_code']);  
+  
+  //$ForwardList = directorateForwardedListFromLD('F',$direc_code['directorate_code']);
+  
+  //print_r($ForwardList); exit;
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Directorate Name</b>')),	
+	  array('data' => t('<b>Number of DoA Sent</b>')),
+	  array('data' => t('<b>Date of DoA Forwarded</b>')),
+	  array('data' => t('<b>PDF Link</b>')),
+	);
+	
+	$i=0;
+	  foreach($ApprovedList as $data){
+		$i++;
+		$arr = explode(",",$data->asset_id);
+		
+		if(trim($data->directorate_code) == 'DB'){
+			$directorate_name = 'Boilers';
+		}elseif(trim($data->directorate_code) == 'LC'){
+			$directorate_name = 'Labour Commissionerate';
+		}elseif(trim($data->directorate_code) == 'DE'){
+			$directorate_name = 'Directorate of Employment';
+		}elseif(trim($data->directorate_code) == 'DF'){
+			$directorate_name = 'Directorate of Factories';
+		}elseif(trim($data->directorate_code) == 'ESI'){
+			$directorate_name = 'Directorate of ESI (MB) Scheme';
+		}elseif(trim($data->directorate_code) == 'LWB'){
+			$directorate_name = 'Labour Welfare Board';
+		}elseif(trim($data->directorate_code) == 'DEC'){
+			$directorate_name = 'Directorate of Employees Compensation';
+		}elseif(trim($data->directorate_code) == 'DIT'){
+			$directorate_name = 'Directorate of Industrial Tribunal';
+		}elseif(trim($data->directorate_code) == 'LD'){
+			$directorate_name = 'Labour Department';
+		}
+		
+		$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'bulkacknowledgement-received/'.$data->buld_pdf_link.'/'.$data->declaration_year, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));		
+		$rows[] = array( 
+		  array('data' => t(l($directorate_name, 'backlog-accept-doa-list-from-ld/'.base64_encode($data->asset_id).'/'.$data->directorate_code))),	
+		  array('data' => t(count($arr))),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->transaction_date)))),
+		  array('data' => $link),
+		);
+	  }
+	
+	
+	 $output = theme_table(
+    array(
+	  'type' => 'table',
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+	  //'multiple' => FALSE,
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+
+	
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+
+}
+
+/***************************************** need to upload *********************************************/
+
+function from_nodal_field_outbox_list(){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+  $direc_code = getLoginUserDetailForAsset($user->uid);
+
+  $ForwardList = directorateApproveRejectListFromField($direc_code['directorate_code']);  
+  
+  //$ForwardList = directorateForwardedListFromLD('F',$direc_code['directorate_code']);
+  
+  //print_r($ForwardList); exit;
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Field Office Name</b>')),	
+	  array('data' => t('<b>Number of DoA Sent</b>')),
+	  array('data' => t('<b>Date of DoA Forwarded</b>')),
+	  array('data' => t('<b>PDF Link</b>')),
+	);
+	
+	$i=0;
+	  foreach($ForwardList as $data){
+		$i++;
+		$arr = explode(",",$data->asset_id);
+		
+		if(trim($data->directorate_code) == 'DB'){
+			$directorate_name = 'Boilers';
+		}elseif(trim($data->directorate_code) == 'LC'){
+			$directorate_name = 'Labour Commissionerate';
+		}elseif(trim($data->directorate_code) == 'DE'){
+			$directorate_name = 'Directorate of Employment';
+		}elseif(trim($data->directorate_code) == 'DF'){
+			$directorate_name = 'Directorate of Factories';
+		}elseif(trim($data->directorate_code) == 'ESI'){
+			$directorate_name = 'Directorate of ESI (MB) Scheme';
+		}elseif(trim($data->directorate_code) == 'LWB'){
+			$directorate_name = 'Labour Welfare Board';
+		}elseif(trim($data->directorate_code) == 'DEC'){
+			$directorate_name = 'Directorate of Employees Compensation';
+		}elseif(trim($data->directorate_code) == 'DIT'){
+			$directorate_name = 'Directorate of Industrial Tribunal';
+		}elseif(trim($data->directorate_code) == 'LD'){
+			$directorate_name = 'Labour Department';
+		}
+		
+		$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'bulkacknowledgement-field-received/'.$data->buld_pdf_link.'/'.$data->declaration_year, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));		
+		$rows[] = array( 
+		  array('data' => t(l($data->office_name, 'field-outbox-list/'.base64_encode($data->asset_id).'/'.$data->directorate_code))),	
+		  array('data' => t(count($arr))),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->transaction_date)))),
+		  array('data' => $link),
+		);
+	  }
+	
+	
+	 $output = theme_table(
+    array(
+	  'type' => 'table',
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+	  //'multiple' => FALSE,
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+ return '<div class="formdvider viewlist">'.$output.'</div>';
+}
+
+function from_field_officer_list_to_nodal($form, &$form_state, $arg1, $arg2, $arg3) {
+  global $user;	 
+  $status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+  $asset_id = base64_decode($arg1);
+  $direc_code = $arg2;
+  $office_id = base64_decode($arg3);	
+  
+  //$direc_code = getLoginUserDetailForAsset($user->uid);
+  
+  $groupAlist = bulkGroupAofficer_list('F',$direc_code,$asset_id);
+  
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Declaration Year  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Employee Group  </b>')),
+	  array('data' => t('<b>Date of Acceptance  </b>')),
+	  array('data' => t('<b>Status </b>')),
+	  array('data' => t('<b>View </b>')),
+	 
+	);
+	
+	$i=0;
+	  foreach($groupAlist as $data){
+		$i++;
+		if($data->forward_status == 'F'){
+			$status = "Forwarded From Field";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}else{
+			$status = "Not Submitted";
+			$link = "";
+		}
+		//echo $data->directorate_code; exit;
+		
+		$rows[$data->uid.'_'.$data->declaration_yr.'_'.$data->id.'_'.$data->directorate_code.'_'.$office_id] = array( 
+		  array('data' => t($data->declaration_yr)),	
+		  array('data' => t($data->fname)),
+		  array('data' => t($data->emp_group)),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->created_date)))),
+		  array('data' => t($status)),
+		  array('data' => t($link)),
+		);
+	  }
+
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Receive Asset Declaration</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+
+
+  	$form['table_data'] = array(
+			'#type' => 'tableselect',
+			//'caption' => '<h3>DoA Group A Officers </h3>',
+			'#required' => TRUE,
+			'#header' => $header,
+			'#options' => $rows,
+			//'#multiple' => FALSE,
+			//'#default_value' => $selected_recipient_data,
+			'#empty' => t('No users found'),
+			'#attributes' => array('class' => array('table pretty table-bordered table-hover sticky-enabled')),
+			'#prefix' => '<div class="col-md-12">',
+			'#suffix' => '</div>'
+		);
+		
+		$form['accept_reject'] = array(
+			'#type' => 'select',
+			'#title' => t('Please select whether you want to Accept or Reject the Asset Declaration'),
+			//'#options' => array('1'=>t('Accept'),'2'=>t('Reject')),
+			'#options' => array('1'=>t('Accept')),
+			'#ajax' => array(
+				'callback' => 'ajax_accept_reject_callback',
+			 ),
+			'#required' => TRUE,
+			'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Please select whether you want to Accept or Reject the Asset Declaration'),
+			'#prefix' => '<div class="col-md-12">',
+			'#suffix' => '</div>'
+		);
+		if(isset($form_state['values']['accept_reject']) && $form_state['values']['accept_reject']=="2"){
+			$form['reject'] = array(
+				'#type' => 'select',
+				'#title' => t('Reason for rejection'),
+				'#options' => array('1'=>t('Mutilated'),'2'=>t('Not Properly Sealed'),'3'=>t('Apparently Blank')),
+				'#required' => TRUE,
+				'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Reason for rejection'),
+				'#prefix' => '<div id="replace_div_reject"><div class="col-md-12">',
+				'#suffix' => '</div></div>'
+			); 
+		}
+		$form['reject_blank'] = array(
+			'#prefix' => '<div id="replace_div_reject">',
+			'#suffix' => '</div>'
+		);
+		
+		
+		$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => 'Submit',
+			'#attributes' => array('class'=>array('form-control btn btn-info')),
+			'#prefix' => '<div class="col-md-2">',
+			'#suffix' => '</div>'
+		);
+		
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );
+	return $form;
+}
+
+function from_field_officer_list_to_nodal_validate($form, &$form_state){
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	$validation_flag = true;
+	foreach($form_state['values']['table_data'] as $k=>$val){
+		if($val!=0){
+			$validation_flag = false;
+			break;
+		}
+	}
+	if($validation_flag){
+		drupal_set_message('Please select atleast one officer.',$type = 'error');
+	}
+}
+function from_field_officer_list_to_nodal_submit($form, &$form_state) { 
+	global $user;
+	//echo $form_state['values']['accept_reject']; exit;
+	//$loginuser_code = getLoginUserDetailForAsset($user->uid);
+	
+	$asset_user_id = "";
+	$asset_id = "";
+	$print_id = array();
+	
+	//print_r($form_state['values']['table_data']); exit;
+	
+	foreach($form_state['values']['table_data'] as $k=>$v){
+		if($k==$v){
+
+			$d_arr = explode('_',$v);
+			
+			$print_id[] = $d_arr[0];
+			
+		    $asset_user_id .= ",".$d_arr[0];
+			$asset_id .= ",".$d_arr[2];
+			
+			$user_info = getLoginUserDetailForAsset($d_arr[0]);
+			if($form_state['values']['accept_reject'] == 2){
+				send_sms($user_info['mobile'],'Your Asset Statement for the year '.$d_arr[1].' has been rejected by the Directorate. Labour Department, WB','1107161492306808630');
+			}else{
+				send_sms($user_info['mobile'],'Your Asset Statement for the year '.$d_arr[1].' has been received by the Directorate Labour Department, WB','1107161492338250692');
+			}
+		}
+	}
+	
+	$asset_user_id = ltrim($asset_user_id,",");
+	$asset_id = ltrim($asset_id,",");
+	//print_r($print_id); exit;
+	$print_id = base64_encode(serialize($print_id));
+	
+	
+	$number = forwarding_id();
+	$number = $number +1;
+	$forwarding_no = 'DOA-'.str_pad($number, 4, "0", STR_PAD_LEFT).'-'.$d_arr[3].'-'.$d_arr[1];
+	
+	
+	if($form_state['values']['accept_reject'] == 2){
+		$sts = 'R';
+		$remarks = $form_state['values']['reject'];
+	}else{
+		$sts = 'A';
+		$remarks = "";
+	}
+	
+	$query1 = db_insert('a_transaction_history');
+	$query1->fields(array(
+					'uid' => $user->uid,
+					'asset_user_id' => $asset_user_id,
+					'status' => $sts,
+					'remarks'  => $remarks,
+					'transaction_date'  => date('Y-m-d H:i:s'),
+					'asset_id' => $asset_id,
+					'declaration_year' =>  $d_arr[1],
+					'buld_pdf_link' => $print_id,
+					'directorate_code' => $d_arr[3],
+					'forwarding_no' => $forwarding_no,
+					'office_id' => $d_arr[4],
+			));
+	$transaction_id = $query1->execute();
+	
+	$myarr = array();
+	foreach($form_state['values']['table_data'] as $key=>$val){
+		
+		if($key==$val){
+
+			$myarr = explode('_',$val);
+			
+					
+			$query = db_update('a_asset_mst');
+	  		$query->fields(array(
+	  						'forward_status' => $sts,
+							'transaction_id' => $transaction_id
+					));
+			$query->condition('id',$myarr[2],'=');
+  			$rs = $query->execute();
+			
+		}
+	}
+	
+	if($form_state['values']['accept_reject'] == 2){
+		drupal_set_message('The Selected DoA of officers have been rejected by the Directorate! '.l('PRINT ACKNOWLEDGEMENT',
+	'bulkacknowledgement-field-received/'.$print_id, array('html' => TRUE,'attributes'=>array('target'=>'_blank'))));
+	}else{
+		drupal_set_message('The Selected DoA of officers have been sucessfully received by the Directorate! '.l('PRINT ACKNOWLEDGEMENT',
+	'bulkacknowledgement-field-received/'.$print_id, array('html' => TRUE,'attributes'=>array('target'=>'_blank'))));
+	}
+	
+}
+
+function directorate_inbox_list_for_Field(){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}	 
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+  $direc_code = getLoginUserDetailForAsset($user->uid);
+
+  $ForwardList = directorateForwardedListFromField('F',$direc_code['directorate_code']);
+  
+  //print_r($ForwardList); exit;
+  //$ForwardList = directorateForwardedListFromLD('F',$direc_code['directorate_code']);
+  
+  //print_r($ForwardList); exit;
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Field Office Name</b>')),	
+	  array('data' => t('<b>Number of DoA Received</b>')),
+	  array('data' => t('<b>Date of DoA Forwarded</b>')),
+	  array('data' => t('<b>PDF Link</b>')),
+	);
+	
+	$i=0;
+	$cnt = 0;
+	//$cnt = count($ForwardList);
+	  foreach($ForwardList as $data){
+		$i++;
+		
+		if(trim($data->directorate_code) == 'DB'){
+			$directorate_name = 'Boilers';
+		}elseif(trim($data->directorate_code) == 'LC'){
+			$directorate_name = 'Labour Commissionerate';
+		}elseif(trim($data->directorate_code) == 'DE'){
+			$directorate_name = 'Directorate of Employment';
+		}elseif(trim($data->directorate_code) == 'DF'){
+			$directorate_name = 'Directorate of Factories';
+		}elseif(trim($data->directorate_code) == 'ESI'){
+			$directorate_name = 'Directorate of ESI (MB) Scheme';
+		}elseif(trim($data->directorate_code) == 'LWB'){
+			$directorate_name = 'Labour Welfare Board';
+		}elseif(trim($data->directorate_code) == 'DEC'){
+			$directorate_name = 'Directorate of Employees Compensation';
+		}elseif(trim($data->directorate_code) == 'DIT'){
+			$directorate_name = 'Directorate of Industrial Tribunal';
+		}elseif(trim($data->directorate_code) == 'LD'){
+			$directorate_name = 'Labour Department';
+		}
+		
+		$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'bulkacknowledgement-field-print/'.$data->buld_pdf_link.'/'.$data->declaration_year, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));		
+		$rows[] = array( 
+		  array('data' => t(l($data->office_name, 'field-inbox-accept-reject/'.base64_encode($data->asset_id).'/'.trim($data->directorate_code).'/'.base64_encode(trim($data->office_id))))),	
+		  array('data' => t($data->total_cnt)),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->transaction_date)))),
+		  array('data' => $link),
+		);
+	  }
+	  
+	  
+	
+	
+	 $output = theme_table(
+    array(
+	  'type' => 'table',
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>DoA Received List Inbox</h3>',
+      'colgroups' => array(),
+	  //'multiple' => FALSE,
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+
+	
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+}
+
+function field_outbox_list($arg1,$arg2){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}	
+  	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$asset_id = base64_decode($arg1);
+	$direc_code = $arg2;
+	
+	$groupAlist = bulkGroupAofficer_list('',$direc_code,$asset_id);
+  
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Sl No.  </b>')),	
+	  array('data' => t('<b>Declaration Year  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Employee Group  </b>')),
+	  array('data' => t('<b>Date of Acceptance  </b>')),
+	  array('data' => t('<b>Status </b>')),
+	  array('data' => t('<b>View </b>')),
+	 
+	);
+	
+	$i=0;
+	  foreach($groupAlist as $data){
+		$i++;
+		if($data->forward_status == 'F'){
+			$status = "Forwarded To Directorate";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}elseif($data->forward_status == 'R'){
+			$status = "Rejected By Directorate";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}elseif($data->forward_status == 'A'){
+			$status = "Received By Directorate";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}else{
+			$status = "Not Submitted";
+			$link = "";
+		}
+		
+		$rows[$data->uid] = array( 
+		  $i,
+		  array('data' => t($data->declaration_yr)),	
+		  array('data' => t($data->fname)),
+		  array('data' => t($data->emp_group)),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->created_date)))),
+		  array('data' => t($status)),
+		  array('data' => t($link)),
+		);
+	  }
+	
+	$output = theme_table(
+    array(
+	  'type' => 'table',
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+	  //'multiple' => FALSE,
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+ return '<div class="formdvider viewlist">'.$output.'</div>';
+	
+}
+
+
+function field_accept_list($form, &$form_state){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+  	$direc_code = getLoginUserDetailForAsset($user->uid);
+	
+	$rsFieldData = individualDoAListByFieldOfficer(0,$direc_code['directorate_code'],$direc_code['office_id']);
+	
+  
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Declaration Year  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Date of Acceptance  </b>')),
+	  array('data' => t('<b>Status </b>')),
+	  array('data' => t('<b>View </b>')),
+	
+	);
+	
+	$i=0;
+	  foreach($rsFieldData as $data){
+		$i++;
+		if($data->status == 1){
+			$status = "Submitted";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}else{
+			$status = "Not Submitted";
+			$link = "";
+		}
+		
+		$rows[$data->uid.'_'.$data->declaration_yr.'_'.$data->id.'_'.$data->directorate_code.'_'.$data->office_id] = array( 
+		  array('data' => t($data->declaration_yr)),	
+		  array('data' => t($data->fname)),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->created_date)))),
+		  array('data' => t($status)),
+		  array('data' => t($link)),
+		);
+	  }
+	  
+  $form['table_heading'] = array(
+  			'#prefix' => '<div class="col-md-12"><h3>Accept DoA By Field Officers</h3>',
+			'#suffix' => '</div>'
+  );
+  	  
+
+  $form['table_data'] = array(
+		'#type' => 'tableselect',
+		//'#caption' => '',
+		'#required' => TRUE,
+		'#header' => $header,
+		'#options' => $rows,
+		//'#multiple' => FALSE,
+		//'#default_value' => $selected_recipient_data,
+		'#empty' => t('No users found'),
+		'#attributes' => array('class' => array('table pretty table-bordered table-hover sticky-enabled')),
+		'#prefix' => '<div class="col-md-12">',
+		'#suffix' => '</div>'
+	);
+		
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => 'Forward to Directorate',
+		'#attributes' => array('class'=>array('form-control btn btn-success')),
+		'#prefix' => '<div class="col-md-3">',
+		'#suffix' => '</div>'
+	);
+	return $form;
+}
+
+function field_accept_list_validate($form, &$form_state){
+	$validation_flag = true;
+	foreach($form_state['values']['table_data'] as $k=>$val){
+		if($val!=0){
+			$validation_flag = false;
+			break;
+		}
+	}
+	if($validation_flag){
+		drupal_set_message('Please select atleast one officer.',$type = 'error');
+	}
+}
+
+function field_accept_list_submit($form, &$form_state) { 
+	global $user;
+	//$loginuser_code = getLoginUserDetailForAsset($user->uid);
+	$asset_user_id = "";
+	$asset_id = "";
+	$print_id = array();
+	
+	/****************************************Validation part**************************************************************/
+	$validation_flag = true;
+	$cnt = 0;
+	$msg = '';
+	//print_r($form_state['values']['table_data']); exit;
+	foreach($form_state['values']['table_data'] as $k=>$val){
+		/*if($val!=0){
+			$validation_flag = false;
+			break;
+		}*/
+		if($k==$val){
+			$cnt++;
+		}
+	}
+	if($cnt==0){
+		$msg = 'Please select atleast one officer.';
+		$validation_flag = false;
+		//break;
+	}else if($cnt>20){
+		$msg = 'More than 20 officers cannot be selected.';
+		$validation_flag = false;
+		//break;
+	}
+	
+	//echo $cnt; exit;
+	if($validation_flag==false){
+		drupal_set_message($msg,$type = 'error');
+		drupal_goto('field-accept-list');
+	}
+	/****************************************Validation part End**************************************************************/
+	
+	//print_r($form_state['values']['table_data']); exit;
+	
+	foreach($form_state['values']['table_data'] as $k=>$v){
+		if($k==$v){
+	
+			$d_arr = explode('_',$v);
+			
+			$print_id[] = $d_arr[0];
+			
+			$asset_user_id .= ",".$d_arr[0];
+			$asset_id .= ",".$d_arr[2];
+			
+			
+			$user_info = getLoginUserDetailForAsset($d_arr[0]);
+			send_sms($user_info['mobile'],'Your Asset Statement for the year '.$d_arr[1].' has been forwarded to the Directorate Nodal Officer. Labour Department, WB','1107161492309838798');
+		}
+	}
+	
+	$asset_user_id = ltrim($asset_user_id,",");
+	$asset_id = ltrim($asset_id,",");
+	//print_r($print_id); exit;
+	$print_id = base64_encode(serialize($print_id));
+	
+	$number = forwarding_id();
+	$number = $number +1;
+	$forwarding_no = 'DOA-'.str_pad($number, 4, "0", STR_PAD_LEFT).'-'.$d_arr[3].'-'.$d_arr[1];
+	
+	$query1 = db_insert('a_transaction_history');
+	$query1->fields(array(
+					'uid' => $user->uid,
+					'asset_user_id' => $asset_user_id,
+					'status' => 'F',
+					'remarks'  => '',
+					'transaction_date'  => date('Y-m-d H:i:s'),
+					'asset_id' => $asset_id,
+					'declaration_year' =>  $d_arr[1],
+					'buld_pdf_link' => $print_id,
+					'directorate_code' => $d_arr[3],
+					'forwarding_no' => $forwarding_no,
+					'office_id' => $d_arr[4]
+					
+			));
+	$transaction_id = $query1->execute();
+
+
+	$myarr = array();
+	foreach($form_state['values']['table_data'] as $key=>$val){
+		
+		if($key==$val){
+
+			$myarr = explode('_',$val);
+			
+					
+			$query = db_update('a_asset_mst');
+	  		$query->fields(array(
+	  						'forward_status' => 'F',
+							'transaction_id' => $transaction_id
+					));
+			$query->condition('id',$myarr[2],'=');
+  			$rs = $query->execute();
+			
+		}
+	}
+	
+	drupal_set_message('The Selected DoA of officers have been sucessfully forwarded to the Directorate! '.l('PRINT FORWARDING LETTER',
+	'bulkacknowledgement-field-print/'.$print_id.'/'.$d_arr[1], array('html' => TRUE,'attributes'=>array('target'=>'_blank'))));	
+	
+}
+
+function directorate_field_inbox_list(){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+  $direc_code = getLoginUserDetailForAsset($user->uid);
+
+  $ForwardList = directorateFieldForwardedList('F',$direc_code['directorate_code'],$direc_code['office_id']);  
+  
+  //$ForwardList = directorateForwardedListFromLD('F',$direc_code['directorate_code']);
+  
+  //print_r($ForwardList); exit;
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Document Number</b>')),	
+	  array('data' => t('<b>Number of DoA Sent</b>')),
+	  array('data' => t('<b>Date of DoA Forwarded</b>')),
+	  array('data' => t('<b>PDF Link</b>')),
+	);
+	
+	$i=0;
+	  foreach($ForwardList as $data){
+		$i++;
+		$arr = explode(",",$data->asset_id);
+		
+		if(trim($data->directorate_code) == 'DB'){
+			$directorate_name = 'Boilers';
+		}elseif(trim($data->directorate_code) == 'LC'){
+			$directorate_name = 'Labour Commissionerate';
+		}elseif(trim($data->directorate_code) == 'DE'){
+			$directorate_name = 'Directorate of Employment';
+		}elseif(trim($data->directorate_code) == 'DF'){
+			$directorate_name = 'Directorate of Factories';
+		}elseif(trim($data->directorate_code) == 'ESI'){
+			$directorate_name = 'Directorate of ESI (MB) Scheme';
+		}elseif(trim($data->directorate_code) == 'LWB'){
+			$directorate_name = 'Labour Welfare Board';
+		}elseif(trim($data->directorate_code) == 'DEC'){
+			$directorate_name = 'Directorate of Employees Compensation';
+		}elseif(trim($data->directorate_code) == 'DIT'){
+			$directorate_name = 'Directorate of Industrial Tribunal';
+		}elseif(trim($data->directorate_code) == 'LD'){
+			$directorate_name = 'Labour Department';
+		}
+		
+		$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'bulkacknowledgement-field-print/'.$data->buld_pdf_link.'/'.$data->declaration_year, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));		
+		$rows[] = array( 
+		  array('data' => t(l($data->forwarding_no, 'field-outbox-list/'.base64_encode($data->asset_id).'/'.$data->directorate_code))),	
+		  array('data' => t(count($arr))),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->transaction_date)))),
+		  array('data' => $link),
+		);
+	  }
+	
+	
+	 $output = theme_table(
+    array(
+	  'type' => 'table',
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+	  //'multiple' => FALSE,
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+ return '<div class="formdvider viewlist">'.$output.'</div>';
+}
+
+/***************************************** need to upload end *****************************************/
+
+	 
+	 
+function groupA_officer_list($form, &$form_state) {
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	 
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+  $direc_code = getLoginUserDetailForAsset($user->uid);
+  
+  $groupAlist = individualGroupAofficer_list(0,$direc_code['directorate_code']);
+  
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Sl No  </b>')),	
+	  array('data' => t('<b>Declaration Year  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Employee Group  </b>')),
+	  array('data' => t('<b>Date of Acceptance  </b>')),
+	  array('data' => t('<b>Status </b>')),
+	  array('data' => t('<b>View </b>')),
+	
+	);
+	
+	$i=0;
+	  foreach($groupAlist as $data){
+		$i++;
+		if($data->status == 1){
+			$status = "Submitted";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}else{
+			$status = "Not Submitted";
+			$link = "";
+		}
+		
+		$rows[$data->uid.'_'.$data->declaration_yr.'_'.$data->id.'_'.$data->directorate_code] = array( 
+		  $i,	
+		  array('data' => t($data->declaration_yr)),	
+		  array('data' => t($data->fname)),
+		  array('data' => t($data->emp_group)),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->created_date)))),
+		  array('data' => t($status)),
+		  array('data' => t($link)),
+		);
+	  }
+	  
+  $form['table_heading'] = array(
+  			'#prefix' => '<div class="col-md-12"><h3>DoA GroupA Officers</h3>',
+			'#suffix' => '</div>'
+  );
+  	  
+
+  $form['table_data'] = array(
+			'#type' => 'tableselect',
+			//'#caption' => '',
+			'#required' => TRUE,
+			'#header' => $header,
+			'#options' => $rows,
+			//'#multiple' => FALSE,
+			//'#default_value' => $selected_recipient_data,
+			'#empty' => t('No users found'),
+			'#attributes' => array('class' => array('table pretty table-bordered table-hover sticky-enabled')),
+			'#prefix' => '<div class="col-md-12">',
+			'#suffix' => '</div>'
+		);
+		
+ if(in_array(variable_get('assetdiradmin', 10), array_keys($user->roles))){
+		$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => 'Forward to Department',
+			'#attributes' => array('class'=>array('form-control btn btn-success')),
+			'#prefix' => '<div class="col-md-3">',
+			'#suffix' => '</div>'
+		);
+ }
+	return $form;
+ //return '<div class="formdvider viewlist">'.$output.'</div>';	
+}	 
+
+function groupA_officer_list_validate($form, &$form_state){
+	$validation_flag = true;
+	foreach($form_state['values']['table_data'] as $k=>$val){
+		if($val!=0){
+			$validation_flag = false;
+			break;
+		}
+	}
+	if($validation_flag){
+		drupal_set_message('Please select atleast one officer.',$type = 'error');
+	}
+	
+}
+
+function groupA_officer_list_submit($form, &$form_state) { 
+	global $user;
+	//$loginuser_code = getLoginUserDetailForAsset($user->uid);
+	$asset_user_id = "";
+	$asset_id = "";
+	$print_id = array();
+	
+	/****************************************Validation part**************************************************************/
+	$validation_flag = true;
+	$cnt = 0;
+	$msg = '';
+	//print_r($form_state['values']['table_data']); exit;
+	foreach($form_state['values']['table_data'] as $k=>$val){
+		/*if($val!=0){
+			$validation_flag = false;
+			break;
+		}*/
+		if($k==$val){
+			$cnt++;
+		}
+	}
+	if($cnt==0){
+		$msg = 'Please select atleast one officer.';
+		$validation_flag = false;
+		//break;
+	}else if($cnt>20){
+		$msg = 'More than 20 officers cannot be selected.';
+		$validation_flag = false;
+		//break;
+	}
+	
+	//echo $cnt; exit;
+	if($validation_flag==false){
+		drupal_set_message($msg,$type = 'error');
+		drupal_goto('groupA-officer-list');
+	}
+	/****************************************Validation part End**************************************************************/
+	
+	foreach($form_state['values']['table_data'] as $k=>$v){
+		if($k==$v){
+	
+			$d_arr = explode('_',$v);
+			
+			$print_id[] = $d_arr[0];
+			
+			$asset_user_id .= ",".$d_arr[0];
+			$asset_id .= ",".$d_arr[2];
+			
+			
+			$user_info = getLoginUserDetailForAsset($d_arr[0]);
+			send_sms($user_info['mobile'],'Your Asset Statement for the year '.date('Y').' has been forwarded to the Labour Department. Labour Department, WB','1107161492312489713');
+		}
+	}
+	
+	$asset_user_id = ltrim($asset_user_id,",");
+	$asset_id = ltrim($asset_id,",");
+	//print_r($print_id); exit;
+	$print_id = base64_encode(serialize($print_id));
+	
+	$number = forwarding_id();
+	$number = $number +1;
+	$forwarding_no = 'DOA-'.str_pad($number, 4, "0", STR_PAD_LEFT).'-'.$d_arr[3].'-'.$d_arr[1];
+	
+	$query1 = db_insert('a_transaction_history');
+	$query1->fields(array(
+					'uid' => $user->uid,
+					'asset_user_id' => $asset_user_id,
+					'status' => 'F',
+					'remarks'  => '',
+					'transaction_date'  => date('Y-m-d H:i:s'),
+					'asset_id' => $asset_id,
+					'declaration_year' =>  $d_arr[1],
+					'buld_pdf_link' => $print_id,
+					'directorate_code' => $d_arr[3],
+					'forwarding_no' => $forwarding_no
+			));
+	$transaction_id = $query1->execute();
+
+
+	$myarr = array();
+	foreach($form_state['values']['table_data'] as $key=>$val){
+		
+		if($key==$val){
+
+			$myarr = explode('_',$val);
+			
+					
+			$query = db_update('a_asset_mst');
+	  		$query->fields(array(
+	  						'forward_status' => 'F',
+							'transaction_id' => $transaction_id
+					));
+			$query->condition('id',$myarr[2],'=');
+  			$rs = $query->execute();
+			
+			
+			
+		}
+	}
+	
+   
+
+	drupal_set_message('The Selected DoA of officers have been sucessfully forwarded to the Labour Department! '.l('PRINT FORWARDING LETTER',
+	'bulkacknowledgement-print/'.$print_id.'/'.$d_arr[1], array('html' => TRUE,'attributes'=>array('target'=>'_blank'))));	
+	
+}
+
+
+function groupA_officer_list_directorate($form, &$form_state, $arg1, $arg2) {
+  global $user;	 
+  $status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+  
+  ctools_include('modal');
+  ctools_modal_add_js();
+  
+  $asset_id = base64_decode($arg1);
+  $direc_code = $arg2;	
+  
+  //$direc_code = getLoginUserDetailForAsset($user->uid);
+  
+  $groupAlist = bulkGroupAofficer_list('F',$direc_code,$asset_id);
+  //print_r( $groupAlist); exit;
+  
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Declaration Year  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Employee Group </b>')),
+	  array('data' => t('<b>Date of Acceptance  </b>')),
+	  array('data' => t('<b>Status </b>')),
+	  array('data' => t('<b>View </b>')),
+	 
+	);
+	
+	$i=0;
+	  foreach($groupAlist as $data){
+		$i++;
+		if($data->forward_status == 'F'){
+			$status = "Forwarded To Department";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}else{
+			$status = "Not Submitted";
+			$link = "";
+		}
+		//echo $data->directorate_code; exit;
+		
+		$rows[$data->uid.'_'.$data->declaration_yr.'_'.$data->id.'_'.$data->directorate_code] = array( 
+		  array('data' => t($data->declaration_yr)),	
+		  array('data' => t($data->fname)),
+		  array('data' => t($data->emp_group)),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->created_date)))),
+		  array('data' => t($status)),
+		  array('data' => t($link)),
+		);
+	  }
+
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Receive Asset Declaration</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+
+
+  	$form['table_data'] = array(
+			'#type' => 'tableselect',
+			//'caption' => '<h3>DoA Group A Officers </h3>',
+			'#required' => TRUE,
+			'#header' => $header,
+			'#options' => $rows,
+			//'#multiple' => FALSE,
+			//'#default_value' => $selected_recipient_data,
+			'#empty' => t('No users found'),
+			'#attributes' => array('class' => array('table pretty table-bordered table-hover sticky-enabled')),
+			'#prefix' => '<div class="col-md-12">',
+			'#suffix' => '</div>'
+		);
+		
+		$form['accept_reject'] = array(
+			'#type' => 'select',
+			//'#title' => t('Please select whether you want to Accept or Reject the Asset Declaration'),
+			'#title' => t('Please select whether you want to Accept the Asset Declaration'),
+			//'#options' => array('1'=>t('Accept'),'2'=>t('Reject')),
+			'#options' => array('1'=>t('Accept')),
+			'#ajax' => array(
+				'callback' => 'ajax_accept_reject_callback',
+			 ),
+			'#required' => TRUE,
+			'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Please select whether you want to Accept the Asset Declaration'),
+			'#prefix' => '<div class="col-md-12">',
+			'#suffix' => '</div>'
+		);
+		if(isset($form_state['values']['accept_reject']) && $form_state['values']['accept_reject']=="2"){
+			$form['reject'] = array(
+				'#type' => 'select',
+				'#title' => t('Reason for rejection'),
+				'#options' => array('1'=>t('Mutilated'),'2'=>t('Not Properly Sealed'),'3'=>t('Apparently Blank')),
+				'#required' => TRUE,
+				'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Reason for rejection'),
+				'#prefix' => '<div id="replace_div_reject"><div class="col-md-12">',
+				'#suffix' => '</div></div>'
+			); 
+		}
+		$form['reject_blank'] = array(
+			'#prefix' => '<div id="replace_div_reject">',
+			'#suffix' => '</div>'
+		);
+		
+		
+		$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => 'Submit',
+			'#attributes' => array('class'=>array('form-control btn btn-info')),
+			'#prefix' => '<div class="col-md-2">',
+			'#suffix' => '</div>'
+		);
+		/*$form['back'] = array(
+			'#type' => 'submit',
+			'#validate' => array('groupA_officer_list_directorate_validate'),
+			'#submit'=>array('not_applicable_asset'),
+			'#value' => 'Reject',
+			'#ajax' => array(
+				//'wrapper' => 'id_of_some_unique_element',
+				'callback' => 'my_module_callback',  
+			  ),
+			'#attributes' => array('class'=>array('form-control btn btn-danger')),
+			'#prefix' => '<div class="col-md-2">',
+			'#suffix' => '</div>'
+		);*/
+		
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );
+	return $form;
+ //return '<div class="formdvider viewlist">'.$output.'</div>';	
+}
+
+function ajax_accept_reject_callback($form, &$form_state){
+	$commands   = array();
+	if($form_state['values']['accept_reject']=='2'){
+		$commands[] = ajax_command_replace('#replace_div_reject', '<div id="replace_div_reject">'.drupal_render($form['reject']).'</div>');
+	}else{
+		$commands[] = ajax_command_replace('#replace_div_reject', '<div id="replace_div_reject">'.drupal_render($form['reject_blank']).'</div>');
+	}
+	return array('#type' => 'ajax', '#commands' => $commands);
+}
+/*function my_module_callback($form, &$form_state){
+	return drupal_get_form('gtnmodal_form');
+}*/
+
+/*function not_applicable_asset($form, &$form_state){
+   ctools_include('modal');
+    $form_state = array(
+      'ajax' => TRUE,
+      'title' => t(''),
+	  'gtn_id'=>$form_state['values']['table_data'],
+    );
+    $output = ctools_modal_form_wrapper('gtnmodal_form', $form_state);
+    if (!empty($form_state['ajax_commands'])) {
+      $output = $form_state['ajax_commands'];
+    }
+    print ajax_render($output);
+    drupal_exit();
+  
+}
+
+function gtnmodal_form($form, &$form_state){
+  $form = array();
+  //$form['#attributes']['id'][] = 'my';	
+  $form['gtn_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('gtn_id'),
+	'#required' => TRUE,
+	'#default_value' => $form_state['gtn_id'],
+	'#attributes' => array('class'=>array('form-control'),'placeholder'=>'GTN ID',),
+	'#prefix' => '<div class="col-md-12">',
+	'#suffix' => '</div>'
+  );
+  
+  $form['notsubmit'] = array(
+	'#type' => 'submit',
+	'#id' => 'gtn_btn',
+	'#ajax' => array(
+				'callback' => 'gtnmodal_form_ajax',
+				'wrapper' => 'table_div_replace',
+			),
+	'#value' => 'Reject12',
+	'#attributes' => array('class'=>array('form-control btn btn-info')),
+	'#prefix' => '<div class="col-md-2">',
+	'#suffix' => '</div>'
+  );
+   return $form;
+}
+
+
+function gtnmodal_form_ajax($form, &$form_state){
+	die('hii');
+	//return "-->".$form_state['input']['gtn_id'];
+}
+*/
+function groupA_officer_list_directorate_validate($form, &$form_state){
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	$validation_flag = true;
+	foreach($form_state['values']['table_data'] as $k=>$val){
+		if($val!=0){
+			$validation_flag = false;
+			break;
+		}
+	}
+	if($validation_flag){
+		drupal_set_message('Please select atleast one officer.',$type = 'error');
+	}
+}
+
+function groupA_officer_list_directorate_submit($form, &$form_state) { 
+	global $user;
+	//echo $form_state['values']['accept_reject']; exit;
+	//$loginuser_code = getLoginUserDetailForAsset($user->uid);
+	
+	$asset_user_id = "";
+	$asset_id = "";
+	$print_id = array();
+	
+	foreach($form_state['values']['table_data'] as $k=>$v){
+		if($k==$v){
+
+			$d_arr = explode('_',$v);
+			
+			$print_id[] = $d_arr[0];
+			
+		    $asset_user_id .= ",".$d_arr[0];
+			$asset_id .= ",".$d_arr[2];
+			
+			$user_info = getLoginUserDetailForAsset($d_arr[0]);
+			if($form_state['values']['accept_reject'] == 2){
+				send_sms($user_info['mobile'],'Your Asset Statement for the year '.date('Y').' has been rejected by the Labour Department. Labour Department, WB','1107161492315642877');
+			}else{
+				send_sms($user_info['mobile'],'Your Asset Statement for the year '.date('Y').' has been received by the Labour Department. Labour Department, WB','1107161492319496729');
+			}
+		}
+	}
+	
+	$asset_user_id = ltrim($asset_user_id,",");
+	$asset_id = ltrim($asset_id,",");
+	//print_r($print_id); exit;
+	$print_id = base64_encode(serialize($print_id));
+	
+	
+	$number = forwarding_id();
+	$number = $number +1;
+	$forwarding_no = 'LABR-'.str_pad($number, 4, "0", STR_PAD_LEFT).'-LD-'.$d_arr[1];
+	
+	
+	if($form_state['values']['accept_reject'] == 2){
+		$sts = 'R';
+		$remarks = $form_state['values']['reject'];
+	}else{
+		$sts = 'A';
+		$remarks = "";
+	}
+	
+	$query1 = db_insert('a_transaction_history');
+	$query1->fields(array(
+					'uid' => $user->uid,
+					'asset_user_id' => $asset_user_id,
+					'status' => $sts,
+					'remarks'  => $remarks,
+					'transaction_date'  => date('Y-m-d H:i:s'),
+					'asset_id' => $asset_id,
+					'declaration_year' =>  $d_arr[1],
+					'buld_pdf_link' => $print_id,
+					'directorate_code' => $d_arr[3],
+					'forwarding_no' => $forwarding_no
+			));
+	$transaction_id = $query1->execute();
+	
+	$myarr = array();
+	foreach($form_state['values']['table_data'] as $key=>$val){
+		
+		if($key==$val){
+
+			$myarr = explode('_',$val);
+			
+					
+			$query = db_update('a_asset_mst');
+	  		$query->fields(array(
+	  						'forward_status' => $sts,
+							'transaction_id' => $transaction_id
+					));
+			$query->condition('id',$myarr[2],'=');
+  			$rs = $query->execute();
+			
+		}
+	}
+	
+	if($form_state['values']['accept_reject'] == 2){
+		drupal_set_message('The Selected DoA of officers have been rejected by the Labour Department! '.l('PRINT ACKNOWLEDGEMENT',
+	'bulkacknowledgement-received/'.$print_id.'/'.$myarr[1], array('html' => TRUE,'attributes'=>array('target'=>'_blank'))));
+	}else{
+		drupal_set_message('The Selected DoA of officers have been sucessfully received by the Labour Department! '.l('PRINT ACKNOWLEDGEMENT',
+	'bulkacknowledgement-received/'.$print_id.'/'.$myarr[1], array('html' => TRUE,'attributes'=>array('target'=>'_blank'))));
+	}
+	
+}
+
+function backlog_accept_doa_list_from_ld($arg1,$arg2){	 
+  global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}	
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+ //$direc_code = getLoginUserDetailForAsset($user->uid);
+ 
+ $asset_id = base64_decode($arg1);
+ $direc_code = $arg2;
+  
+ $groupAlist = bulkGroupAofficer_list('',$direc_code,$asset_id);
+  
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Sl No.  </b>')),	
+	  array('data' => t('<b>Declaration Year  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Employee Group  </b>')),
+	  array('data' => t('<b>Date of Acceptance  </b>')),
+	  array('data' => t('<b>Status </b>')),
+	  array('data' => t('<b>View </b>')),
+	 
+	);
+	
+	$i=0;
+	  foreach($groupAlist as $data){
+		$i++;
+		if($data->forward_status == 'F'){
+			$status = "Forwarded To Department";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}elseif($data->forward_status == 'R'){
+			$status = "Rejected By Department";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}elseif($data->forward_status == 'A'){
+			$status = "Received By Department";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}else{
+			$status = "Not Submitted";
+			$link = "";
+		}
+		
+		$rows[$data->uid] = array( 
+		  $i,
+		  array('data' => t($data->declaration_yr)),	
+		  array('data' => t($data->fname)),
+		  array('data' => t($data->emp_group)),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->created_date)))),
+		  array('data' => t($status)),
+		  array('data' => t($link)),
+		);
+	  }
+	
+	
+	 $output = theme_table(
+    array(
+	  'type' => 'table',
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+	  //'multiple' => FALSE,
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+
+	
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+}
+
+
+function groupA_outbox_list($arg1,$arg2){	 
+  global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}	
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+ //$direc_code = getLoginUserDetailForAsset($user->uid);
+ 
+ $asset_id = base64_decode($arg1);
+ $direc_code = $arg2;
+  
+ $groupAlist = bulkGroupAofficer_list('',$direc_code,$asset_id);
+  
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Sl No.  </b>')),	
+	  array('data' => t('<b>Declaration Year  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Employee Group  </b>')),
+	  array('data' => t('<b>Date of Acceptance  </b>')),
+	  array('data' => t('<b>Status </b>')),
+	  array('data' => t('<b>View </b>')),
+	 
+	);
+	
+	$i=0;
+	  foreach($groupAlist as $data){
+		$i++;
+		if($data->forward_status == 'F'){
+			$status = "Forwarded To Department";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}elseif($data->forward_status == 'R'){
+			$status = "Rejected By Department";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}elseif($data->forward_status == 'A'){
+			$status = "Received By Department";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}else{
+			$status = "Not Submitted";
+			$link = "";
+		}
+		
+		$rows[$data->uid] = array( 
+		  $i,
+		  array('data' => t($data->declaration_yr)),	
+		  array('data' => t($data->fname)),
+		  array('data' => t($data->emp_group)),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->created_date)))),
+		  array('data' => t($status)),
+		  array('data' => t($link)),
+		);
+	  }
+	
+	
+	 $output = theme_table(
+    array(
+	  'type' => 'table',
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+	  //'multiple' => FALSE,
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+
+	
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+}
+
+
+function groupA_outbox_details_list($arg1,$arg2){	
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	} 
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+ //$direc_code = getLoginUserDetailForAsset($user->uid);
+ 
+ $asset_id = base64_decode($arg1);
+ $direc_code = $arg2;
+  
+ $groupAlist = bulkGroupAofficer_list('',$direc_code,$asset_id);
+  
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Sl No.  </b>')),	
+	  array('data' => t('<b>Declaration Year  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Employee Group  </b>')),
+	  array('data' => t('<b>Date of Acceptance  </b>')),
+	  array('data' => t('<b>Status </b>')),
+	  array('data' => t('<b>View </b>')),
+	 
+	);
+	
+	$i=0;
+	  foreach($groupAlist as $data){
+		$i++;
+		if($data->forward_status == 'A'){
+			$status = "Received By Department";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}elseif($data->forward_status == 'R'){
+			$status = "Rejected";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}else{
+			$status = "Not Submitted";
+			$link = "";
+		}
+		
+		$rows[$data->uid] = array( 
+		  $i,
+		  array('data' => t($data->declaration_yr)),	
+		  array('data' => t($data->fname)),
+		  array('data' => t($data->emp_group)),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->created_date)))),
+		  array('data' => t($status)),
+		  array('data' => t($link)),
+		);
+	  }
+	
+	
+	 $output = theme_table(
+    array(
+	  'type' => 'table',
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>DoA Forwarded List</h3>',
+      'colgroups' => array(),
+	  //'multiple' => FALSE,
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+
+	
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+}
+
+
+function directorate_inbox_list_for_LD(){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}	 
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+  //$direc_code = getLoginUserDetailForAsset($user->uid);
+
+  $ForwardList = directorateForwardedListFromLD();
+  
+  //$ForwardList = directorateForwardedListFromLD('F',$direc_code['directorate_code']);
+  
+  //print_r($ForwardList); exit;
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Sl No. </b>')),	
+	  array('data' => t('<b>Directorate Name</b>')),	
+	  array('data' => t('<b>Number of DoA Received</b>')),
+	  array('data' => t('<b>Date of DoA Forwarded</b>')),
+	  array('data' => t('<b>PDF Link</b>')),
+	);
+	
+	$i=0;
+	$cnt = 0;
+	//$cnt = count($ForwardList);
+	  foreach($ForwardList as $data){
+		$i++;
+		
+		if(trim($data->directorate_code) == 'DB'){
+			$directorate_name = 'Boilers';
+		}elseif(trim($data->directorate_code) == 'LC'){
+			$directorate_name = 'Labour Commissionerate';
+		}elseif(trim($data->directorate_code) == 'DE'){
+			$directorate_name = 'Directorate of Employment';
+		}elseif(trim($data->directorate_code) == 'DF'){
+			$directorate_name = 'Directorate of Factories';
+		}elseif(trim($data->directorate_code) == 'ESI'){
+			$directorate_name = 'Directorate of ESI (MB) Scheme';
+		}elseif(trim($data->directorate_code) == 'LWB'){
+			$directorate_name = 'Labour Welfare Board';
+		}elseif(trim($data->directorate_code) == 'DEC'){
+			$directorate_name = 'Directorate of Employees Compensation';
+		}elseif(trim($data->directorate_code) == 'DIT'){
+			$directorate_name = 'Directorate of Industrial Tribunal';
+		}elseif(trim($data->directorate_code) == 'LD'){
+			$directorate_name = 'Labour Department';
+		}
+		
+		$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'bulkacknowledgement-print/'.$data->buld_pdf_link.'/'.$data->declaration_year, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));		
+		$rows[] = array( 
+		  $i,
+		  array('data' => t(l($directorate_name, 'groupA-inbox-list/'.base64_encode($data->asset_id).'/'.$data->directorate_code))),	
+		  array('data' => t($data->total_cnt)),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->transaction_date)))),
+		  array('data' => $link),
+		);
+	  }
+	  
+	  
+	
+	
+	 $output = theme_table(
+    array(
+	  'type' => 'table',
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>DoA Received List From Directorates</h3>',
+      'colgroups' => array(),
+	  //'multiple' => FALSE,
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+
+	
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+}
+
+function directorate_inbox_list(){
+    global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}	
+		 
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+  $direc_code = getLoginUserDetailForAsset($user->uid);
+
+  $ForwardList = directorateForwardedList('F',$direc_code['directorate_code']);  
+  
+  //$ForwardList = directorateForwardedListFromLD('F',$direc_code['directorate_code']);
+  
+  //print_r($ForwardList); exit;
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Directorate Name</b>')),
+	  array('data' => t('<b>Document No</b>')),	
+	  array('data' => t('<b>Number of DoA Sent</b>')),
+	  array('data' => t('<b>Date of DoA Forwarded</b>')),
+	  array('data' => t('<b>PDF Link</b>')),
+	);
+	
+	$i=0;
+	  foreach($ForwardList as $data){
+		$i++;
+		$arr = explode(",",$data->asset_id);
+		
+		if(trim($data->directorate_code) == 'DB'){
+			$directorate_name = 'Boilers';
+		}elseif(trim($data->directorate_code) == 'LC'){
+			$directorate_name = 'Labour Commissionerate';
+		}elseif(trim($data->directorate_code) == 'DE'){
+			$directorate_name = 'Directorate of Employment';
+		}elseif(trim($data->directorate_code) == 'DF'){
+			$directorate_name = 'Directorate of Factories';
+		}elseif(trim($data->directorate_code) == 'ESI'){
+			$directorate_name = 'Directorate of ESI (MB) Scheme';
+		}elseif(trim($data->directorate_code) == 'LWB'){
+			$directorate_name = 'Labour Welfare Board';
+		}elseif(trim($data->directorate_code) == 'DEC'){
+			$directorate_name = 'Directorate of Employees Compensation';
+		}elseif(trim($data->directorate_code) == 'DIT'){
+			$directorate_name = 'Directorate of Industrial Tribunal';
+		}elseif(trim($data->directorate_code) == 'LD'){
+			$directorate_name = 'Labour Department';
+		}
+		
+		$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'bulkacknowledgement-print/'.$data->buld_pdf_link.'/'.$data->declaration_year, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));		
+		$rows[] = array( 
+		  array('data' => t(l($directorate_name, 'groupA-outbox-list/'.base64_encode($data->asset_id).'/'.$data->directorate_code))),
+		  array('data' => $data->forwarding_no),
+		  array('data' => t(count($arr))),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->transaction_date)))),
+		  array('data' => $link),
+		);
+	  }
+	
+	
+	 $output = theme_table(
+    array(
+	  'type' => 'table',
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+	  //'multiple' => FALSE,
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+
+	
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+}
+
+function directorate_outbox_list(){	 
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+  $direc_code = getLoginUserDetailForAsset($user->uid);
+
+  //$ForwardList = directorateForwardedList('A',$direc_code['directorate_code']);
+  
+  $ForwardList = directorateListFromTransaction($direc_code['directorate_code']); 
+  //print_r($ForwardList); exit;
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Sl No. </b>')),	
+	  array('data' => t('<b>Directorate Name</b>')),
+	  array('data' => t('<b>Document No</b>')),	
+	  array('data' => t('<b>Number of DoA Sent</b>')),
+	  array('data' => t('<b>Date of DoA Forwarded</b>')),
+	  array('data' => t('<b>Status</b>')),
+	  array('data' => t('<b>Remarks</b>')),
+	  array('data' => t('<b>PDF Link</b>')),
+	);
+	
+	$i=0;
+	  foreach($ForwardList as $data){
+		$i++;
+		$arr = explode(",",$data->asset_id);
+		if(trim($data->directorate_code) == 'DB'){
+			$directorate_name = 'Boilers';
+		}elseif(trim($data->directorate_code) == 'LC'){
+			$directorate_name = 'Labour Commissionerate';
+		}elseif(trim($data->directorate_code) == 'DE'){
+			$directorate_name = 'Directorate of Employment';
+		}elseif(trim($data->directorate_code) == 'DF'){
+			$directorate_name = 'Directorate of Factories';
+		}elseif(trim($data->directorate_code) == 'ESI'){
+			$directorate_name = 'Directorate of ESI (MB) Scheme';
+		}elseif(trim($data->directorate_code) == 'LWB'){
+			$directorate_name = 'Labour Welfare Board';
+		}elseif(trim($data->directorate_code) == 'DEC'){
+			$directorate_name = 'Directorate of Employees Compensation';
+		}elseif(trim($data->directorate_code) == 'DIT'){
+			$directorate_name = 'Directorate of Industrial Tribunal';
+		}elseif(trim($data->directorate_code) == 'LD'){
+			$directorate_name = 'Labour Department';
+		}
+		
+		if(trim($data->status) == 'F'){
+			$status = 'Forwarded';
+		}elseif(trim($data->status) == 'R'){
+			$status = 'Rejected';
+		}elseif(trim($data->status) == 'A'){
+			$status = 'Accepted';
+		}
+		
+		if(trim($data->remarks) == '1'){
+			$remarks = 'Mutilated';
+		}elseif(trim($data->status) == '2'){
+			$remarks = 'Not Properly Sealed';
+		}elseif(trim($data->status) == '3'){
+			$remarks = 'Apparently Blank';
+		}else{
+			$remarks = 'N/A';
+		}
+		
+		$getyr = explode("-",$data->forwarding_no);
+		$submit_year = end($getyr);
+		
+		$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'bulkacknowledgement-received/'.$data->buld_pdf_link.'/'.$submit_year, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));		
+		$rows[] = array( 
+		  $i,
+		  array('data' => t(l($directorate_name, 'groupA-outbox-detail/'.base64_encode($data->asset_id).'/'.$data->directorate_code))),
+		  array('data' => $data->forwarding_no),	
+		  array('data' => t(count($arr))),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->transaction_date)))),
+		  array('data' => $status),
+		  array('data' => $remarks),
+		  array('data' => $link),
+		);
+	  }
+	
+	
+	 $output = theme_table(
+    array(
+	  'type' => 'table',
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>DoA Sent List From Department to Directorates</h3>',
+      'colgroups' => array(),
+	  //'multiple' => FALSE,
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+
+	
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+}
+
+
+
+function directorate_display_list($form, &$form_state, $dcode) {
+	
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+
+ drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+ $direc_code = getLoginUserDetailForAsset($user->uid);
+  
+ $groupAlist = groupAofficer_list('F',$dcode);
+  
+    $header = array();
+	$rows   = array();
+	$output = '';
+
+	$header = array(  
+	  array('data' => t('<b>Declaration Year  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Date of Acceptance  </b>')),
+	  array('data' => t('<b>Status </b>')),
+	  array('data' => t('<b>View </b>')),
+	 
+	);
+	
+	$i=0;
+	  foreach($groupAlist as $data){
+		$i++;
+		if($data->forward_status == 'F'){
+			$status = "Forwarded From Directorate";
+			$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 
+						 'ack-file/'.$data->uid.'/'.$data->declaration_yr, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}else{
+			$status = "Not Submitted";
+			$link = "";
+		}
+		
+		$rows[] = array(  
+		  array('data' => t($data->declaration_yr)),	
+		  array('data' => t($data->fname)),
+		  array('data' => t(date('d-m-Y H:i:s', strtotime($data->created_date)))),
+		  array('data' => t($status)),
+		  array('data' => t($link)),
+		);
+	  }
+	
+	
+	 $form['table_data'] = array(
+			'#type' => 'tableselect',
+			//'#theme' => 'table',
+			'#required' => TRUE,
+			'#header' => $header,
+			'#options' => $rows,
+			//'#multiple' => FALSE,
+			//'#default_value' => $selected_recipient_data,
+			'#empty' => t('No users found'),
+			'#attributes' => array('class' => array('table pretty table-bordered table-hover sticky-enabled')),
+			'#prefix' => '<div class="col-md-12">',
+			'#suffix' => '</div>'
+		);
+		
+		$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => 'Generate Ack',
+			'#attributes' => array('class'=>array('form-control btn btn-info')),
+			'#prefix' => '<div class="col-md-2">',
+			'#suffix' => '</div>'
+		);
+	return $form;
+}
+
+
+function backlog_doa_form($form, &$form_state){
+	
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	
+	$current_month = date('m');
+	if($current_month>=01 && $current_month<=12){
+		drupal_goto('not-acceptable');
+		exit;
+	}
+	/*$current_date = date('d');
+	if($current_date<=27 && $current_date>=6){
+		drupal_goto('not-acceptable');
+		exit;
+	}*/
+	 
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Receive Asset Declaration For Backlog</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	$form['decission_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Decission'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Decission'),
+		'#prefix' => '<div id="decission_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );  
+	 
+	$form['fname_backlog'] = array(
+		'#type' => 'textfield',
+		//'#autocomplete_path' => 'getassetuser/autocomplete',
+		'#autocomplete_path' => 'getassetuser/autocompletebacklog',
+		'#ajax' => array('event' => 'blur',
+                      'callback' => '_reload_mem_order_list_backlog',
+                      //'wrapper' => 'dropdown_product_cat',
+                      'effect' => 'fade',
+                      'progress' => array('type' => '','message' => '',),
+                   ),
+		'#title' => t('Enter Officers Name'),
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Enter Officers Name'),
+		'#prefix' => '<div class="col-md-12">',
+		'#suffix' => '</div>'
+	 ); 
+	
+	
+	
+	$form['backlogdate'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Choose Date'),
+		//'#id' =>'order_no_map',
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control','backlogdate'),'placeholder'=>'Choose Date', 'autocomplete' => 'off'),
+		'#prefix' => '<div id="order_no_map_backlog_date" style="display:none"><div class="col-md-12">',
+		'#suffix' => '</div></div>'
+	 );
+	  
+	$form['uid_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('User Id Backlog'),
+		//'#id' =>'order_no_map',
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('doc_name_clear','form-control'),'placeholder'=>'User Id Backlog'),
+		'#prefix' => '<div id="order_no_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	$form['designation_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Designation'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Designation'),
+		'#prefix' => '<div id="designation_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 ); 
+	$form['district_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('District'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'District'),
+		'#prefix' => '<div id="district_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	$form['directorate_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Directorate'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Directorate'),
+		'#prefix' => '<div id="directorate_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );  
+	 $form['fetch_data_backlog'] = array(
+		'#prefix' => '<div id="fetch_data_map_backlog"><div class="col-md-12">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	 /*$form['submit_btn'] = array(
+		'#prefix' => '<div id="fetch_data_map_submit"><div class="col-md-12">',
+		'#suffix' => '</div></div>'
+	 );*/
+	  $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Accept',
+		//'#attributes' => array('class'=>array('btn btn-primary')),
+		/*'#prefix' => '<div class="col-md-12">',  
+        '#suffix' => '</div>',*/
+		//'#attributes' => array('class'=>array('btn btn-success pull-left'),'onclick' => 'this.form.target="_blank";return true;'),
+		'#attributes' => array('class'=>array('btn btn-success pull-left')),
+		'#prefix' => '<div id="frmbtn_backlog" style="display:none"><div class="col-md-3">',
+  		'#suffix' => '</div></div>',
+     ); 
+	 
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	return $form; 
+}
+
+
+function backlog_doa_form_submit($form, &$form_state) {
+	global $user;
+	
+	$bkdate = date('Y',strtotime($form_state['values']['backlogdate']));
+	//echo $bkdate; exit; 
+	
+	if(trim($form_state['values']['decission_backlog']=='INSERT')){
+	$officerInfo		=	array(
+										'uid'						=> 	$form_state['values']['uid_backlog'],
+										'declaration_yr'			=>	$bkdate,
+										'designation'				=>  $form_state['values']['designation_backlog'],
+										'directorate_code'			=>  $form_state['values']['directorate_backlog'],
+										'district_code'				=>	!empty($form_state['values']['district_backlog'])?trim($form_state['values']['district_backlog']):'',
+										'document_no'  				=>  '',
+										'created_date' 			 	=>  date('Y-m-d',strtotime($form_state['values']['backlogdate'])), 
+										'status'  					=>  '1',
+										'operator_uid'  			=>  $user->uid,
+										'backlog_flag' 				=>  'B'
+								);
+   
+ //print_r($officerInfo); exit;
+   db_insert('a_asset_mst')->fields($officerInfo)->execute();
+	}else if(trim($form_state['values']['decission_backlog']=='UPDATE')){
+		
+		$query = db_update('a_asset_mst');
+		$query->fields(array('created_date' =>  date('Y-m-d',strtotime($form_state['values']['backlogdate'])),  'status'  =>  '1', 'operator_uid'  =>  $user->uid));
+		$query->condition('uid', trim($form_state['values']['uid_backlog']), '=');
+		$query->condition('declaration_yr', date('Y'), '=');
+		$rs = $query->execute();
+	}
+   //print_r($query); exit;
+   
+   $ackpdf = acknowledgement_print_form_save_to_db($form_state['values']['uid_backlog'],date('Y'));
+   
+   drupal_set_message('Application for officer '.$form_state['values']['fname'].' has been successfully accepted. '.l('PRINT ACKNOWLEDGEMENT','ack-file/'.$form_state['values']['uid_backlog'].'/'.date('Y'), array('html' => TRUE,'attributes'=>array('target'=>'_blank'))));
+   //drupal_goto('acknowledgement-print');
+	
+}
+
+function _reload_mem_order_list_backlog($form, $form_state) {
+ drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+ $commands   = array();
+ //echo $form_state['values']['fname']; exit;
+ $user_arr = explode('-',$form_state['values']['fname_backlog']);
+ 
+ //print_r($mydata);
+ $verify = getVerifyByUidYear($user_arr[1],date('Y'));
+ 
+ 
+	$header = array();
+	$rows   = array();
+	
+	$header = array(  
+	  array('data' => t('Employee Information'),'colspan' => 4),  
+	);
+ 
+ if(!empty($verify) && $verify['status']==1){
+	 
+	 $rows[] = array( 
+	  array('data' => t('You have already submitted asset for this year'),'colspan' => 4),
+	);
+	 
+	 $rows[] = array( 
+	  array('data' => l('<strong class="btn btn-danger print-btn"> Print Acknowlwdgement</strong>','ack-file/'.$user_arr[1].'/'.$verify['declaration_yr'], array('html' => TRUE,'attributes'=>array('target'=>'_blank'))) ,'colspan' => 4),
+	);
+	 
+	
+ }else{
+	 
+	 $mydata = getUserInfoByUid($user_arr[1]);
+ 
+	 $form['uid_backlog']['#value'] = $user_arr[1];
+	 $form['designation_backlog']['#value'] = $mydata['designation'];
+	 $form['directorate_backlog']['#value'] = $mydata['directorate_code'];
+	 $form['district_backlog']['#value'] = $mydata['district_code'];
+	 if(!empty($verify) && $verify['status']==0){
+		 $form['decission_backlog']['#value'] = 'UPDATE';
+	 }else{
+		 $form['decission_backlog']['#value'] = 'INSERT';
+	 }
+	 
+	 
+	 
+		
+	
+	$rows[] = array(  
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Officers Designation </b>')),
+	  array('data' => t('<b>Directorate Name  </b>')),
+	  array('data' => t('<b>District Name  </b>')),
+	);
+	$rows[] = array( 
+	  array('data' => t($mydata['fname'])),
+	  array('data' => t($mydata['designation'])), 	 
+	  array('data' => t($mydata['directorate_name'])), 
+	  array('data' => t($mydata['district_name'])),
+	);
+ }
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+  
+ //$commands[] = ajax_command_invoke('.doc_name_clear', 'val', array($form['values']['fname']));
+ $commands[] = ajax_command_replace('#order_no_map_backlog', '<div id="order_no_map_backlog">'.drupal_render($form['uid_backlog']).'</div>');
+ $commands[] = ajax_command_replace('#designation_map_backlog', '<div id="designation_map_backlog">'.drupal_render($form['designation_backlog']).'</div>');
+ $commands[] = ajax_command_replace('#directorate_map_backlog', '<div id="directorate_map_backlog">'.drupal_render($form['directorate_backlog']).'</div>');
+ $commands[] = ajax_command_replace('#district_map_backlog', '<div id="district_map_backlog">'.drupal_render($form['district_backlog']).'</div>');
+ $commands[] = ajax_command_replace('#fetch_data_map_backlog', '<div id="fetch_data_map_backlog"><div class="col-md-12">'.$output.'</div></div>');
+ $commands[] = ajax_command_replace('#decission_map_backlog', '<div id="decission_map_backlog">'.drupal_render($form['decission_backlog']).'</div>');
+//print_r($commands);
+ if(!empty($verify) && $verify['status']==1){
+	$commands[] = ajax_command_invoke('#frmbtn_backlog', 'hide');
+	$commands[] = ajax_command_invoke('#order_no_map_backlog_date', 'hide');
+ }else{
+ 	$commands[] = ajax_command_invoke('#frmbtn_backlog', 'show');
+	$commands[] = ajax_command_invoke('#order_no_map_backlog_date', 'show');
+	
+ }
+ 
+ return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function backlog_doa_all_form($form, &$form_state){
+	
+	global $user;
+	drupal_add_js(drupal_get_path('module', 'asset_user') . '/myfunction.js');
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	
+	
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Receive Asset Declaration For Backlog All</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	/*$form['decission_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Decission'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Decission'),
+		'#prefix' => '<div id="decission_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );*/  
+	 
+	$form['fname_backlog'] = array(
+		'#type' => 'textfield',
+		//'#autocomplete_path' => 'getassetuser/autocomplete',
+		'#autocomplete_path' => 'getassetuser/autocompletebacklogall',
+		'#ajax' => array('event' => 'blur',
+                      'callback' => '_reload_mem_order_list_backlog_all',
+                      //'wrapper' => 'dropdown_product_cat',
+                      'effect' => 'fade',
+                      'progress' => array('type' => '','message' => '',),
+                   ),
+		'#title' => t('Enter Officers Name'),
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Enter Officers Name'),
+		'#prefix' => '<div class="col-md-12">',
+		'#suffix' => '</div>'
+	 ); 
+	
+	
+	/*$years = array(
+	  '2018' => t('2018'),
+	  '2017' => t('2017'), 
+	  '2016' => t('2016'),
+	  '2015' => t('2015'),
+	  '2014' => t('2014'),
+	  '2013' => t('2013'),
+	  '2012' => t('2012'),
+	  '2011' => t('2011'),
+	  '2010' => t('2010'),
+	  '2009' => t('2009'),
+	);*/
+	
+	//$years = array_combine(range(date('Y'),date('Y')-10), range(date('Y'),date('Y')-10));
+	
+	if($form_state['values']['fname_backlog']!=""){
+	 //echo "-->".$form_state['values']['fname_backlog']; exit;
+	 $submittedYear = array();
+	 $user_arr = explode('-',$form_state['values']['fname_backlog']);
+	 
+	 $userData = getLoginUserDetailForAsset($user_arr[1]);
+	 $doj = date('Y',strtotime($userData['doj']));
+	 $years = array_combine(range(date('Y'),$doj), range(date('Y'),$doj));
+	 
+	 foreach($years as $k=>$y){
+		 //echo "-->>".$k; die();
+		 $getInfo = array();
+		 $getInfo = getAssetDataWithYearStatusUID($k,$user_arr[1],'1');
+		 if(!empty($getInfo)){
+			 $submittedYear[] = $k; 
+			 unset($years[$k]);
+		 }
+		 
+		 $form['backlogdate_'.$y] = array(
+			'#type' => 'textfield',
+			'#title' => t('Date '.$y),
+			//'#id' =>'order_no_map',
+			//'#value'=>'',
+			//'#required' => TRUE,
+			'#attributes' => array('class'=>array('form-control','datepiker'),'placeholder'=>'Backlog Date','autocomplete'=>'off'),
+			'#prefix' => '<div id="backlog_date_replace_txt_'.$y.'"><div class="col-md-2">',
+			'#suffix' => '</div></div>'
+		);
+	 }
+	
+	//print_r($submittedYear); die;
+	 
+	$form['backlogyear'] = array(
+		'#type' => 'checkboxes',
+		'#title' => t('Choose Year'),
+		'#ajax' => array(
+			'callback' => '_reload_txtbox',
+			),
+		//'#id' =>'order_no_map',
+		//'#value'=>'',
+		//'#default_value'=>$submittedYear,
+		'#options' => $years,
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('checkbox-inline','checkbox-row'),'placeholder'=>'Choose Year', 'autocomplete' => 'off'),
+		'#prefix' => '<div class="year_list"><div id="order_no_map_backlog_date"><div class="col-md-12 container">',
+		'#suffix' => '</div></div></div>'
+	 );
+	 
+	}
+	
+	$form['backlogyear_blank'] = array(
+		'#prefix' => '<div class="year_list"><div id="order_no_map_backlog_date"><div class="col-md-12 container">',
+		'#suffix' => '</div></div></div>'
+	);
+	
+	$form['backlogdate_blank'] = array(
+		'#prefix' => '<div id="order_no_map_backlog_date_txt"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	  
+	$form['uid_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('User Id Backlog'),
+		//'#id' =>'order_no_map',
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('doc_name_clear','form-control'),'placeholder'=>'User Id Backlog'),
+		'#prefix' => '<div id="order_no_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	$form['designation_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Designation'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Designation'),
+		'#prefix' => '<div id="designation_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 ); 
+	$form['district_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('District'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'District'),
+		'#prefix' => '<div id="district_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	$form['directorate_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Directorate'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Directorate'),
+		'#prefix' => '<div id="directorate_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );  
+	 $form['fetch_data_backlog'] = array(
+		'#prefix' => '<div id="fetch_data_map_backlog"><div class="col-md-12">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	 /*$form['submit_btn'] = array(
+		'#prefix' => '<div id="fetch_data_map_submit"><div class="col-md-12">',
+		'#suffix' => '</div></div>'
+	 );*/
+	  $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Accept',
+		//'#attributes' => array('class'=>array('btn btn-primary')),
+		/*'#prefix' => '<div class="col-md-12">',  
+        '#suffix' => '</div>',*/
+		//'#attributes' => array('class'=>array('btn btn-success pull-left'),'onclick' => 'this.form.target="_blank";return true;'),
+		'#attributes' => array('class'=>array('btn btn-success pull-left')),
+		'#prefix' => '<div id="frmbtn_backlog" style="display:none"><div class="col-md-3">',
+  		'#suffix' => '</div></div>',
+     ); 
+	 
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	return $form; 
+}
+
+function _reload_mem_order_list_backlog_all($form, $form_state) {
+ drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+ $commands   = array();
+ //echo $form_state['values']['fname']; exit;
+ $user_arr = explode('-',$form_state['values']['fname_backlog']);
+ 
+ //print_r($mydata);
+ //$verify = getVerifyByUidYear($user_arr[1],date('Y'));
+ 
+ 
+	$header = array();
+	$rows   = array();
+	
+	$header = array(  
+	  array('data' => t('Employee Information'),'colspan' => 6),  
+	);
+ 
+ /*if(!empty($verify) && $verify['status']==1){
+	 
+	 $rows[] = array( 
+	  array('data' => t('You have already submitted asset for this year'),'colspan' => 4),
+	);
+	 
+	 $rows[] = array( 
+	  array('data' => l('<strong class="btn btn-danger print-btn"> Print Acknowlwdgement</strong>','acknowledgement-print/'.$user_arr[1].'/'.$verify['declaration_yr'], array('html' => TRUE,'attributes'=>array('target'=>'_blank'))) ,'colspan' => 4),
+	);
+	 
+	
+ }else{*/
+	 
+	 $mydata = getUserInfoByUid($user_arr[1]);
+ 
+	 $form['uid_backlog']['#value'] = $user_arr[1];
+	 $form['designation_backlog']['#value'] = $mydata['designation'];
+	 $form['directorate_backlog']['#value'] = $mydata['directorate_code'];
+	 $form['district_backlog']['#value'] = $mydata['district_code'];
+	 /*if(!empty($verify) && $verify['status']==0){
+		 $form['decission_backlog']['#value'] = 'UPDATE';
+	 }else{
+		 $form['decission_backlog']['#value'] = 'INSERT';
+	 }*/
+	 
+	 
+	 
+		
+	
+	$rows[] = array(  
+	  array('data' => t('<b>HRMS ID  </b>')),	
+	  array('data' => t('<b>Officers Name  </b>')),
+	  array('data' => t('<b>Officers Designation </b>')),
+	  array('data' => t('<b>Officers Group </b>')),
+	  array('data' => t('<b>Directorate Name  </b>')),
+	  array('data' => t('<b>District Name  </b>')),
+	);
+	$rows[] = array( 
+	  array('data' => t($mydata['hrms_id'])),	
+	  array('data' => t($mydata['fname'])),
+	  array('data' => t($mydata['designation'])), 
+	  array('data' => t($mydata['emp_group'])),	 
+	  array('data' => t($mydata['directorate_name'])), 
+	  array('data' => t($mydata['district_name'])),
+	);
+ //}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+  
+ //$commands[] = ajax_command_invoke('.doc_name_clear', 'val', array($form['values']['fname']));
+ $commands[] = ajax_command_replace('#order_no_map_backlog', '<div id="order_no_map_backlog">'.drupal_render($form['uid_backlog']).'</div>');
+ $commands[] = ajax_command_replace('#designation_map_backlog', '<div id="designation_map_backlog">'.drupal_render($form['designation_backlog']).'</div>');
+ $commands[] = ajax_command_replace('#directorate_map_backlog', '<div id="directorate_map_backlog">'.drupal_render($form['directorate_backlog']).'</div>');
+ $commands[] = ajax_command_replace('#district_map_backlog', '<div id="district_map_backlog">'.drupal_render($form['district_backlog']).'</div>');
+ $commands[] = ajax_command_replace('#fetch_data_map_backlog', '<div id="fetch_data_map_backlog"><div class="col-md-12">'.$output.'</div></div>');
+ //$commands[] = ajax_command_replace('#decission_map_backlog', '<div id="decission_map_backlog">'.drupal_render($form['decission_backlog']).'</div>');
+ $commands[] = ajax_command_replace('#order_no_map_backlog_date', '<div id="order_no_map_backlog_date">'.drupal_render($form['backlogyear']).'</div>');
+ $commands[] = ajax_command_invoke('#frmbtn_backlog', 'show');
+ //$commands[] = ajax_command_invoke('#order_no_map_backlog_date', 'show');
+ 
+//print_r($commands);
+ /*if(!empty($verify) && $verify['status']==1){
+	$commands[] = ajax_command_invoke('#frmbtn_backlog', 'hide');
+	$commands[] = ajax_command_invoke('#order_no_map_backlog_date', 'hide');
+ }else{
+ 	$commands[] = ajax_command_invoke('#frmbtn_backlog', 'show');
+	$commands[] = ajax_command_invoke('#order_no_map_backlog_date', 'show');
+ }*/
+ 
+  foreach($form_state['values']['backlogyear'] as $k=>$y){
+	 //echo "k-->".$k."y-->".$y;
+	 $mydiv .= '<div id="backlog_date_replace_txt_'.$k.'"></div>';
+	 $commands[] = ajax_command_replace('#order_no_map_backlog_date_txt', '<div id="order_no_map_backlog_date_txt">'.$mydiv.'</div>');
+   }
+ 
+ return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function _reload_txtbox($form, $form_state) {
+	  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	  
+	  $commands = array();
+	  
+	  foreach($form_state['values']['backlogyear'] as $k=>$y){
+	  $blank="";
+	  $mydiv .= '<div id="backlog_date_replace_txt_'.$k.'"></div>';
+		  if($k==$y){
+			  $commands[] = ajax_command_replace('#backlog_date_replace_txt_'.$y, drupal_render($form['backlogdate_'.$y]));
+			  $commands[] = ajax_command_invoke(NULL, "myJqueryDatePiker", array('anyparametervalue') );
+		  }
+		  if($k!=$y){
+			  $commands[] = ajax_command_replace('#backlog_date_replace_txt_'.$k, '<div id="backlog_date_replace_txt_'.$k.'">'.$blank.'</div>');
+		  }
+	  }
+  return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function backlog_doa_all_form_submit($form, &$form_state) {
+	global $user;
+	
+	$user_arr = explode('-',$form_state['values']['fname_backlog']);
+	//print_r($form_state['values']); exit;
+	
+	//$bkdate = date('Y',strtotime($form_state['values']['backlogyear']));
+	//echo $bkdate; exit; 
+	
+	//if(trim($form_state['values']['decission_backlog']=='INSERT')){
+	foreach($form_state['values']['backlogyear'] as $k=>$y){
+		if($k == $y){
+			//$d = $y.'-04-30';
+			$d = !empty($form_state['values']['backlogdate_'.$y])? date('Y-m-d',strtotime($form_state['values']['backlogdate_'.$y])) : date($y.'-04-30');
+				
+			$officerInfo =	array(
+								'uid'						=> 	$form_state['values']['uid_backlog'],
+								'declaration_yr'			=>	$y,
+								'designation'				=>  $form_state['values']['designation_backlog'],
+								'directorate_code'			=>  $form_state['values']['directorate_backlog'],
+								'district_code'				=>	!empty($form_state['values']['district_backlog'])?trim($form_state['values']['district_backlog']):'',
+								'document_no'  				=>  '',
+								//'created_date' 			 	=>  date($d), //date('Y-m-d'), 
+								'created_date' 			 	=>  $d,
+								'status'  					=>  '1',
+								'operator_uid'  			=>  $user->uid,
+							);
+		   //print_r($officerInfo); exit;
+		   db_insert('a_asset_mst')->fields($officerInfo)->execute();
+		}
+	}
+	/*}else if(trim($form_state['values']['decission_backlog']=='UPDATE')){
+		
+		$query = db_update('a_asset_mst');
+		$query->fields(array('created_date' =>  date('Y-m-d',strtotime($form_state['values']['backlogdate'])),  'status'  =>  '1', 'operator_uid'  =>  $user->uid));
+		$query->condition('uid', trim($form_state['values']['uid_backlog']), '=');
+		$query->condition('declaration_yr', date('Y'), '=');
+		$rs = $query->execute();
+	}*/
+   //print_r($query); exit;
+   drupal_set_message('Application for officer '.$user_arr[0].' has been successfully accepted');
+   //drupal_set_message('Application for officer '.$form_state['values']['fname'].' has been successfully accepted. '.l('PRINT ACKNOWLEDGEMENT','acknowledgement-print/'.$form_state['values']['uid_backlog'].'/'.date('Y'), array('html' => TRUE,'attributes'=>array('target'=>'_blank'))));
+   //drupal_goto('acknowledgement-print');
+	
+}
+
+function showcause_notice_form($form, &$form_state){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Showcause Notice Window</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	$form['decission_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Decission'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Decission'),
+		'#prefix' => '<div id="decission_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );  
+	 
+	$form['fname_backlog'] = array(
+		'#type' => 'textfield',
+		//'#autocomplete_path' => 'getassetuser/autocomplete',
+		'#autocomplete_path' => 'getassetuser/autocompletebacklog',
+		'#ajax' => array('event' => 'blur',
+                      'callback' => '_reload_mem_order_list_backlog',
+                      //'wrapper' => 'dropdown_product_cat',
+                      'effect' => 'fade',
+                      'progress' => array('type' => '','message' => '',),
+                   ),
+		'#title' => t('Enter Officers Name'),
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Enter Officers Name'),
+		'#prefix' => '<div class="col-md-12">',
+		'#suffix' => '</div>'
+	 ); 
+	
+	
+	$form['uid_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('User Id Backlog'),
+		//'#id' =>'order_no_map',
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('doc_name_clear','form-control'),'placeholder'=>'User Id Backlog'),
+		'#prefix' => '<div id="order_no_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	$form['designation_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Designation'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Designation'),
+		'#prefix' => '<div id="designation_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 ); 
+	$form['district_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('District'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'District'),
+		'#prefix' => '<div id="district_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	$form['directorate_backlog'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Directorate'),
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Directorate'),
+		'#prefix' => '<div id="directorate_map_backlog"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );  
+	 $form['fetch_data_backlog'] = array(
+		'#prefix' => '<div id="fetch_data_map_backlog"><div class="col-md-12">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	 $form['backlogdate'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Notice Message'),
+		//'#id' =>'order_no_map',
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Notice Message', 'autocomplete' => 'off'),
+		'#prefix' => '<div id="order_no_map_backlog_date" style="display:none"><div class="col-md-12">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	 /*$form['submit_btn'] = array(
+		'#prefix' => '<div id="fetch_data_map_submit"><div class="col-md-12">',
+		'#suffix' => '</div></div>'
+	 );*/
+	  $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Sent Show Cause Notice',
+		//'#attributes' => array('class'=>array('btn btn-primary')),
+		/*'#prefix' => '<div class="col-md-12">',  
+        '#suffix' => '</div>',*/
+		//'#attributes' => array('class'=>array('btn btn-success pull-left'),'onclick' => 'this.form.target="_blank";return true;'),
+		'#attributes' => array('class'=>array('btn btn-success pull-left')),
+		'#prefix' => '<div id="frmbtn_backlog" style="display:none"><div class="col-md-3">',
+  		'#suffix' => '</div></div>',
+     ); 
+	 
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	return $form; 
+}
+	
+function showcause_notice_form_submit($form, &$form_state){ 
+	global $user;
+	//if(trim($form_state['values']['decission']=='INSERT')){
+	$officerInfo		=	array(
+										'uid'					=> 	$form_state['values']['uid_backlog'],
+										'message'				=>  $form_state['values']['backlogdate'],
+										'send_by'  				=>  $user->uid,
+										'created_date' 			=>  date('Y-m-d H:i:s'), 
+										'status'  				=>  '1',
+								);
+   
+
+   $id = db_insert('a_showcause_notice')->fields($officerInfo)->execute();
+	/*}else if(trim($form_state['values']['decission']=='UPDATE')){
+		
+		$query = db_update('a_asset_mst');
+		$query->fields(array('created_date' =>  date('Y-m-d H:i:s'), 'status'  =>  '1', 'operator_uid'  =>  $user->uid));
+		$query->condition('uid', trim($form_state['values']['uid']), '=');
+		$query->condition('declaration_yr', date('Y'), '=');
+		$rs = $query->execute();
+	}*/
+   
+   $user_info = getLoginUserDetailForAsset($form_state['values']['uid_backlog']);
+   
+   
+   //send_sms($user_info['mobile'],'Your Asset Statement for the year '.date('Y').' has been received by the '.$directorate_name.'. To check your status and download the asset acknowledgement please login into your account https://wblabour.gov.in/assetlogin');
+   
+   drupal_set_message('Show Cause Notice for officer '.$form_state['values']['fname'].' has been successfully Sent. '.l('<strong> Print Show Cause Notice</strong>','showcause-print/'.$id.'/'.date('Y'), array('html' => TRUE,'attributes'=>array('target'=>'_blank'))));
+   //drupal_goto('acknowledgement-print');
+}
+
+function showcause_admin_list(){
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$query = db_select('a_showcause_notice', 'assetmst');
+	$query->leftJoin('users', 'u', 'u.uid = assetmst.uid');  
+    $query->leftJoin('a_user_details', 'ud', 'ud.uid = assetmst.uid');  
+  	//$query->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = assetmst.directorate_code');  
+  	$query->leftJoin('a_user_details_service', 'us', 'us.uid = assetmst.uid'); 
+	$query->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = us.directorate_code');  
+  	$query->fields('u', array('name','access','created'));
+  	$query->fields('ud', array('fname','status'));
+  	$query->fields('dm', array('directorate_name'));
+  	$query->fields('us', array('designation','district_code','directorate_code')); 
+	$query ->fields('assetmst', array('showcause_id','uid','message','send_by','created_date','status'));
+	$query->condition('assetmst.status','1','=');
+	//$query->condition('assetmst.uid', $user->uid, '='); 
+	$query->orderBy('assetmst.created_date', 'DESC'); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	//print_r($resultData); exit;
+	
+	$output = '';
+	$header = array(
+				array('data'=> 'Sl No'),
+				array('data'=> 'Name'),
+				array('data'=> 'Directorate Name'),
+				array('data'=> 'Message'),
+				//array('data'=> 'Send By'),
+				array('data'=> 'Date'),
+				array('data'=> 'PDF'),
+			);
+			
+	$rows = array();
+	$i = 0;
+	foreach($resultData as $val){
+		
+		$i++;	
+	
+	$link =  l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/pdf.png">'), 'showcause-print/'.$val->showcause_id.'/'.date('Y'), array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+	  
+	  $rows [] = array(  
+	  		  $i,	
+			  array('data' => t($val->fname)),
+			  array('data' => t($val->directorate_name)),
+			  array('data' => t($val->message)),
+			  //array('data' => t($val->send_by)),
+			  array('data' => trim($val->created_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->created_date))) : 'N/A'),
+			  array('data' => $link),
+		); 
+	}
+	
+	  
+	  $output .= theme('datatable', array(
+        'header' => $header,
+        'rows' => $rows,
+        'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+        'sticky' => true,
+        'caption' => '<h3>Show Cause User List </h3>',
+        'colgroups' => array(),
+        'empty' => t("No data found!") // The message to be displayed if table is empty
+      )
+    ).theme('pager'); 	
+	  
+	return $output;
+}
+
+function employee_compliance_form($form, &$form_state){
+	
+	global $user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+	
+   $userData = getLoginUserDetailForAsset($user->uid);
+	
+	$form['#attributes']['class'][] = 'form-vertical';
+	
+	$form['form_begin'] = array(
+    	'#type' => 'markup',
+    	'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Compliance of Asset Declaration</h4></div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );
+	 
+	 //$years = array_combine(range(date('Y'),date('Y')-10), range(date('Y'),date('Y')-10));
+	 $doj = date('Y',strtotime($userData['doj']));
+	 $years = array_combine(range(date('Y'),$doj), range(date('Y'),$doj));
+	
+	 $submittedYear = array();
+	 //$user_arr = explode('-',$form_state['values']['fname_backlog']);
+	 foreach($years as $k=>$y){
+		 //echo "-->>".$k; die();
+		 $getInfo = array();
+		 $getInfo = getAssetDataWithYearStatusUID($k,$user->uid,'1');
+		 if(!empty($getInfo)){
+			 $submittedYear[] = $k; 
+			 unset($years[$k]);
+		 }
+	 }
+	
+	//print_r($submittedYear); die;
+	
+	$form['uid_empcomply'] = array(
+		'#type' => 'hidden',
+		'#title' => t('User Id'),
+		//'#id' =>'order_no_map',
+		//'#value'=>'',
+		'#default_value' => isset($user->uid) ? $user->uid : '',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('doc_name_clear','form-control'),'placeholder'=>'User Id Backlog'),
+		'#prefix' => '<div id="uid_empcomply_map"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	$form['designation_empcomply'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Designation'),
+		//'#value'=>'',
+		'#default_value' => isset($userData[designation]) ? $userData[designation] : '',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Designation'),
+		'#prefix' => '<div id="designation_map_empcomply"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 ); 
+	$form['district_empcomply'] = array(
+		'#type' => 'hidden',
+		'#title' => t('District'),
+		//'#value'=>'',
+		'#default_value' => isset($userData[district_code]) ? $userData[district_code] : '',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'District'),
+		'#prefix' => '<div id="district_map_empcomply"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );
+	$form['directorate_empcomply'] = array(
+		'#type' => 'hidden',
+		'#title' => t('Directorate'),
+		'#default_value' => isset($userData[directorate_code]) ? $userData[directorate_code] : '',
+		//'#value'=>'',
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('form-control'),'placeholder'=>'Directorate'),
+		'#prefix' => '<div id="directorate_map_empcomply"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 ); 
+	 
+	$form['empcomply'] = array(
+		'#type' => 'checkboxes',
+		'#title' => t('Choose Year(s)'),
+		//'#id' =>'order_no_map',
+		//'#default_value'=>$submittedYear,
+		'#ajax' => array(
+                      	 'callback' => 'employee_compliance_callback',
+                      	 'progress' => array('type' => '','message' => '',),
+                   ),
+		'#options' => $years,
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('checkbox-inline','checkbox-row'),'placeholder'=>'Choose Year', 'autocomplete' => 'off'),
+		'#prefix' => '<div class="year_list"><div id="comply_years"><div class="col-md-12 container">',
+		'#suffix' => '</div></div></div>'
+	 );
+	 	 
+	 /* $form['markup'] = array (
+        '#markup' => '<a href="javascript:myComplyFunction()" class="btn btn-success pull-left">Comply</a>',
+		'#attributes' => array('class'=>array('btn btn-success pull-left')),
+		'#prefix' => '<div class="col-md-3">',
+  		'#suffix' => '</div>',
+     );*/ 
+	 
+	  $form['empcomply_fetch_data'] = array(
+		'#prefix' => '<div id="empcomply_fetch_dataid"><div class="col-md-12">',
+		'#suffix' => '</div></div>'
+	 );
+	 
+	 $form['emp_info'] = array(
+		'#prefix' => '<div id="emp_info_div">',
+		'#suffix' => '</div>'
+	 );
+	 
+	if(!empty($form_state['values']['empcomply'])){
+		
+		$empyears = "";
+		foreach($form_state['values']['empcomply'] as $key=>$val) {
+				if($key == $val) {
+				   $empyears .= ",".$val;
+				}
+		}
+		if($empyears!=""){
+			$empyears = ltrim($empyears,",");
+			
+			$header = array();
+			$rows   = array();
+			
+			
+			$header = array(  
+			  array('data' => t('Employee Compliance Information'),'colspan' => 5),  
+			);
+			
+			$mydata = getUserInfoByUid($user->uid);
+			 
+			 //print_r($mydata[fname]);  exit;
+			 
+			  $rows[] = array( 
+			  array('data' => t('I <strong>'. $mydata[fname]. '</strong> want to comply for the year(s) '.$empyears),'colspan' => 4),
+			  /*array('data' => t('I want to comply for the years '.$empyears.' <br>'.l('<strong> Print Forwarding Letter</strong>','empcomply-frwdletter/'.$user->uid, 
+					array('html'=> TRUE,'attributes'=>array('target'=>'_blank')))),'colspan' => 4),*/
+			);
+		
+			$form['emp_info']['emp_comply'] = array(
+				'#theme'  => 'table',
+				'#header' => $header,
+				'#rows'   => $rows,
+				'#attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+				'#empty'  => t('<center>No Records Found</center>'),
+				'#prefix' => '<div class="col-md-12">',
+				'#suffix' => '</div>'
+			  );
+		
+			
+		
+			 $form['emp_info']['table_begin'] = array(
+				'#type' => 'markup',
+				'#prefix' => '<div class="col-md-12"><table class="table pretty table-bordered table-hover sticky-enabled"><thead>
+							  <tr>
+							  <th>Sl No.</th>
+							  <th>YEAR</th>
+							  <th>DESIGNATION</th>
+							  </tr>
+							  </thead>',
+			);
+			
+			$i = 0;
+			
+			foreach($form_state['values']['empcomply'] as $key=>$val) {
+				if($key == $val) {
+				   //$empyears .= ",".$val;
+				   $i++;
+				   
+				   $form['emp_info']['row_'.$val] = array(
+					  '#type' => 'markup',
+					  '#prefix' => '<tr class="even"><td><label>'.$i.'</label>',
+					  '#suffix' => '</td>'
+					);
+					$form['emp_info']['year_'.$val] = array(
+					  '#type' => 'markup',
+					  '#prefix' => '<td><label>'.$val.'</label>',
+					  '#suffix' => '</td>'
+					);
+					$form['emp_info']['designation_'.$val] = array(
+					  '#type' => 'textfield',
+					  '#required' => TRUE,
+					  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Designation','autocomplete'=>'off'),
+					  '#prefix' => '<td>',
+					  '#suffix' => '</td></tr>'
+					);
+				}
+			}
+			
+			$form['emp_info']['table_end'] = array(
+				'#type' => 'markup',
+				'#suffix' => '</table></div>',
+			);
+			
+			$form['emp_info']['sub_info'] = array (
+				'#type' => 'submit',
+				'#value' => 'Accept', 
+				/*"#ajax" => array(
+					  'callback' => 'employee_compliance_callback',
+					  'progress' => array('type' => '','message' => '',),
+					  "wrapper" => "test-ajax",
+					  "effect" => "fade",
+				),*/
+				'#attributes' => array('class'=>array('btn btn-success pull-left')),
+				'#prefix' => '<div id="sub_info_id"><div class="col-md-3">',
+				'#suffix' => '</div></div>',
+			 ); 
+		
+		}
+		
+		
+	}
+	
+	/*$form['sub_info'] = array (
+		'#prefix' => '<div id="sub_info_id">',
+		'#suffix' => '</div>',
+	 );  */
+	 
+	 /*$form['designation_previous'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Designation of Previous Years'),
+		'#required' => TRUE,
+		'#attributes' => array('class'=>array('doc_name_clear','form-control'),'placeholder'=>'Designation of Previous Years'),
+		'#prefix' => '<div id="designation_previous_map" style="display:none"><div class="col-md-3">',
+		'#suffix' => '</div></div>'
+	 );*/
+	 
+	  
+	 
+	  
+	 
+	$form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+    );	
+	
+	return $form;
+	
+}
+
+function employee_compliance_callback($form, $form_state) {
+	
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	global $user;
+    $commands   = array();	
+	$commands[] = ajax_command_replace('#emp_info_div', '<div id="emp_info_div">'.drupal_render($form['emp_info']).'</div>');  
+	$commands[] = ajax_command_replace('#empcomply_fetch_dataid', '<div id="empcomply_fetch_dataid"><div class="col-md-12">'.$output.'</div></div>');  
+	
+  return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function employee_compliance_form_validate($form, &$form_state){
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+}
+
+function employee_compliance_form_submit($form, &$form_state){
+ 	global $user;
+	//print_r($form_state['values']); exit; 
+
+	//$empcomply_year = explode(',',$form_state['values']['empcomply']);
+	//print_r($empcomply_year); exit;
+	
+	if(!empty($form_state['values']['empcomply'])) {
+		foreach($form_state['values']['empcomply'] as $key=>$val){
+			if($key == $val){
+				$chkexist = array();
+				$chkexist = chkIfExist($user->uid,$val,'7');
+				if(empty($chkexist)){
+					$empComplyInfo		=	array(
+												'uid'						=> 	$user->uid,
+												'declaration_yr'			=>	$val,
+												'designation'				=>  $form_state['values']['designation_'.$val],
+												'directorate_code'			=>  $form_state['values']['directorate_empcomply'],
+												'district_code'				=>	!empty($form_state['values']['district_empcomply'])?trim($form_state['values']['district_empcomply']):'',
+												'created_date' 			 	=>  date('Y-m-d'), 
+												'status'  					=>  '7',
+												'operator_uid'  			=>  0,
+										);
+		   
+				   //print_r($empComplyInfo); exit;
+				   db_insert('a_asset_mst')->fields($empComplyInfo)->execute();
+				}
+			}
+		}
+	}
+	
+ //send_sms($user_info['mobile'],'Your Asset Statement for the year '.date('Y').' has been received by the '.$directorate_name.'. To check your status and download the asset acknowledgement please login into your account https://wblabour.gov.in/assetlogin');
+   
+   $empcompliancepdf = empcompliancepdf_print_form_save_to_db($user->uid);
+   
+   /*drupal_set_message('Application for officer '.$form_state['values']['fname'].' has been successfully complied. '.l('<strong> Print Acknowlwdgement</strong>','empcompliance-file/'.$form_state['values']['uid'], 
+   array('html' => TRUE,'attributes'=>array('target'=>'_blank'))));*/
+	
+}
+
+function chkIfExist($uid,$declaration_yr,$status){
+	$query = db_select('a_asset_mst','am');
+	$query->fields('am', array('uid','declaration_yr','designation','directorate_code','status','created_date'));
+	$query->condition('am.uid',$uid,'=');
+	$query->condition('am.declaration_yr',$declaration_yr,'=');
+	$query->condition('am.status',$status,'=');
+	$result = $query->execute();
+	$rsData = $result->fetchAll();
+	return $rsData;
+}
+
+function getOperatorInfoByDirectorateCodeAndOfficeIdAndEmpGroup($directorate_code,$office_id,$emp_group){
+	$resultgData = array();
+	$querypending = db_select('a_user_details','ud');
+	$querypending->leftJoin('a_user_details_service', 'us', 'ud.uid = us.uid');
+	$querypending->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = us.directorate_code'); 
+	$querypending->fields('ud', array('uid','fname','doj','dor','status','mobile'));
+	$querypending->fields('dm', array('id','directorate_name'));
+	$querypending->fields('us', array('designation','directorate_code','district_code','service_status','emp_group','office_id'));
+	$querypending->condition('us.directorate_code',$directorate_code,'=');
+	if(trim($emp_group)=='A'){
+		$querypending->condition('us.office_id',0,'=');
+	}else{
+		$querypending->condition('us.office_id',$office_id,'=');
+	}
+	$querypending->condition('ud.status',1,'=');
+	$result1 = $querypending->execute();
+	$resultgData = $result1->fetchAssoc();
+	
+	return $resultgData;
+}
+
+function empcompliancepdf_print_form_save_to_db($args){	
+  include('mpdf/mpdf.php');
+  global $user, $base_root, $base_path;
+	
+  //$operatorInfo = getLoginUserDetailForAsset($args);
+   
+  //$uid_in = unserialize(base64_decode($args));
+	
+  $bulkpdf = db_select('a_asset_mst','am');
+  $bulkpdf->leftJoin('users', 'u', 'u.uid = am.uid');  
+  $bulkpdf->leftJoin('a_user_details', 'ud', 'ud.uid = am.uid');  
+  $bulkpdf->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = am.directorate_code');  
+  $bulkpdf->leftJoin('a_user_details_service', 'us', 'am.uid = us.uid'); 
+  
+  $bulkpdf->leftJoin('a_office_master', 'ofm', 'us.office_id = ofm.office_id'); 
+  $bulkpdf->leftJoin('district_master', 'dms', 'ofm.district_code = dms.district_code'); 
+  
+  //$bulkpdf->leftJoin('a_transaction_history', 't', 'am.transaction_id = t.id'); 
+  
+  $bulkpdf->fields('am', array('id','uid','declaration_yr','designation','status','created_date','forward_status'));
+  $bulkpdf->fields('u', array('name','access','created'));
+  $bulkpdf->fields('ud', array('fname','status'));
+  $bulkpdf->fields('dm', array('directorate_name'));
+  $bulkpdf->fields('us', array('district_code','directorate_code','emp_group','office_id'));
+  
+  $bulkpdf->fields('ofm', array('office_name'));
+  $bulkpdf->fields('dms', array('district_name'));
+  
+  //$bulkpdf->fields('t', array('forwarding_no'));
+  $bulkpdf->condition('am.status','7','=');
+  $bulkpdf->condition('am.uid',$args,'=');
+  //$bulkpdf->condition('am.declaration_yr',$year,'=');
+  $bulkpdf->orderBy('am.created_date','asc');
+  
+  $result = $bulkpdf->execute();
+  $rsData = $result->fetchAll();
+  
+  
+  $operatorInfo = getOperatorInfoByDirectorateCodeAndOfficeIdAndEmpGroup($rsData[0]->directorate_code,$rsData[0]->office_id,$rsData[0]->emp_group);
+  
+  $number = get_last_of_assetmst();
+  $generatedNo = "FD-".str_pad($number, 4, "0", STR_PAD_LEFT)."-".$rsData[0]->directorate_code;
+
+  
+ if($rsData[0]->directorate_code == 'DB'){
+		//$directorate_name = 'Directorate of Boilers';
+		$daddress = 'New Secretariat Buildings (8th Floor), ‘A’–Block <br/> 1, K.S Roy Road, Kolkata – 700001';
+	}elseif($rsData[0]->directorate_code == 'LC'){
+		$daddress = 'New Secretariat Buildings (11th Floor), ‘A’–Block <br/> 1, K.S Roy Road, Kolkata – 700001';
+	}elseif($rsData[0]->directorate_code == 'DE'){
+		$daddress = '67, Bentinck Street, Kolkata – 700069';
+	}elseif($rsData[0]->directorate_code == 'DF'){
+		$daddress = 'New Secretariat Buildings (8th Floor), ‘A’–Block <br/> 1, K.S Roy Road, Kolkata – 700001';
+	}elseif($rsData[0]->directorate_code == 'ESI'){
+		$daddress = 'Block - G.B. Sector - III, Salt Lake, Kolkata - 700097';
+	}elseif($rsData[0]->directorate_code == 'LD'){
+		$daddress = 'New Secretariat Buildings (12th Floor), ‘A’–Block <br/> 1, K.S Roy Road, Kolkata – 700001';
+	}
+  
+  
+  $cntData = 0;
+  $cntData = count($rsData);
+  //$daddress = "ADDRESS";
+	if(1){ 
+	
+	$i=0;
+	/*$text = "";
+	$qrpath = variable_get('file_public_path', conf_path() . '/files') . "/qrcode/ASSET-".$rsData[0]->declaration_yr."-".
+							$rsData[0]->uid."-".$rsData[0]->id.'.png';
+    foreach($rsData as $pdfresult){
+	   //$i++;	
+	$text .= $pdfresult->fname.', '.$pdfresult->designation.', '.$pdfresult->directorate_name.', '.$pdfresult->declaration_yr.',
+		  '.$pdfresult->created_date;
+	
+   }
+   //echo $text; exit;
+   if (!file_exists($qrpath)) {
+		$qrpath =  myfun_qrcode($text , $qrpath);
+	}*/
+	$output = '';
+	$content = '';
+	$header = '<!DOCTYPE html>
+			  <html>
+			  <head>
+				<meta charset="utf-8">
+				<title>Acknowledgement</title>
+				<link rel="stylesheet" href="'.$base_root.$base_path.'sites/all/modules/common_pdf_generator/includes/mpdfstyletables.css" media="all" />
+			  </head>
+			  <body>
+				 <table width="100%" border="0" cellspacing="0" cellpadding="0">
+					<tbody>
+					 <tr>
+						<td align="right" width="55%">
+						<img src="./sites/all/modules/common_pdf_generator/includes/logo.png" style="width:120px;">
+						</td>
+						<td align="right" width="40%" style="padding-top:30px;">
+						<!--<img src="./'.$qrpath.'" style="width:120px; height=120px;">-->
+						</td>
+					  </tr>
+					 <tr>
+						<td colspan="2" align="center" style="font-size:22px;margin: 0;padding: 0;color:#2e4b90;">Government of West Bengal<br/>
+<strong>'.$rsData[0]->directorate_name.'</strong></td>
+					  </tr>
+
+
+					  <tr>
+						<td colspan="2" align="center" style="font-size:16px;margin: 0;padding:0 0 20px;color:#676767;">'.$rsData[0]->office_name.'<br>'.$rsData[0]->district_name.'</td>
+					  </tr>
+					  <tr>
+						<td colspan="2" align="center" style="background:#2e4b90;padding:2px;"></td>
+					  </tr>
+					  <tr>
+						<td align="left" style="font-size:15px;padding:30px 0;">No: <strong>'.$generatedNo.'</strong></td>
+						<td align="right" style="font-size:15px;padding:30px 0;">Date: <strong>'.date('d-m-Y').'</strong></td>
+					  </tr>
+					  <tr>
+						<td colspan="2" style="font-size:15px;padding:0;">
+							To,<br/>
+							The Nodal Officer, <br/>
+							'.$operatorInfo['fname'].'<br/>
+						</td>
+					  </tr>
+					  
+					  <tr>
+						<td colspan="2" style="font-size:20px;color:#0e783d;padding:40px 0 0;" align="center"><strong>Sub: Compliance as per Labour Department order number LD/1454544 dated 10-03-2020</strong></td>
+					  </tr>
+					  
+					  <tr>
+						<td colspan="2" style="font-size:15px;padding:0;">
+							Sir/Madam,<br/>
+						</td>
+					  </tr>
+					  <tr>
+						<td colspan="2" style="font-size:16px;padding:40px 0;">Reference to the above mentioned order of the Labour Department, <strong>'.$cntData.'</strong> sealed envelopes containing
+						self attested copies of "DECLARATION OF ASSETS AS THEY STOOD ON 1st January of the following '.$cntData.' years, are submitted herewith :
+						</td>
+					  </tr></tbody></table>
+	';
+	
+	$i=0;
+	
+	$signature ='';				 	  
+				  
+	$table_st = '<table width="900" border="0" cellspacing="0" cellpadding="0">
+					<tr>
+					 <th style="background-color: #2e4b90;font-size:14px;border: 1px solid #ddd;padding: 8px;color:#fff;">Sl. No.</th>
+					  <th style="background-color: #2e4b90;font-size:14px;border: 1px solid #ddd;padding: 8px;color:#fff;">Year</th>
+					  <th style="background-color: #2e4b90;font-size:14px;border: 1px solid #ddd;padding: 8px;color:#fff;">Capacity </th>
+					  <th style="background-color: #2e4b90;font-size:14px;border: 1px solid #ddd;padding: 8px;color:#fff;">Designation</th>
+					</tr>';
+	$table_end ='</table>';
+	
+	   
+	   $pagecnt = 1;	
+	   $i=0;
+	   foreach($rsData as $pdfresult){
+	   	
+		if($i==0){
+			$signature .= $table_st;
+		}else if($pagecnt == 1){
+		  // for first page	
+		  if($i>7){
+			$pagecnt++;
+			//$i=0;
+			$signature .= $table_end;
+			$signature .= $table_st;
+			$signature .='<pagebreak>';
+		  }
+		}else if($pagecnt > 1){
+		  // for second page	
+		  if($i>20){
+			$pagecnt++;
+			//$i=0;
+			$signature .= $table_end;
+			$signature .= $table_st;
+			$signature .='<pagebreak>';
+		  }
+		}
+		$i++;
+		$signature .='<tr>
+					  <td style="background-color: #f2f2f2;font-size:14px;border: 1px solid #ddd;padding: 8px;">'.$i.'</td>
+					  <td style="background-color: #f2f2f2;font-size:14px;border: 1px solid #ddd;padding: 8px;">'.$pdfresult->declaration_yr.'</td>
+					  <td style="background-color: #f2f2f2;font-size:14px;border: 1px solid #ddd;padding: 8px;">in the capacity of</td>
+					  <td style="background-color: #f2f2f2;font-size:14px;border: 1px solid #ddd;padding: 8px;">'.$pdfresult->designation.'</td>
+					<!--  <td style="background-color: #f2f2f2;font-size:14px;border: 1px solid #ddd;padding: 8px;">'.date('d-m-Y h:i:s', strtotime($pdfresult->created_date)).'</td>-->
+					</tr>
+					';
+		}
+		
+		$signature .= $table_end;
+		
+		$signature .= '<table width="100%" border="0" cellspacing="0" cellpadding="0">
+						 <tr>
+							<td colspan="2" align="left" style="font-size:18px;margin: 0;padding: 0;">Thanking You,<br/></td>
+						  </tr>
+						  <tr>
+							<td colspan="2" align="left" style="font-size:18px;margin: 0;padding: 0;">Yours faithfully,<br/></td>
+						  </tr>
+						  <tr>
+						  	<td colspan="2" align="left" style="font-size:18px;margin: 0;padding: 0;">
+							 Name: dsadsadsadsa
+							</td>
+						  </tr>
+						</table>'; 
+		
+		
+	
+	$last_footer ='<hr width="100%">
+	<table width="100%">
+	<tr>
+	<td align="center" style="font-size:13; padding:10px 0;"><strong>Note:</strong> This is a system generated document. No signature required. (Page {PAGENO} of {nb})</td>
+	</tr>
+	</table>
+	';
+	$footer = '
+	</body>
+	</html>';
+
+	$output = $header.$signature;
+	//return pdf_using_mpdf_api($output);
+	$mpdf = new mPDF('utf-8', 'A4', '', '', 10, 10, 10, 8, 0, 0);
+	/*$mpdf->SetDisplayMode('fullpage');
+	
+	$mpdf->list_indent_first_level = 1;*/
+	$mpdf->SetHTMLFooter($last_footer);
+	
+	$mpdf->SetWatermarkText('Asset Declaration',0.1);
+	$mpdf->showWatermarkText = true;
+	//$mpdf->SetWatermarkImage('./sites/all/modules/common_pdf_generator/includes/stamp.png');
+	//$mpdf->showWatermarkImage = true;
+	
+	/*$mpdf->debug = true;*/
+	$mpdf->showImageErrors = true;
+	
+	$mpdf->WriteHTML($output);
+	
+	$mpdf->Output();
+	
+	
+	
+	$directory_path	=	file_default_scheme().'://upload/bklgasset/'.$generatedNo.'.pdf';
+	$mpdf->Output($directory_path);
+	
+   	$pd = file_get_contents($directory_path);
+	
+	
+	
+	
+	$empComplyInfoDetails =	array(
+								'empcompliance_uid'			=> 	$rsData[0]->uid,
+								'empcompliance_from_uid'	=>	$rsData[0]->uid,
+								'empcompliance_to_uid'		=>  $operatorInfo->uid,
+								'empcompliance_ackpdf'		=> 	$pd,
+								'empcompliance_date'		=>  date('Y-m-d'),
+								'empcompliance_status'		=>	'FD',
+								'empcompliance_number'		=> $generatedNo
+						);
+	$inserted_id = db_insert('a_emp_compliance')->fields($empComplyInfoDetails)->execute();
+	
+	 //send_sms($user_info['mobile'],'Your Asset Statement for the year '.date('Y').' has been received by the '.$directorate_name.'. To check your status and download the asset acknowledgement please login into your account https://wblabour.gov.in/assetlogin');
+	
+	drupal_set_message('Application for officer '.$rsData[0]->fname.' has been successfully complied. '.l('<strong> Print Acknowlwdgement</strong>','empcompliance-file/'.$inserted_id, 
+   array('html' => TRUE,'attributes'=>array('target'=>'_blank'))));
+	/*$query = db_update('a_asset_mst');
+	$query->fields(array('ackpdfname'=>	$rsData['declaration_yr'].'-'.$rsData['id'],'ackpdf'=>	$pd));
+	$query->condition('uid', $args, '=');
+	$query->condition('declaration_yr', $year, '=');
+	$rs = $query->execute();*/
+	
+	}else{
+		drupal_set_message('Still Now PDF is not generated. Please generate PDF first.', $type='warning');
+		//drupal_goto('grn/list');
+	}
+}
+
+function get_last_of_assetmst(){
+	$query 			= 	db_select('a_asset_mst', 'am');
+	$query			->	fields('am',  array('id'));
+	$query			->	orderBy('am.id','DESC');
+	$query_result 	= 	$query->execute()->fetchObject();
+	$lastId			=	$query_result->id;
+	return $lastId;
+}
+
+function compliance_file_display($arg){
+	if($arg != 0){
+		$query = db_select('a_emp_compliance','aec');
+		$query->fields('aec', array('empcompliance_id','empcompliance_uid','empcompliance_from_uid','empcompliance_ackpdf','empcompliance_date','empcompliance_status','empcompliance_number'));
+		$query->condition('aec.empcompliance_id', $arg, '='); 
+		$result = $query->execute();
+		$result_data = $result->fetchAssoc();
+		//print_r($result_data); exit;
+		header("Content-Type: application/pdf");
+		header('Content-Disposition: inline; filename="'.$result_data['empcompliance_number'].'"'); // file name
+		echo $result_data['empcompliance_ackpdf'];
+		exit();
+	}else{
+		drupal_set_message('Unable to open file');
+	}
+}
+
+function asset_retirement_list(){
+  global $user;
+  $status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+  	
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+
+	
+ $direc_code = getLoginUserDetailForAsset($user->uid);  
+ 
+  
+ $query = db_select('a_user_details','aud');
+ $query->leftJoin('a_user_details_service', 'auds', 'auds.uid = aud.uid'); 
+ $query->leftJoin('users', 'u', 'u.uid = auds.uid');  
+ $query->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = auds.directorate_code');  
+ $query->fields('aud', array('uid','fname','status','hrms_id','doj','dor'));
+ $query->fields('dm', array('id','directorate_name'));
+ $query->fields('u', array('name','access','created'));
+ $query->fields('auds', array('designation','district_code','directorate_code','emp_group')); 
+ $query->condition('auds.service_status',5,'=');
+ if(in_array(variable_get('field', 11), array_keys($user->roles))){
+	$query->condition('auds.emp_group','A','!=');
+	$query->condition('auds.office_id',$direc_code['office_id'],'=');
+ }
+ $query->condition('auds.directorate_code',$direc_code['directorate_code'],'=');
+ $query->orderBy('aud.fname','ASC');	 
+ $result = $query->execute();
+ $rsData = $result->fetchAll();
+  	
+	
+	
+	
+	$header = array();
+	$rows   = array();
+	$output = '';
+	
+	
+	
+	$header = array(  
+	  array('data' => t('<b>Sl No. </b>')),		
+	  array('data' => t('<b>HRMS ID </b>')),	
+	  array('data' => t('<b>Officers Name </b>')),
+	  array('data' => t('<b>Officers Designation </b>')),
+	  array('data' => t('<b>Group </b>')),
+	  array('data' => t('<b>Directorate </b>')),
+	  array('data' => t('<b>Date of Joining </b>')),
+	  /*array('data' => t('<b>Date of Retirement </b>')),*/
+	  array('data' => t('<b>'.date('Y').'</b>')),
+	  array('data' => t('<b>'.(date('Y')-1).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-2).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-3).'</b>')),
+	  array('data' => t('<b>'.(date('Y')-4).'</b>')),
+	);
+	
+	$years = array_combine(range(date('Y'),date('Y')-10), range(date('Y'),date('Y')-10));
+	 $i=0;
+	  foreach($rsData as $data){
+		$i++;
+		
+		$submitted_yr = array();
+		$rs = array();
+		$rs = yearWiseIndividualUserDataSubmitted(array($years),$data->uid);
+		//print_r($rs); exit;
+		$doj_year = date('Y',strtotime($data->doj));
+		
+		if(!empty($rs)){
+			foreach($rs as $v){
+				if($data->uid == $v->uid){
+					$submitted_yr[] = $v->declaration_yr;
+				}
+			}
+		}
+		
+		if(in_array(date('Y'),$submitted_yr)){
+			$link19 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.date('Y'), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')){
+			$link19 = 'N/A';
+		}else{
+			$link19 = '<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">';
+		} 
+		if(in_array(date('Y')-1,$submitted_yr)){
+			$link18 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-1), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-1){
+			$link18 = 'N/A';
+		}else{
+			$link18 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		} 
+		if(in_array(date('Y')-2,$submitted_yr)){
+			$link17 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-2), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-2){
+			$link17 = 'N/A';
+		}else{
+			$link17 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-3,$submitted_yr)){
+			$link16 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-3), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-3){
+			$link16 = 'N/A';
+		}else{
+			$link16 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+		if(in_array(date('Y')-4,$submitted_yr)){
+			$link15 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/submitted.png">'), 
+						 'ack-file/'.$data->uid.'/'.(date('Y')-4), array('html' => TRUE,'attributes'=>array('title' => 'Submitted','target' => '_blank')));
+		}elseif($doj_year>date('Y')-4){
+			$link15 = 'N/A';
+		}else{
+			$link15 = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/not-submitted.png">'), 
+						 '', array('html' => TRUE,'attributes'=>array('title' => 'Not Submitted')));
+		}
+
+		$rows[] = array( 
+		  $i,	
+		  array('data' => t($data->hrms_id)),	
+		  array('data' => t($data->fname)),
+		  array('data' => t($data->designation)), 	 
+		  array('data' => t($data->emp_group)), 
+		  array('data' => t($data->directorate_name)),
+		  array('data' => t(date('d-m-Y', strtotime($data->doj)))),
+		  /*array('data' => t(date('d-m-Y', strtotime($data->dor)))),*/
+		  array('data' => t($link19)),
+          array('data' => t($link18)),
+		  array('data' => t($link17)),
+		  array('data' => t($link16)),
+		  array('data' => t($link15)),
+		);
+	  }
+	  
+   $output .= theme('datatable', array(
+							  'header' => $header,
+							  'rows' => $rows,
+							  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+							  'sticky' => true,
+							  'caption' => '<h3>DoA Retirement List </h3>',
+							  'colgroups' => array(),
+							  'empty' => t("No data found!") // The message to be displayed if table is empty
+							)
+						  ).theme('pager');	 
+	
+	
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+	  
+ }
+ 
+ function asset_officers_list_form(){
+  global $user;
+  $status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}
+  	
+  drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+
+	
+ $direc_code = getLoginUserDetailForAsset($user->uid);  
+  
+ $query = db_select('a_user_details','aud');
+ $query->leftJoin('a_user_details_service', 'auds', 'auds.uid = aud.uid'); 
+ $query->leftJoin('users', 'u', 'u.uid = auds.uid');  
+ $query->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = auds.directorate_code');  
+ $query->fields('aud', array('fname','status','hrms_id','doj','dor','dob'));
+ $query->fields('dm', array('id','directorate_name'));
+ $query->fields('u', array('name','access','created'));
+ $query->fields('auds', array('uid','designation','district_code','directorate_code','emp_group','service_status')); 
+ $query->condition('aud.status',0,'=');
+ $query->condition('auds.directorate_code',$direc_code['directorate_code'],'=');
+ $query->orderBy('aud.fname','ASC');	 
+ $result = $query->execute();
+ $rsData = $result->fetchAll();
+  	
+	
+	
+	
+	$header = array();
+	$rows   = array();
+	$output = '';
+	
+	
+	
+	$header = array(  
+	  array('data' => t('<b>Sl No. </b>')),		
+	  array('data' => t('<b>HRMS ID </b>')),	
+	  array('data' => t('<b>Officers Name </b>')),
+	  array('data' => t('<b>Officers Designation </b>')),
+	  array('data' => t('<b>Group </b>')),
+	  array('data' => t('<b>Directorate </b>')),
+	   array('data' => t('<b>Date of Birth </b>')),
+	  array('data' => t('<b>Date of Joining </b>')),
+	  /*array('data' => t('<b>Date of Retirement </b>')),*/
+	  array('data'=> t('<b>Retirement Status </b>')),
+	);
+	 $i=0;
+	  foreach($rsData as $data){
+		  if($data->service_status != 5){
+			$status_img = "status_on.png";
+		}else if($data->status == 5){
+			$status_img = "status_off.png";
+		}else{
+			$status_img = "status_off.png";
+		}
+		
+		$i++;
+
+		$rows[] = array( 
+		  $i,	
+		  array('data' => t($data->hrms_id)),	
+		  array('data' => t($data->fname)),
+		  array('data' => t($data->designation)), 	 
+		  array('data' => t($data->emp_group)), 
+		  array('data' => t($data->directorate_name)),
+		  array('data' => t(date('d-m-Y', strtotime($data->dob)))),
+		  array('data' => t(date('d-m-Y', strtotime($data->doj)))),
+		  /*array('data' => t(date('d-m-Y', strtotime($data->dor)))),*/
+		  array('data' => l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'asset').'/images/'.$status_img.'">'), 
+		      'retirement-change-dashboard/changeStatus/'.$data->uid.'/'.$data->service_status, array('html' => TRUE, 'attributes'=>array('title' => 'Status')))),
+		);
+	  }
+	  
+   $output .= theme('datatable', array(
+							  'header' => $header,
+							  'rows' => $rows,
+							  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+							  'sticky' => true,
+							  'caption' => '<h3>DoA Officer List </h3>',
+							  'colgroups' => array(),
+							  'empty' => t("No data found!") // The message to be displayed if table is empty
+							)
+						  ).theme('pager');	  
+	
+	
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+	  
+ } 
+ 
+ function retirement_status_change($emp_uid='',$service_status=''){
+	if($service_status==1){
+		$service_status = 5;
+	}else{
+		$service_status = 1;
+	}
+	$query = db_update('a_user_details_service');
+	$query->fields(array('service_status' => $service_status));
+	$query->condition('uid', $emp_uid);
+	$rs = $query->execute();
+	drupal_set_message("Your data has been updated successfully");
+	drupal_goto('asset-officers-list');
+}
