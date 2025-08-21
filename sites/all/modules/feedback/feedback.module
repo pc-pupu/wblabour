@@ -1,0 +1,198 @@
+<?php
+
+function feedback_permission() {
+  return array(
+    'feedback-per' => array(
+      'title' => t('Feedback Permission'),
+    ),
+	'feedback-list-per' => array(
+      'title' => t('Feedback permission for CMSMANAGER'),
+    )
+  );
+}
+
+function feedback_menu() {
+  $items = array();
+ 
+  $items['may-we-help-you'] = array(
+	//'title' => 'Feedback',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('feedback_entry'),
+	'access arguments' => array('feedback-per'),
+	//'access arguments' => array('access content'),
+	//'file' => 'feedback.form.inc',
+  );
+  
+  $items['feedback-list'] = array(
+	'title' => 'Feedback List',
+	'page callback' => 'feedback_list',
+	//'page arguments' => array('feedback_list'),
+	'access arguments' => array('feedback-list-per'),
+  );
+  
+  
+  return $items;
+}
+
+function feedback_entry(){
+  $form['feedback_applicant_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Name'),
+	'#description' => t('<small class="text-muted">We\'ll never share your email with anyone else.</small>'),
+	'#attributes' => array('id' => 'exampleInputName','class'=>array('form-control'),'placeholder'=>'Enter Name', 'autocomplete'=>'off'),
+	'#required' => TRUE,
+  );
+  
+  $form['feedback_email'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Email address'),
+	'#attributes' => array('id' => 'exampleInputName','class'=>array('form-control'),'placeholder'=>'Enter Email', 'autocomplete'=>'off'),
+	'#required' => TRUE,
+  );
+  
+  $form['feedback_select_directorate'] = array(
+    '#type' => 'select',
+    '#title' => t('Select Directorate'),
+	'#options' => authority_list(),
+	'#attributes' => array('id' => 'exampleInputName','class'=>array('form-control')),
+	'#required' => TRUE,
+  );
+  
+  $form['feedback_comment'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Comment'),
+	'#attributes' => array('id' => 'exampleInputName','class'=>array('form-control')),
+	'#required' => TRUE,
+  );
+  
+  $form['my_captcha_element'] = array(
+	  '#type' => 'captcha',
+	  '#captcha_type' => 'captcha/Math',
+	  //'#captcha_type' => 'image_captcha/Image',
+	);
+  
+  $form['submit'] = array(
+    	'#type' => 'submit',
+		'#value' => 'Save',
+		'#attributes' => array('id' => 'exampleInputName','class'=>array('btn','btn-primary')),
+		
+	);
+	
+	$form['reset'] = array(
+    	'#type' => 'markup',
+		'#markup' => '<input type="reset" value="Reset" class="btn btn-primary" style="margin-left: 10px;"><b style="color:#F00; margin-left: 295px;">REMARKS: Fields marked with * are mandatory</b>',
+		/*'#suffix' => '</div>'*/
+    );	
+  
+  return $form;	
+}
+
+function feedback_entry_validate($form, &$form_state){
+  if (!$form_state['values']['feedback_applicant_name']) {
+    form_set_error('feedback_applicant_name', 'You must enter your name before continuing');    
+  }
+  if (!valid_email_address($form_state['values']['feedback_email'])) {
+    form_set_error('feedback_email', 'You must enter valid email address before continuing');    
+  }
+  if (!$form_state['values']['feedback_select_directorate']) {
+    form_set_error('feedback_select_directorate', 'You must select directorate before continuing');    
+  }
+  if (!$form_state['values']['feedback_comment']) {
+    form_set_error('feedback_comment', 'You must enter comment before continuing');    
+  }
+  /*if(!empty($form_state['values']['feedback_comment']) || $form_state['values']['feedback_comment'] != ""){
+	$match_pattern1 	= 	'/[A-Za-z0-9]+/';
+	if(!preg_match($match_pattern1, $form_state['values']['feedback_comment'])) {
+		//form_error($element, t($element['#title'].' SHOULD BE TEXT ONLY'));
+		form_set_error('feedback_comment', 'You must enter comment before continuing11111111');
+	}
+  }*/
+}
+
+
+function feedback_entry_submit($form, &$form_state) {
+ 
+ 	$arr=array();
+	$date = date('Y-m-d H:i:s');
+	$feedbackInfo = array('feedback_applicant_name'=>$form_state['values']['feedback_applicant_name'],
+						  'feedback_email'=>$form_state['values']['feedback_email'],
+						  'feedback_select_directorate'=>$form_state['values']['feedback_select_directorate'],
+						  'feedback_comment'=>$form_state['values']['feedback_comment'],
+					      'feedback_date' => $date
+						  );
+
+ 	$id = db_insert('feedback')->fields($feedbackInfo)->execute();
+
+	if($id){
+		drupal_set_message('Your Feedback has been recorded successfully!!! We will get back to you as soon as possible!!');
+		drupal_goto("may-we-help-you");
+   }
+   else
+   {
+	   $form_state['rebuild']=true;
+   }
+}
+
+function feedback_list(){
+	 global $base_root, $base_path;
+	 $sort = 'DESC';
+	 
+	 $order = 'feedback_date';
+     $feedback_list_query = db_select('feedback', 'f');
+	 $feedback_list_query->leftJoin('ar_authority', 'a', 'f.feedback_select_directorate::integer=a.id');
+     $feedback_list_query->fields('f', array('id','feedback_applicant_name','feedback_email','feedback_select_directorate','feedback_comment','feedback_date'));
+	 $feedback_list_query->fields('a', array('authority_name'));
+	 $feedback_list_query = $feedback_list_query->extend('TableSort')->extend('PagerDefault')->limit(20);
+	 $feedback_list_query->orderBy($order, $sort);
+	 // echo $feedback_list_query; exit;
+	 $feedback_list_query_result = $feedback_list_query->execute();
+	 $feedback_list_query_result_data = $feedback_list_query_result->fetchAll();
+	 
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+  
+     $header = array(
+          array('data'=> 'Feedback SL.NO'),
+		  array('data'=> 'Applicaant Name'),
+          array('data' => 'Email Id'),
+		  array('data' => 'Directorate Name'),
+		  array('data' => 'Feedback Comment'),
+		  array('data'=> 'Feedback Date'),
+      );
+	 $i=0;
+	 foreach($feedback_list_query_result_data as $data){
+		$i++;
+		//$aa=$base_root.$base_path.'/feedback-list/'.$data->cid.'/cmscircularedit';
+		//$link_s=l(t('View/Edit'), $aa) ;
+		$rows[] = array(
+      			    $i,
+					$data->feedback_applicant_name,
+					$data->feedback_email,
+					$data->authority_name,
+					$data->feedback_comment,
+					date('d-m-Y', strtotime($data->feedback_date)),
+	  			);   
+	 }
+	 
+      				
+	 
+	 $output .= theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+	
+	
+	
+ }
+

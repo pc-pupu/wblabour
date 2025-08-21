@@ -1,0 +1,6 @@
+name = Top Links Block
+description = Top Links Block
+core = 7.x
+stylesheets[all][] = css/menu_style.css
+scripts[] = js/top_menu.js
+package = Top Links Modules

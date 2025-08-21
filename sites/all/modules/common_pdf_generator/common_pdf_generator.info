@@ -1,0 +1,8 @@
+;$Id$
+name = Common PDF Generator Module
+description = All Project Related PDF Generator Module
+package = Custom Module
+version = "7.x"
+core = 7.x
+files[] = common_pdf_generator.module
+;dependencies[] = autoload

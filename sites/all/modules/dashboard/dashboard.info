@@ -1,0 +1,9 @@
+;$Id$
+
+name = dashboard
+description = A dashboard module.
+package = Drupal 7 Development
+core = 7.x
+files[] = dashboard.module
+
+;dependencies[] = autoload

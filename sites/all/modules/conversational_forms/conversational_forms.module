@@ -1,0 +1,277 @@
+<?php
+
+/**
+ * @TODO
+ *  1. JS Field Validation
+ *  2. Conditional fields --x
+ *  3. Configuration
+ *      - (option)Add cofo to webform x
+ *      - (option)Add cofo to block x
+ *      - Configure questions x
+ *      - Configure patterns x
+ *      - CF error --x
+ *      - Add robotchatresponse
+ *      - Prevent autofocus
+ *      - CF label x
+ *      - Placeholder
+ *  4. Extend for FAPI
+ *  5. Add library link or download library --x
+ *  6. Change image.
+ */
+
+define('CONVERSATIONAL_FORMS_LIB', variable_get('conversational_forms_library_url',
+'//cf-4053.kxcdn.com/conversational-form/0.9.6/conversational-form.min.js'));
+
+require_once drupal_get_path('module', 'conversational_forms') . '/includes/webform.inc';
+
+/**
+ * Implements hook_menu().
+ */
+function conversational_forms_menu() {
+  $items['admin/config/content/conversational-forms'] = array(
+    'title' => t('Conversational forms'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('conversational_forms_admin_settings'),
+    'access callback' => array(TRUE), // @TODO permission.
+    'file' => 'includes/conversational_forms.admin.inc',
+    'file path' => drupal_get_path('module', 'conversational_forms'),
+  );
+  $items['admin/config/content/conversational-forms/settings'] = array(
+    'title' => t('Settings'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/config/content/conversational-forms/example-fapi'] = array(
+    'title' => t('Example'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('conversational_forms_fapi_example_form'),
+    'access callback' => array(TRUE), // @TODO permission.
+    'file' => 'example/fapi.example.inc',
+    'file path' => drupal_get_path('module', 'conversational_forms'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function conversational_forms_preprocess_node(&$vars) {
+
+  $components = $vars['elements']['webform']['#form']['#node']->webform['components'];
+
+  if ($vars['type'] == 'webform') {
+    $cf_add = conversational_forms_is_enabled($vars['nid']);
+    if ($cf_add) {
+      // Change name attribute to form_key.
+      // We need it to change from default submitted['form_key'] format to work with
+      // our library. Square brackets don't go well with js.
+      foreach ($components as $component) {
+        $form_key = $component['form_key'];
+
+        if ($component['type'] == 'select') {
+          $element = $vars['elements']['webform']['#form']['submitted'][$form_key];
+          foreach ($element['#options'] as $key => $value) {
+            $vars['elements']['webform']['#form']['submitted'][$form_key][$key]['#name'] =
+            $vars['content']['webform']['#form']['submitted'][$form_key][$key]['#name'] =
+            $form_key;
+          }
+        }
+        else {
+          $vars['elements']['webform']['#form']['submitted'][$form_key]['#name'] =
+          $vars['content']['webform']['#form']['submitted'][$form_key]['#name'] =
+          $form_key;
+        }
+
+      }
+      // Set cf-context.
+      $vars['content_attributes_array']['cf-context'] = 'cf-context';
+      drupal_add_js(drupal_get_path('module', 'conversational_forms') . "/js/conversational_forms.js", array(
+        'scope' => 'header',
+        'weight' => 1, // This should load after webform.js
+      ));
+
+      drupal_add_js(CONVERSATIONAL_FORMS_LIB, array(
+        'type' => 'external',
+        'scope' => 'footer',
+        'weight' => 0,
+      ));
+      conversational_forms_css();
+    }
+  }
+}
+
+function conversational_forms_preprocess_block(&$vars) {
+  $nid = conversational_forms_nid_from_block_id($vars['block']);
+  $cf_add = conversational_forms_is_enabled($nid);
+	if ($cf_add) {
+		$vars['content_attributes_array']['cf-context'] = 'cf-context';
+	    drupal_add_js(CONVERSATIONAL_FORMS_LIB, array(
+        'type' => 'external',
+        'scope' => 'footer',
+        'weight' => 0,
+      ));
+      conversational_forms_css();
+	}
+}
+
+function conversational_forms_form_alter(&$form, &$form_state, $form_id) {
+  $nid = !empty($form['#node']) ? $form['#node']->nid : 0;
+  $cf_add = conversational_forms_is_enabled($nid);
+  $webform_id = 'webform_client_form_' . $nid;
+  switch ($form_id) {
+    case 'webform_configure_form':
+      $form['cf'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Conversational forms'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+      );
+      $form['cf']['cf-add-to-webform'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Convert this webform to conversational form.'),
+        '#default_value' => $cf_add,
+      );
+      $file_upload_location = 'public://conversational_forms/';
+      $form['cf']['conversational_forms_robot_image'] = array(
+        '#title' => t('Robot Image'),
+        '#type' => 'managed_file',
+        '#description' => t('If no file is uploaded, default will be used.'),
+        '#default_value' => variable_get('conversational_forms_robot_image', ''),
+        '#upload_location' => $file_upload_location,
+        '#states' => array(
+          'visible' => array(
+            ':input[name="cf-add-to-webform"]' => array('checked' => TRUE),
+          ),
+        ),
+      );
+      $form['cf']['conversational_forms_anonymous_image'] = array(
+        '#title' => t('Anonymous Image'),
+        '#type' => 'managed_file',
+        '#description' => t('If no file is uploaded, default will be used.'),
+        '#default_value' => variable_get('conversational_forms_anonymous_image', ''),
+        '#upload_location' => $file_upload_location,
+        '#states' => array(
+          'visible' => array(
+            ':input[name="cf-add-to-webform"]' => array('checked' => TRUE),
+          ),
+        ),
+      );
+      $form['#submit'][] = 'conversational_forms_webform_configure_submit';
+      break;
+
+    case $webform_id:
+      if ($cf_add) {
+        $form['#attributes']['cf-form'] = 'cf-form';
+        array_unshift($form['#submit'], 'conversational_forms_webform_submit');
+      }
+      break;
+
+    default:
+      # code...
+      break;
+  }
+}
+
+function conversational_forms_webform_configure_submit($form, &$form_state) {
+  $id = 'cf-add-to-webform-' . $form_state['values']['nid'];
+  variable_set($id, $form_state['values']['cf-add-to-webform']);
+  // Images.
+  $image_fields = array(
+      'Robot' => 'conversational_forms_robot_image',
+      'Anonymous' => 'conversational_forms_anonymous_image',
+    );
+  // If fid is not 0 we have a valid file.
+  foreach ($image_fields as $key => $value) {
+      if ($form_state['values'][$value] != 0) {
+        $file = file_load($form_state['values'][$value]);
+        $file->status = FILE_STATUS_PERMANENT;
+        file_save($file);
+
+        // When a module is managing a file, it must manage the usage count.
+        // Here we increment the usage count with file_usage_add().
+        file_usage_add($file, 'image_example', 'sample_image', 1);
+
+        // Save the fid of the file so that the module can reference it later.
+        variable_set($value, $file->fid);
+        drupal_set_message(t('The @key image is saved.', array('@key' => $key,)));
+      }
+      // If the file was removed we need to remove the module's reference to the
+      // removed file's fid, and remove the file.
+      elseif ($form_state['values'][$value] == 0) {
+        // Retrieve the old file's id.
+        $fid = variable_get($value, FALSE);
+        $file = $fid ? file_load($fid) : FALSE;
+        if ($file) {
+          file_usage_delete($file, 'image_example', 'sample_image', 1);
+          file_delete($file);
+        }
+        variable_set($value, FALSE);
+      }
+  }
+}
+
+function conversational_forms_block_view_alter(&$data, $block) {
+  if ($block->module == 'webform') {
+    $cf_add = conversational_forms_is_enabled(conversational_forms_nid_from_block_id($block));
+    if ($cf_add) {
+      $cf = '<div cf-context></div>' . $data['content'];
+      $data['content'] = $cf;
+    }
+  }
+}
+
+function conversational_forms_is_enabled($id) {
+  return variable_get('cf-add-to-webform-' . $id, 0);
+}
+
+function conversational_forms_nid_from_block_id($block) {
+  return str_replace('client-block-', '', $block->delta);
+}
+
+function conversational_forms_css() {
+  // Not much of CSS + varibales, hence no .css
+  $css = '
+    .conversational-form--enable-animation cf-chat-response.show text[value-added] {
+      color: #100;
+    }
+  ';
+  // Get robot image.
+  $robot = variable_get('conversational_forms_robot_image', '');
+  if (is_numeric($robot)) {
+    $robot = file_create_url(file_load($robot)->uri);
+    $css .= '
+      cf-chat-response.robot.show thumb {
+        background-image: url(' . $robot . ') !important;
+      }
+    ';
+  }
+  // Get robot image.
+  $anonymous = variable_get('conversational_forms_anonymous_image', '');
+  if (is_numeric($anonymous)) {
+    $anonymous = file_create_url(file_load($anonymous)->uri);
+    $css .= '
+      cf-chat-response.user.show thumb {
+        background-image: url(' . $anonymous . ') !important;
+      }
+    ';
+  }
+  drupal_add_css($css, array('type' => 'inline', 'scope' => 'footer'));
+}
+
+function conversational_forms_js() {
+  drupal_add_js(CONVERSATIONAL_FORMS_LIB, 'external');
+}
+
+function conversational_forms_webform_submit($form, &$form_state) {
+
+  foreach ($form_state['input']['submitted'] as $key => $value) {
+    if ($value == NULL && isset($form_state['input'][$key])) {
+      $form_state['input']['submitted'][$key] =
+      $form_state['values']['submitted'][$key] =
+      $form_state['complete form']['submitted'][$key]['#value'] =
+      $form_state['input'][$key];
+    }
+  }
+
+}

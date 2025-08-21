@@ -1,0 +1,47 @@
+<?php
+
+/*function mycron_cron() {
+  send_sms('9836886161','test message');
+}*/
+
+
+/*function mycron_cronapi() {
+  $items = array();
+  
+  
+
+  $items['one_minute_cron'] = array(
+    'title' => t('This is my first cron job #1'),
+    'file' => 'mycron.jobs.inc',
+    'file path' => drupal_get_path('module', 'mycron') . '/cron',
+    'callback' => 'example_my_cron_job_callback',
+    'callback arguments' => array('cronjob1'),
+    'enabled' => FALSE,
+    'tags' => array('example'),
+    'settings' => array(
+      'example_plugin' => array(
+        'example_setting' => 'example_value',
+      ),
+    ),
+    'scheduler' => array(
+      'name' => 'crontab',
+      'crontab' => array(
+        'rules' => array('* * * * *'),
+      ),
+    ),
+    'launcher' => array(
+      'name' => 'serial',
+      'serial' => array(
+        'thread' => 'any',
+      ),
+    ),
+    'logger' => array(
+      'name' => 'cache',
+      'cache' => array(
+        'bin' => 'my_cache_bin',
+      ),
+    ),
+  );
+
+  return $items;
+}*/

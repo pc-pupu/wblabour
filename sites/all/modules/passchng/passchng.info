@@ -1,0 +1,8 @@
+;$Id$
+name = Password Change
+description = User Password Change
+;package = Correspondance Module
+version = "7.x"
+core = 7.x
+files[] = passchng.module
+;dependencies[] = autoload

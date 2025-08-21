@@ -1,0 +1,1238 @@
+<?php
+function central_inspection_permission() {
+  return array(
+    'central_inspection_per' => array(
+      'title' => t('Central Inspection Permission'),
+    ),
+	'central_inspection_schedule_per' => array(
+      'title' => t('Central Inspection Schedule Permission'),
+    )
+	
+  );
+}
+
+ function central_inspection_menu() {
+	$items=array();
+	
+	$items['central-inspection-step']=array(
+		'title'=>'Central Inspection',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('central_inspection_step_form'),
+		'access arguments' => array('access content'),
+	);
+	
+	$items['central-inspection']=array(
+		'title'=>'Central Inspection',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('central_inspection_form'),
+		'access arguments' => array('central_inspection_per'),
+	);
+	
+	$items['central-inspection-schedule']=array(
+		'title'=>'Central Inspection Schedule',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('central_inspection_schedule_form'),
+		'access arguments' => array('central_inspection_schedule_per'),
+	);
+	
+	$items['central-inspection-data/%ctools_js/%/%/%'] = array(
+    	'page callback' => 'mymodal_callback',
+    	'page arguments' => array(1,2,3,4),
+    	'access callback' => TRUE,
+    	'type' => MENU_CALLBACK,
+    );
+	
+	
+	return $items;
+ }
+ 
+function central_inspection_step_form($form, &$form_state) {
+	$form['#attributes']['class'][] = 'form-inline'; 
+	$form['#theme'] = 'central_inspection_step_page';
+    $form['first_name'] = array(
+        '#type' => 'textfield',
+        '#attributes' => array('class'=>array('form-control'), 'placeholder'=>'First Name', 'autocomplete' => 'off'),
+    );
+    $form['last_name'] = array(
+        '#type' => 'textfield',
+        '#attributes' => array('placeholder' => t('Last name')),
+    );
+    $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => 'Submit',
+    );
+    return $form;
+}
+ 
+function central_inspection_theme($existing, $type, $theme, $path){
+  
+  
+  $items = array();	
+  $items['central_inspection_step_page'] = array(
+	  'render element' => 'form',
+	  'template' => 'central_inspection_step_part',
+  );
+  return $items;
+}
+ 
+ 
+function mymodal_callback($ajax,$lb_id,$sf_id,$inspection_details_id){
+  //die($ajax.'--->'.$ID);
+  //$ajax = 1;
+  if ($ajax) {
+    ctools_include('ajax');
+    ctools_include('modal');
+    $form_state = array(
+      'ajax' => TRUE,
+      'title' => t(''),
+	  'lb_id'=>$lb_id,
+	  'sf_id'=>$sf_id,
+	  'inspection_details_id'=>$inspection_details_id,
+    );
+    $output = ctools_modal_form_wrapper('mymodal_form', $form_state);
+    if (!empty($form_state['ajax_commands'])) {
+      $output = $form_state['ajax_commands'];
+    }
+    print ajax_render($output);
+    drupal_exit();
+  }else {
+    return drupal_get_form('mymodal_form');
+  }
+}
+
+function mymodal_form($form, $form_state){
+  drupal_add_css(drupal_get_path('module', 'central_inspection') . '/css/central_inspection.css', array('group' => CSS_DEFAULT, 'every_page' => TRUE));	
+  //$row = (object)db_query('SELECT * FROM dashboard_quick_draft WHERE quick_draft_id='.$form_state['noteID'])->fetchAssoc();
+  
+  //echo $form_state['lb_id'].'-->'.$form_state['sf_id'].'-->'.$form_state['inspection_details_id'];
+  
+  
+   	  $query_schedule_dt = db_select('ld_inspection_schedule', 's');
+	  $query_schedule_dt ->fields('s', array('id','from_dt','to_dt','directorate_code','confirm_flag'));
+	  $query_schedule_dt->condition('directorate_code', 'LB');
+	  $query_schedule_dt->condition('s.confirm_flag', '1');
+	  $query_schedule_dt->condition('s.id',$form_state['lb_id'],'=');
+	  $result_data = $query_schedule_dt->execute();
+	  $result_get_schedule_data = $result_data->fetchAssoc();
+	  $frm_dt = $result_get_schedule_data['from_dt'];
+	  $to_dt = $result_get_schedule_data['to_dt'];
+	  
+	  
+		$data_post_data = 	array(
+			"source"=>"WBLD",
+			"from_date"	=> $frm_dt,
+			 "to_date"    =>$to_dt
+		);  
+		/*$data_post_data = 	array(
+			"source"=>"WBLD",
+			"from_date"	=> "2017-09-15",
+			 "to_date"    =>"2017-10-10"
+		);  */
+	
+	
+	$lc = 'https://wblc.gov.in/labourdept/eservices/centralInspectionDateWiseView';
+	$ch_lc = curl_init();
+	curl_setopt($ch_lc, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+	curl_setopt($ch_lc, CURLOPT_URL, $lc);
+	curl_setopt($ch_lc, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch_lc, CURLOPT_SSL_VERIFYHOST, 0);
+	curl_setopt($ch_lc, CURLOPT_SSL_VERIFYPEER, 0); 
+	curl_setopt($ch_lc, CURLOPT_FOLLOWLOCATION, 0);
+	curl_setopt($ch_lc, CURLOPT_POSTFIELDS, json_encode( $data_post_data ) );
+	curl_setopt($ch_lc, CURLOPT_POST, true);
+	$results_lc=curl_exec($ch_lc);
+	//$errors_lc=curl_error($ch_lc);
+	curl_close($ch_lc);
+	$lc_final_arr = json_decode($results_lc); 
+	//print_r($lc_final_arr)."<br>"; 
+	
+	
+	$boilers = 'https://wbboilers.gov.in/labourdept/eservices/centrailInspectionSeheduleData';
+	$ch_boilers = curl_init();
+	curl_setopt($ch_boilers, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+	curl_setopt($ch_boilers, CURLOPT_URL, $boilers);
+	curl_setopt($ch_boilers, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch_boilers, CURLOPT_SSL_VERIFYHOST, 0);
+	curl_setopt($ch_boilers, CURLOPT_SSL_VERIFYPEER, 0); 
+	curl_setopt($ch_boilers, CURLOPT_FOLLOWLOCATION, 0);
+	curl_setopt($ch_boilers, CURLOPT_POSTFIELDS, json_encode( $data_post_data ) );
+	curl_setopt($ch_boilers, CURLOPT_POST, true);
+	$results_boilers=curl_exec($ch_boilers);
+	$errors_boilers=curl_error($ch_boilers);
+	curl_close($ch_boilers);
+	$boilers_final_arr = json_decode($results_boilers); 
+	//print_r($boilers_final_arr)."<br>"; 
+	//exit;
+	
+	$sf = 'https://wbfactoryonline.in/webservices/REST/LDSchedule';
+	$ch_sf = curl_init();
+	curl_setopt($ch_sf, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+	curl_setopt($ch_sf, CURLOPT_URL, $sf);
+	curl_setopt($ch_sf, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch_sf, CURLOPT_SSL_VERIFYHOST, 0);
+	curl_setopt($ch_sf, CURLOPT_SSL_VERIFYPEER, 0); 
+	curl_setopt($ch_sf, CURLOPT_FOLLOWLOCATION, 0);
+	curl_setopt($ch_sf, CURLOPT_POSTFIELDS, json_encode( $data_post_data ) );
+	curl_setopt($ch_sf, CURLOPT_POST, true);
+	$results_sf=curl_exec($ch_sf);
+	$errors_sf=curl_error($ch_sf);
+	curl_close($ch_sf);
+	$sf_final_arr = json_decode($results_sf); 
+	
+	
+	/*print_r($sf_final_arr);
+	exit;*/
+	
+	
+	$final_arr = array();
+	$k = 0; 
+	
+	$final_arr[$k]['est_name']="test";
+		$k = 1; 
+	if(!empty($lc_final_arr->list)){
+		foreach($lc_final_arr->list as $val){  
+			$final_arr[$k]['cifid'] 					= $val->cifid;  
+			$final_arr[$k]['est_name'] 					= $val->est_name; 
+			$final_arr[$k]['inspector_name'] 			= $val->inspector_name; 
+			$final_arr[$k]['risk_status'] 				= $val->risk_status;
+			$final_arr[$k]['date_of_inspection'] 		= $val->scd_form_date;
+			$final_arr[$k]['location'] 					= $val->sub_div_name;
+			$final_arr[$k]['inspection_status'] 		= 'NOT ASSIGNED';
+			$final_arr[$k]['director_code'] 			= 'Labour Commissionerate';
+			$k++;
+		}
+	}
+	
+	if($boilers_final_arr[0][0]->error_code!=0){
+		foreach($boilers_final_arr[0] as $val){  
+			$final_arr[$k]['cifid'] 					= $val->cifid;  
+			$final_arr[$k]['est_name'] 					= $val->factory_name; 
+			$final_arr[$k]['inspector_name'] 			= $val->inspector_name; 
+			$final_arr[$k]['risk_status'] 				= 'NOT ASSIGNED';
+			$final_arr[$k]['date_of_inspection'] 		= $val->date_of_inspection;
+			$final_arr[$k]['location'] 					= $val->area_zone;
+			$final_arr[$k]['inspection_status'] 		= $val->status_name;
+			$final_arr[$k]['director_code'] 			= 'Boilers Directorate';
+			$k++;
+		}
+	}
+	
+	if(!empty($sf_final_arr->list)){
+		foreach($sf_final_arr->list as $val){  
+			$final_arr[$k]['cifid'] 					= $val->cifid;  
+			$final_arr[$k]['est_name'] 					= $val->area_zone; 
+			$final_arr[$k]['inspector_name'] 			= $val->inspector_name; 
+			$final_arr[$k]['risk_status'] 				= $val->risk_status;
+			$final_arr[$k]['date_of_inspection'] 		= $val->date_of_inspection;
+			$final_arr[$k]['location'] 					= $val->area_zone;
+			$final_arr[$k]['inspection_status'] 		= $val->inspection_status;
+			$final_arr[$k]['director_code'] 			= 'Factory Directorate';
+			$k++;
+		}
+	}
+	//print_r($final_arr)."<br>";
+    //exit;
+   
+    $rows = array();
+    $header = array();
+  	$output = '';
+  	$i = 0;
+    $header = array(
+		  array('data'=> 'SL No'),
+		  array('data'=> 'Directorate'),
+          array('data'=> 'Establishment Name'),
+		  array('data'=> 'Inspector Name'),
+          array('data' => 'Risk Category'),
+		  array('data' => 'Address'),
+		  //array('data' => 'CIFID'),
+		  //array('data' => 'Service'),
+		  //array('data' => 'Notification'),
+		  //array('data' => 'Authority Code'),
+		  //array('data' => 'Action'),
+     );
+	foreach($final_arr as $val){ 
+	//echo $val->inspector_name;
+	//exit;
+	if($val['cifid'] == $form_state['inspection_details_id']){
+		$risk = '';
+		if($val['risk_status'] == 1){
+			$risk = 'High Risk';	
+		}else if($val['risk_status'] == 2){
+			$risk = 'Medium Risk';
+		}
+		$i++;
+		$rows[] = array(
+						$i,
+						$val['director_code'],
+						$val['est_name'],
+						$val['inspector_name'],
+						$risk,
+						$val['location']
+			);   
+		 }
+	}
+	 
+	// Or, render using a theme function.
+	$output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+   // return '<div class="table-responsive statistics_box">'.$output.'</div>';
+  
+  
+  
+  $form = array();
+  $form['form_begin'] = array(
+    	'#type' => 'markup',
+		//'#prefix' =>'<div class="model_boxnew"> hi'.$form_state['noteID'],
+		//'#suffix' => '</div>'
+        '#prefix' => '<div class="model_boxnew"> <h1>Inspection Details</h1><h2>By, Central Inspector</h2><div class="dividernew"></div><p><div class="table-responsive statistics_box centralized-table scheduled-table">'.$output.'</div></p>',
+		'#suffix' => '</div>'
+    );
+  return $form;
+}
+ 
+ 
+ function central_inspection_schedule_form($form, &$form_state){
+	 global $base_root, $base_path;
+	 
+  	drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/sky-forms.css');
+  	drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/form-design.css');
+	
+	$form['#attributes']['class'][] = 'sky-form custom-form-main';
+	 
+	 
+	 $filter_data = isset($form_state['values']['schedule_date']) && !empty($form_state['values']['schedule_date']) ? $form_state['values']['schedule_date'] : '';
+	 if(trim($filter_data)!=""){
+		 
+		 $arr_schedule = explode("_",trim($filter_data));
+			
+	 }
+	 
+	 $form['schedule_date'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+     '#options' => schedule_list(),
+	 //'#required' => TRUE,
+	 '#attributes' => array('class'=>array('')),
+	 '#prefix'=>'<div class="x_panel"><div class="x_title"><h1><span>S</span>cheduled Date List</h1></div><div class="x_content"><fieldset><div class="row"><div class="col-md-8"><label class="select"><i class="icon-prepend icon-calendar"></i> <i class="select-icon"></i> Scheduled Dates',
+	 '#suffix' => '</label></div>'
+	 );  
+	 
+	  $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Search',
+		'#attributes' => array('class'=>array('btn btn-primary pull-left generate-btn')),
+		'#prefix' => '',  
+        '#suffix' => '</div></fieldset>',
+     ); 
+	 
+	$form['lb_list'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_lb_list($arr_schedule[0],$arr_schedule[1]),
+	  '#prefix' => '<div class="col-md-12">',  
+      '#suffix' => '</div></div></div>',
+    );
+	 
+	return  $form;
+ }
+ 
+ function central_inspection_schedule_form_submit($form, &$form_state){
+	 $form_state['rebuild'] = TRUE;
+ }
+ 
+ function central_inspection_form($form, &$form_state) {
+	global $base_root, $base_path;
+	
+    
+  	drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/sky-forms.css');
+  	drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/form-design.css');
+	
+	
+	$form['#attributes']['class'][] = 'sky-form custom-form-main';
+	
+	$allDateArry = array();
+	$date_range = isset($form_state['values']['inspectionrange']) && !empty($form_state['values']['inspectionrange']) ? $form_state['values']['inspectionrange'] : '';
+	
+	if($date_range!=""){
+		$given_date = explode("to",trim($date_range));
+	
+		$startDate = date('Y-m-d',strtotime($given_date[0]));
+		$endDate = date('Y-m-d',strtotime($given_date[1]));
+		
+	
+		/*$holidays = array(
+			'2017-09-19',
+			'2017-09-26',
+			'2017-09-27',
+			'2017-09-28',
+			'2017-09-29',
+			'2017-09-30',
+			'2017-10-01',
+			'2017-10-02',
+			'2017-10-03',
+			'2017-10-04',
+			'2017-10-05',
+			'2017-10-06',
+			'2017-10-19',
+			'2017-10-20'
+		);*/
+		
+		$holidays = array(
+				'2018-01-01',
+				'2018-01-12',
+				'2018-01-22',
+				'2018-01-23',
+				'2018-01-26',
+				'2018-02-14',
+				'2018-03-01',
+				'2018-03-02',
+				'2018-03-30',
+				'2018-05-01',
+				'2018-05-09',
+				'2018-08-15',
+				'2018-08-22',
+				'2018-09-03',
+				'2018-09-21',
+				'2018-10-02',
+				'2018-10-08',
+				'2018-10-15',
+				'2018-10-16',
+				'2018-10-17',
+				'2018-10-18',
+				'2018-10-19',
+				'2018-10-22',
+				'2018-10-23',
+				'2018-10-24',
+				'2018-10-25',
+				'2018-11-06',
+				'2018-11-07',
+				'2018-11-08',
+				'2018-11-09',
+				'2018-11-13',
+				'2018-11-21',
+				'2018-11-23',
+				'2018-12-25'
+				);
+		
+		$allDateArry = getAllWorkingDays($startDate,$endDate,$holidays);
+	}
+	
+	$form['headdiv'] = array(
+	   '#title'=>'',
+	   '#type' => 'markup', 
+	   '#markup' => '<div><div style="width:10%; float:left; padding: 0px 0px 25px 0px;"><img src="'.$base_root.$base_path.'/sites/all/modules/dashboard/images/user.png" alt="" class="img-circle img-responsive#"></div>
+	   <div style="float:left;margin-top: 67px; margin-left: 36px;"><h3><i>Welcome On Board</i></h3><h6 style=" padding: 2px 0px 0px 19px; font-size: 17px;">Centralized Inspection Authority</h6></div>
+	   </div>'
+	);	
+	
+	$form['inspectionrange'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield', 
+	   '#attributes' => array('id' => 'inspectionrange', 'autocomplete' => 'off', 'class'=>array(''),'placeholder'=>'Inspection Date Range', 'readonly'=>'readonly'),
+	   //'#required' => TRUE,
+	   '#prefix'=>'<div class="x_panel"><div class="x_title"><h1><span>C</span>entralized Inspection System</h1></div><div class="x_content"><fieldset><div class="row"><section class="col-md-8"><label class="input"><i class="icon-prepend icon-calendar"></i>Inspection Date Range<span id=\'star\'>*</span>',
+	   '#suffix' => '</label></section>'
+	);	
+	
+	$form['generate_schedule'] = array(
+	   '#type' => 'submit',
+       '#value' => 'Randomize and Generate Inspection Schedule',
+	   '#attributes' => array('class'=>array('btn btn-success pull-left generate-btn')),
+	   '#prefix' => '',
+	   '#suffix' => '</div></fieldset>'
+	);	
+		
+   $form['search_result'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_subdivision_data($startDate,$endDate,$allDateArry),
+	  '#prefix' => '<div class="centralized-table-row"><section class="col-md-12">',
+	  '#suffix' => '</section></div>'
+    ); 
+	
+	$form['search_result_factory'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_zone_data($startDate,$endDate,$allDateArry),
+	  '#prefix' => '<div class="centralized-table-row"><section class="col-md-12">',
+	  '#suffix' => '</section></div>'
+    ); 
+	
+	if($date_range!=""){
+	 $form['submit'] = array (
+        '#type' => 'submit',
+		'#value' => 'Confirm',
+		'#submit' => array('central_inspection_form_submit_confirm'),
+		'#attributes' => array('class'=>array('btn btn-success pull-left')),
+		'#prefix' => '<footer class="centralized-box-footer">',
+	  	'#suffix' => '</footer>'
+     ); 
+	}
+	
+	 $form['footermarkup'] = array (
+        '#type' => 'markup',
+		'#prefix' => '',
+  		'#suffix' => '</div></div>',
+     ); 
+	 
+	 
+	
+	return  $form;
+ }
+ 
+ function central_inspection_form_submit_confirm($form, &$form_state){
+	 //echo "confirm"; exit;
+	 
+	 $query_get_schedule = db_select('ld_inspection_schedule', 's');
+	 $query_get_schedule ->fields('s', array('id','from_dt','to_dt','directorate_code','confirm_flag'));
+	 $query_get_schedule->condition('confirm_flag', '0');
+  	 $result_get_schedule = $query_get_schedule->execute();
+	 $result_result_get_schedule_data = $result_get_schedule->fetchAll();
+	 
+	 //print_r($result_result_get_schedule_data);
+	 //exit;
+	 
+	 $query_schedule_updt = db_update('ld_inspection_schedule');
+	 $query_schedule_updt->fields(array('confirm_flag'=>'1'));
+	 $query_schedule_updt->condition('confirm_flag', '0');
+	 $query_schedule_updt->execute();
+	 
+	 $query_schedule_updt_lb = db_update('ld_inspection_schedule_details');
+	 $query_schedule_updt_lb->fields(array('confirm_flag'=>'1'));
+	 $query_schedule_updt_lb->condition('confirm_flag', '0');
+	 $query_schedule_updt_lb->execute();
+	 
+	 $query_schedule_updt_sf = db_update('ld_inspection_schedule_details_sf');
+	 $query_schedule_updt_sf->fields(array('confirm_flag'=>'1'));
+	 $query_schedule_updt_sf->condition('confirm_flag', '0');
+	 $query_schedule_updt_sf->execute();
+	 
+	 $result_send_data['range'] = $result_result_get_schedule_data[0]->from_dt."_".$result_result_get_schedule_data[0]->to_dt;
+	 $query_send = db_select('ld_inspection_schedule_details','s');
+	 $query_send ->fields('s', array('id','district_name','sub_div_name','schedule_date','sub_div_code','district_code'));
+	 $query_send->condition('s.confirm_flag', '1');
+	 $query_send->condition('s.schedule_id', $result_result_get_schedule_data[0]->id, '=');
+     $query_send->orderBy('s.sub_div_name','ASC');
+  	 $result_send = $query_send->execute();
+	 $result_send_data['schedule'] = $result_send->fetchAll();
+	 
+	// print_r($result_send_data);
+	 //exit;
+	 
+	 if(!empty($result_send_data)){
+		 // For Labour Commissionerate
+		 
+		$lc = 'https://wblc.gov.in/labourdept/eservices/centrailInspectionData';
+		$ch_lc = curl_init();
+		curl_setopt($ch_lc, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+		curl_setopt($ch_lc, CURLOPT_URL, $lc);
+		curl_setopt($ch_lc, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch_lc, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch_lc, CURLOPT_SSL_VERIFYPEER, 0); 
+		curl_setopt($ch_lc, CURLOPT_FOLLOWLOCATION, 0);
+		curl_setopt($ch_lc, CURLOPT_POSTFIELDS, json_encode( $result_send_data ) );
+		curl_setopt($ch_lc, CURLOPT_POST, true);
+		$results_lc=curl_exec($ch_lc);
+		$errors_lc=curl_error($ch_lc);
+		curl_close($ch_lc);
+		
+		 // End of Labour Commissionerate
+		 
+		 
+		 
+		$boilers = 'https://wbboilers.gov.in/labourdept/eservices/centrailInspectionData';
+		$ch_boilers = curl_init();
+		curl_setopt($ch_boilers, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+		curl_setopt($ch_boilers, CURLOPT_URL, $boilers);
+		curl_setopt($ch_boilers, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch_boilers, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch_boilers, CURLOPT_SSL_VERIFYPEER, 0); 
+		curl_setopt($ch_boilers, CURLOPT_FOLLOWLOCATION, 0);
+		curl_setopt($ch_boilers, CURLOPT_POSTFIELDS, json_encode( $result_send_data ) );
+		curl_setopt($ch_boilers, CURLOPT_POST, true);
+		$results_boilers=curl_exec($ch_boilers);
+		$errors_boilers=curl_error($ch_boilers);
+		curl_close($ch_boilers);
+		
+	 }
+	 print_r($result_send_data);
+	
+	 $result_send_data_sf['range'] = $result_result_get_schedule_data[0]->from_dt."_".$result_result_get_schedule_data[0]->to_dt;
+	 $result_send_data_sf['source'] ='WBLD';
+	 $query_send_sf = db_select('ld_inspection_schedule_details_sf', 's');
+	 $query_send_sf ->fields('s', array('id','area_zone','zone_type','schedule_date','office_id'));
+	 $query_send_sf->condition('s.confirm_flag', '1');
+	 $query_send_sf->condition('s.schedule_id', $result_result_get_schedule_data[1]->id, '=');
+     $query_send_sf->orderBy('s.area_zone','ASC');
+  	 $result_send_sf = $query_send_sf->execute();
+	 $result_send_data_sf['schedule'] = $result_send_sf->fetchAll();
+	 
+	 //print_r($result_send_data_sf);exit;
+	 
+	 if(!empty($result_send_data_sf)){
+		 $factory = 'https://wbfactoryonline.in/webservices/REST/LDAddSchedule';
+		 $ch_factory = curl_init();
+		 curl_setopt($ch_factory, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+		 curl_setopt($ch_factory, CURLOPT_URL, $factory);
+		 curl_setopt($ch_factory, CURLOPT_RETURNTRANSFER, 1);
+		 curl_setopt($ch_factory, CURLOPT_SSL_VERIFYHOST, 0);
+		 curl_setopt($ch_factory, CURLOPT_SSL_VERIFYPEER, 0); 
+		 curl_setopt($ch_factory, CURLOPT_FOLLOWLOCATION, 0);
+		 curl_setopt($ch_factory, CURLOPT_POSTFIELDS, json_encode( $result_send_data_sf ) );
+		 curl_setopt($ch_factory, CURLOPT_POST, true);
+		 $results_factory=curl_exec($ch_factory);
+		 $errors_factory=curl_error($ch_factory);
+		 curl_close($ch_factory);
+	 
+	 }
+	 
+	 
+	 
+	
+	/* echo  $results_factory."<br>";
+	 
+	 echo $errors_factory;*/
+	 
+	 //print_r($result_send_data_sf);
+	 //exit;
+	 
+	 //******************This part is for agile Lab*************************//
+	 
+	 //$lb_id = $result_result_get_schedule_data[0]->id;
+	 /*$lb_id = 373;
+	 $sf_id = $lb_id+1;
+	 $schedule_arr_agile['source'] = 'WBLD';
+	 $schedule_arr_agile['range'] = $result_result_get_schedule_data[0]->from_dt."_".$result_result_get_schedule_data[0]->to_dt;
+	 $schedule_arr_agile['schedule'] = getScheduleDataForAgile($lb_id,$sf_id);*/
+	 //print_r($schedule_arr_agile);
+	 //print_r(json_encode($schedule_arr_agile));
+	 //exit;
+	 
+	 //$postText = http_build_query($schedule_arr_agile);
+	 
+	 
+	 /*if(!empty($schedule_arr_agile)){
+		 $agile = 'http://202.61.117.163/tasbpublished/api/CIS';
+		 $ch_agile = curl_init();
+		 curl_setopt($ch_agile, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+		 curl_setopt($ch_agile, CURLOPT_URL, $agile);
+		 curl_setopt($ch_agile, CURLOPT_RETURNTRANSFER, 1);
+		 curl_setopt($ch_agile, CURLOPT_SSL_VERIFYHOST, 0);
+		 curl_setopt($ch_agile, CURLOPT_SSL_VERIFYPEER, 0); 
+		 curl_setopt($ch_agile, CURLOPT_FOLLOWLOCATION, 0);
+		 curl_setopt($ch_agile, CURLOPT_POSTFIELDS, json_encode( $schedule_arr_agile ) );
+		 curl_setopt($ch_agile, CURLOPT_POST, true);
+		 $results_agile=curl_exec($ch_agile);
+		 $errors_agile=curl_error($ch_agile);
+		 curl_close($ch_agile);
+		 //echo "Dump Result <br>";
+		 //var_dump($results_agile);
+		 //echo "Agile error <br>";
+		 print_r($errors_agile);
+		 //echo "<br> Agile response <br>";
+		 print_r($results_agile);
+	 	 
+		 exit;
+	 }*/
+	 
+	 
+	
+	 
+	 //*******************agile lab part end*******************************//
+	 
+ }
+ 
+ function central_inspection_form_submit($form, &$form_state) {
+	 
+	/*$date_range = $form_state['values']['inspectionrange'];
+	$given_date = explode("to",trim($date_range));
+	
+	$startDate = date('Y-m-d',strtotime($given_date[0]));
+	$endDate = date('Y-m-d',strtotime($given_date[1]));
+
+	$holidays = array(
+    	'2017-09-06',
+    	'2017-09-19',
+    );*/
+	//getAllWorkingDays($startDate,$endDate,$holidays);
+	
+	$form_state['rebuild'] = TRUE;
+	
+	//exit;
+   // var_dump( count( $days ) );
+ }
+ 
+ function get_subdivision_data($fromDate,$toDate,$allDateArry){
+	
+	 
+	if(!empty($allDateArry)){ 
+	shuffle($allDateArry);
+	/*print_r($allDateArry);
+	echo sizeof($allDateArry);
+	exit;*/
+	$query = db_select('sub_division', 's');
+	$query ->fields('s', array('id','district_name','sub_div_name','sub_div_code','district_code'));
+	$query->condition('s.is_active','Y','=');
+    $query->orderBy('s.sub_div_name','ASC');
+  	$result = $query->execute();
+	$sub_div_data = $result->fetchAll();
+	
+	//print_r($sub_div_data); 
+	//exit;
+	
+	
+	
+	$query1 = db_delete('ld_inspection_schedule');
+	$query1->condition('confirm_flag', '0');
+	$query1->condition('directorate_code', 'LB');
+	$query1->execute();
+	
+	
+	$inspection_schedule_dt = array(
+								'from_dt'					=> 	format_date(strtotime($fromDate), 'custom', 'Y-m-d'),
+								'to_dt'						=>	format_date(strtotime($toDate), 'custom', 'Y-m-d'),
+								'directorate_code'			=>	'LB', 
+								'confirm_flag'				=>	'0', 
+							);
+	$schedule_id = db_insert('ld_inspection_schedule')->fields($inspection_schedule_dt)->execute();
+	
+	
+	$query_del_schedule_details = db_select('ld_inspection_schedule_details', 's');
+	$query_del_schedule_details ->fields('s', array('id','confirm_flag'));
+	$query_del_schedule_details->condition('s.confirm_flag','0','=');
+	$query_del_schedule_details->condition('s.directorate_code','LB','=');
+	$result_del_schedule_details = $query_del_schedule_details->execute();
+	$rs_del_schedule_details = $result_del_schedule_details->fetchAssoc();
+	
+	if(!empty($rs_del_schedule_details)){
+		$query_del_details = db_delete('ld_inspection_schedule_details');
+		$query_del_details->condition('confirm_flag', '0');
+		$query_del_details->condition('directorate_code', 'LB');
+		$query_del_details->execute();
+	}
+	
+	
+	 
+	$rows = array();
+    $header = array();
+  	$output = '';
+  
+    $header = array(
+          array('data'=> 'SL.NO'),
+		  array('data'=> 'District Name'),
+          array('data' => 'Subdivision Name'),
+		  array('data' => 'Date'),
+		  //array('data' => 'Service'),
+		  //array('data' => 'Notification'),
+		  //array('data' => 'Authority Code'),
+		  //array('data' => 'Action'),
+     );
+	$i=0;
+	$k=0;
+	foreach($sub_div_data as $data){
+		$i++;
+		
+		
+		$inspection_schedule_details = array(
+								'schedule_id'				=>  $schedule_id,
+								'district_name'				=> 	$data->district_name,
+								'sub_div_name'				=>	$data->sub_div_name,
+								'schedule_date'				=>	format_date(strtotime($allDateArry[$k]), 'custom', 'Y-m-d'),
+								'sub_div_code'				=>	$data->sub_div_code,
+								'district_code'				=>  $data->district_code,
+								'directorate_code'			=>	'LB',
+								'confirm_flag'				=>	'0'
+							);
+							
+		//print_r($inspection_schedule_details);	
+		//exit;				
+		
+		db_insert('ld_inspection_schedule_details')->fields($inspection_schedule_details)->execute(); 
+		
+		//$aa=$base_root.$base_path.'cmsentry/actrulesmapdel/'.$data->id;
+		//$link_s=l(t('Delete'), $aa) ;
+		$rows[] = array(
+					$i,
+					$data->district_name,
+      				$data->sub_div_name,
+					$allDateArry[$k]
+					//$data->service_name,
+					//$data->notification_name
+					//$data->authority_code
+					//$link_s
+	  	);  
+		if($k == sizeof($allDateArry)-1){
+			$k=0;
+			shuffle($allDateArry);
+		}else{
+			$k++;
+		}
+	 }
+	 
+     //print_r($rows); exit; 				
+	 
+   $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => 'Randomize List of Labour and Bolier Directorate',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+   return '<div class="table-responsive statistics_box centralized-table">'.$output.'</div>';
+	}
+	
+ }
+ 
+ function get_zone_data($fromDate,$toDate,$allDateArry){
+	 //echo $fromDate; 
+	 
+	 
+	 if(!empty($allDateArry)){ 
+		shuffle($allDateArry);
+		
+		
+		$query_zone = db_select('ld_factory_zone_mst', 'z');
+		$query_zone ->fields('z', array('area_zone_id','area_zone','zone_type','area_zone_details','office_id','office'));
+		$query_zone->orderBy('z.area_zone','ASC');
+		$result_zone = $query_zone->execute();
+		$zone_div_data = $result_zone->fetchAll();
+		
+		
+		$query_sf = db_delete('ld_inspection_schedule');
+		$query_sf->condition('confirm_flag', '0');
+		$query_sf->condition('directorate_code', 'SF');
+		$query_sf->execute();
+		
+		
+		$inspection_schedule_dt_sf = array(
+									'from_dt'					=> 	format_date(strtotime($fromDate), 'custom', 'Y-m-d'),
+									'to_dt'						=>	format_date(strtotime($toDate), 'custom', 'Y-m-d'),
+									'directorate_code'			=>	'SF', 
+									'confirm_flag'				=>	'0', 
+								);
+		$schedule_id_sf = db_insert('ld_inspection_schedule')->fields($inspection_schedule_dt_sf)->execute();
+		
+		$query_del_schedule_details_sf = db_select('ld_inspection_schedule_details_sf', 's');
+		$query_del_schedule_details_sf ->fields('s', array('id','confirm_flag'));
+		$query_del_schedule_details_sf->condition('s.confirm_flag','0','=');
+		$query_del_schedule_details_sf->condition('s.directorate_code','SF','=');
+		$result_del_schedule_details_sf = $query_del_schedule_details_sf->execute();
+		$rs_del_schedule_details_sf = $result_del_schedule_details_sf->fetchAssoc();
+		
+		
+		if(!empty($rs_del_schedule_details_sf)){
+			$query_del_details_sf = db_delete('ld_inspection_schedule_details_sf');
+			$query_del_details_sf->condition('confirm_flag', '0');
+			$query_del_details_sf->condition('directorate_code','SF','=');
+			$query_del_details_sf->execute();
+		}
+		
+		
+		$rows = array();
+    	$header = array();
+		$output = '';
+	  
+		$header = array(
+			  array('data'=> 'SL.NO'),
+			  array('data'=> 'Zone Name'),
+			  array('data' => 'Zone Type'),
+			  array('data' => 'Date'),
+			  //array('data' => 'Service'),
+			  //array('data' => 'Notification'),
+			  //array('data' => 'Authority Code'),
+			  //array('data' => 'Action'),
+		 );
+		$i=0;
+		$k=0;
+		
+		$schedule_id_lb = $schedule_id_sf-1;
+		//echo "scheduleId-->".$schedule_id_lb;
+		
+		$query_send_match = db_select('ld_inspection_schedule_details','s');
+		$query_send_match ->fields('s', array('id','district_name','sub_div_name','schedule_date','sub_div_code','district_code'));
+		$query_send_match->condition('s.confirm_flag', '0');
+		$query_send_match->condition('s.schedule_id', $schedule_id_lb, '=');
+		$query_send_match->orderBy('s.sub_div_name','ASC');
+		$result_send_match = $query_send_match->execute();
+		$result_send_data_match = $result_send_match->fetchAll();
+		//print_r($result_send_data_match);
+		//exit;
+		
+		/*$query = db_select('sub_division', 's');
+		$query ->fields('s', array('id','district_name','sub_div_name','sub_div_code','district_code'));
+		$query->condition('s.is_active','Y','=');
+		$query->orderBy('s.sub_div_name','ASC');
+		$result = $query->execute();
+		$sub_div_data = $result->fetchAll();*/
+		
+		for($m=0; $m<sizeof($zone_div_data); $m++){
+			$i++; 
+			//echo "area_zone-->".$zone_div_data[$m]->area_zone."<br>";
+			for($n=0; $n<sizeof($result_send_data_match); $n++){
+				//echo "sub_div_name-->".$result_send_data_match[$n]->sub_div_name."<br>";
+				if(trim($zone_div_data[$m]->area_zone) == trim($result_send_data_match[$n]->sub_div_name)){
+					//echo "dt",$result_send_data_match[$n]->schedule_date."<br>";
+					//exit;
+					
+					$inspection_schedule_details_sf = array(
+									'schedule_id'			=>  $schedule_id_sf,
+									'area_zone'				=> 	$zone_div_data[$m]->area_zone,
+									'zone_type'				=>	$zone_div_data[$m]->zone_type,
+									'schedule_date'			=>	format_date(strtotime($result_send_data_match[$n]->schedule_date), 'custom', 'Y-m-d'),
+									'office_id'				=>	$zone_div_data[$m]->office_id,
+									'directorate_code'		=>	'SF',
+									'confirm_flag'			=>	'0'
+								);
+			
+					db_insert('ld_inspection_schedule_details_sf')->fields($inspection_schedule_details_sf)->execute();
+					$rows[] = array(
+						$i,
+						$zone_div_data[$m]->area_zone,
+						$zone_div_data[$m]->zone_type,
+						format_date(strtotime($result_send_data_match[$n]->schedule_date), 'custom', 'd-m-Y')
+					); 
+					 
+					break;
+				}elseif(trim($zone_div_data[$m]->area_zone) !='Asansol' && trim($zone_div_data[$m]->area_zone) !='Barrackpore' && trim($zone_div_data[$m]->area_zone) !='Durgapur' && trim($zone_div_data[$m]->area_zone) !='Haldia' && trim($zone_div_data[$m]->area_zone) !='Kalyani' && trim($zone_div_data[$m]->area_zone) !='Serampore'){
+				//elseif(trim($zone_div_data[$m]->area_zone) != trim($result_send_data_match[$n]->sub_div_name)){
+				
+					//echo "dt",$allDateArry[$k]."<br>";
+					//exit;
+					$inspection_schedule_details_sf = array(
+									'schedule_id'			=>  $schedule_id_sf,
+									'area_zone'				=> 	$zone_div_data[$m]->area_zone,
+									'zone_type'				=>	$zone_div_data[$m]->zone_type,
+									'schedule_date'			=>	format_date(strtotime($allDateArry[$k]), 'custom', 'Y-m-d'),
+									'office_id'				=>	$zone_div_data[$m]->office_id,
+									'directorate_code'		=>	'SF',
+									'confirm_flag'			=>	'0'
+								);
+			
+					db_insert('ld_inspection_schedule_details_sf')->fields($inspection_schedule_details_sf)->execute();
+					$rows[] = array(
+						$i,
+						$zone_div_data[$m]->area_zone,
+						$zone_div_data[$m]->zone_type,
+						format_date(strtotime($allDateArry[$k]), 'custom', 'd-m-Y')
+					); 
+					break; 
+				}
+				
+			}
+			
+			if($k == sizeof($allDateArry)-1){
+				$k=0;
+				shuffle($allDateArry);
+			}else{
+				$k++;
+			}
+		}
+		
+		
+		/*foreach($zone_div_data as $data){
+			
+			
+			
+			$inspection_schedule_details_sf = array(
+									'schedule_id'			=>  $schedule_id_sf,
+									'area_zone'				=> 	$data->area_zone,
+									'zone_type'				=>	$data->zone_type,
+									'schedule_date'			=>	format_date(strtotime($allDateArry[$k]), 'custom', 'Y-m-d'),
+									'office_id'				=>	$data->office_id,
+									'directorate_code'		=>	'SF',
+									'confirm_flag'			=>	'0'
+								);
+			
+			db_insert('ld_inspection_schedule_details_sf')->fields($inspection_schedule_details_sf)->execute(); 
+			
+			$i++;
+			$rows[] = array(
+						$i,
+						$data->area_zone,
+						$data->zone_type,
+						$allDateArry[$k]
+			);  
+			if($k == sizeof($allDateArry)-1){
+				$k=0;
+				shuffle($allDateArry);
+			}else{
+				$k++;
+			}
+		 }*/
+		 
+		 //print_r($rows); exit; 				
+		 
+	   $output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('class' => array('table', 'table-bordered')),
+		  'sticky' => true,
+		  'caption' => 'Randomize List of Directorate of Factories',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');
+	
+		 
+	   return '<div class="table-responsive statistics_box centralized-table">'.$output.'</div>';
+	 }
+	 
+ }
+ 
+ 
+ // all days between start date and end date exclude saturday, sunday, monday and holidys
+ function getAllWorkingDays($startDate,$endDate,$holidays){
+	//Define out start and end dates
+    $start = new DateTime($startDate);
+    $end = new DateTime($endDate);
+    
+    //Define our holidays
+    //New Years Day
+    //Martin Luther King Day
+    /*$holidays = array(
+        '2017/09/06',
+        '2017/09/19',
+    );*/
+    
+    
+    $period = array();
+    //Use the start and end date to fill the period array with DateTime objects increments by 1 day
+    while ( $start <= $end ) {
+        //We have to clone the start DateTime object
+        //or as we increment it, every instance of it will increment
+        $period[] = clone $start;
+        $start->modify( '+1 day' );
+    }
+    
+    
+    //Holds valid DateTime objects of valid dates
+    $days = array();
+    //iterate over the period by day
+    foreach( $period as $day )
+    {
+            //If the day of the week is not a weekend
+        $dayOfWeek = $day->format( 'N' );
+        if( $dayOfWeek < 6 && $dayOfWeek != 1){
+                    //If the day of the week is not a pre-defined holiday
+            $format = $day->format( 'Y-m-d' );
+            if( false === in_array( $format, $holidays ) ){
+                            //Add the valid day to our days array
+                            //This could also just be a counter if that is all that is necessary
+                //print_r($day);
+                //echo $day->format('Y-m-d')."<br>";            
+                $days[] =  $day->format('d-m-Y');
+            }
+        }
+    }
+    //print_r($days); 
+	return $days;
+ }
+ 
+ function schedule_list(){
+  $default_select = array(""=>"- Select -");
+  $query_schedule_dt = db_select('ld_inspection_schedule', 's');
+  $query_schedule_dt ->fields('s', array('id','from_dt','to_dt','directorate_code','confirm_flag'));
+  $query_schedule_dt->condition('directorate_code', 'LB');
+  $query_schedule_dt->condition('s.confirm_flag', '1');
+  $result_data = $query_schedule_dt->execute();
+  $list = array();
+  foreach ($result_data as $record) {
+	$LB = $record->id;
+	$SF = $record->id+1;  
+    $list[$LB."_".$SF] = t('@date_range', array(
+    '@date_range' => $record->from_dt." to ".$record->to_dt,
+    ));
+  }
+  return ($default_select+$list);
+ 
+}
+
+
+function get_lb_list($lb_id='',$sf_id=''){
+	
+	ctools_include('modal');
+    ctools_modal_add_js();
+
+	 global $base_root, $base_path;
+	 $central_schedule_arr = array();
+	 
+	 if($lb_id!=""){
+		 
+	 $query_lb = db_select('ld_inspection_schedule_details','s');
+	 $query_lb ->fields('s', array('id','district_name','sub_div_name','schedule_date','sub_div_code','district_code'));
+	 $query_lb->condition('s.confirm_flag', '1');
+	 $query_lb->condition('s.schedule_id', $lb_id, '=');
+     $query_lb->orderBy('s.sub_div_name','ASC');
+  	 $query_lb_rs = $query_lb->execute();
+	 $result_lb_data = $query_lb_rs->fetchAll();
+	 
+	 $query_sf = db_select('ld_inspection_schedule_details_sf', 's');
+	 $query_sf ->fields('s', array('id','area_zone','zone_type','schedule_date','office_id'));
+	 $query_sf->condition('s.confirm_flag', '1');
+	 $query_sf->condition('s.schedule_id', $sf_id, '=');
+     $query_sf->orderBy('s.area_zone','ASC');
+  	 $query_sf_rs = $query_sf->execute();
+	 $result_sf_data = $query_sf_rs->fetchAll();
+	 $j=0;
+	 foreach($result_lb_data as $data_lb){
+		$central_schedule_arr[$j]['id'] 		= $data_lb->id;  
+		$central_schedule_arr[$j]['location'] 		= $data_lb->sub_div_name; 
+		$central_schedule_arr[$j]['schedule_date'] 	= $data_lb->schedule_date; 
+		$j++;
+	 }
+	 foreach($result_sf_data as $data_sf){
+		$central_schedule_arr[$j]['id'] 		= $data_sf->id;  
+		$central_schedule_arr[$j]['location'] 		= $data_sf->area_zone; 
+		$central_schedule_arr[$j]['schedule_date'] 	= $data_sf->schedule_date; 
+		$j++;
+	 }
+	 //print_r($central_schedule_arr);
+	 //print_r($result_sf_data);
+	 
+	 //$cms_act_query_result_data = db_query("SELECT ar_mapping.id,ar_mapping.act_name,ar_mapping.rules_name,array_agg(ar_authority.authority_name) as authority_name, ar_area.area_name FROM ar_mapping JOIN ar_authority ON ar_mapping.authority_id LIKE CONCAT('%', ar_authority.id, '%') JOIN ar_area ON ar_mapping.area_id = ar_area.id GROUP BY ar_mapping.id,ar_area.area_name ORDER BY ar_mapping.id ASC");
+	 
+	 $central_schedule_arr = unique_multidim_array($central_schedule_arr,'location'); 
+	 
+	 //print_r($central_schedule_arr);
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+	 
+	 
+		 // Table settings.
+	$attributes['datatable_options'] = array(
+	  'bFilter'   => TRUE,
+	  'bInfo'     => TRUE,
+	);
+	// Define table columns
+	$header = array(
+          array('data'=> 'SL.NO'),
+		  array('data'=> 'Location'),
+		  array('data' => 'Schedule Date'),
+		  array('data' => 'Action'),
+      );
+	// Table data.
+	$i=0;
+	 foreach($central_schedule_arr as $data){
+		$i++;
+		
+		$link_s = l('View', $base_root.$base_path.'central-inspection-data/nojs/'.$lb_id.'/'.$sf_id.'/'.$data['id'], array('attributes' => array('id'=>'inspecid_'.$i, 'class' => array('ctools-use-modal','rsswidget'))));
+		
+		//$disburse_appl_link=ctools_modal_text_button(t(''.$data->applicant_unit_name), $base_root.$base_path.'sanctiondisburse/sanc_disburse_screen/ajax/'.$data->ecrc_profile_id.'/'.$dic_req_id.'/'.$data->applicant_unit_name, t('Sanction Disburse Money'), 'ctools-modal-my-view-forma-style');
+		
+		$aa=$base_root.$base_path.'central-inspection-schedule/'.$data['id'];
+		//$edit=$base_root.$base_path.'cmsentry/actrulesmapedit/'.$data->id;
+		//$link_s=l(t('View'), $aa) ;
+		//$edit_link_s=l(t('Edit'), $edit) ;
+		$rows[] = array(
+					$i,
+					$data['location'],
+					$data['schedule_date'],
+					array('data' => $link_s),	
+					//array('data' => $link_s.' | '.$edit_link_s ),	
+	  	);   
+	 }
+	 
+	 
+	// Or, render using a theme function.
+	$variables = array(
+	  //'attributes' => $attributes,
+	  'header' => $header,
+	  'rows' => $rows,
+	  'attributes' => array('class' => array('table', 'table-bordered')),
+	);
+	//$output = theme('datatable', $variables);
+	$output = theme('table', $variables);
+  
+
+  	 
+    return '<div class="table-responsive statistics_box centralized-table scheduled-table">'.$output.'</div>';
+	
+	 }
+	
+}
+
+function unique_multidim_array($array, $key) {
+    $temp_array = array();
+    $i = 0;
+    $key_array = array();
+   
+    foreach($array as $val) {
+        if (!in_array($val[$key], $key_array)) {
+            $key_array[$i] = $val[$key];
+            $temp_array[$i] = $val;
+        }
+        $i++;
+    }
+    return $temp_array;
+} 
+
+
+
+
+
+
+
+//******************This part is for agile Lab*************************//
+	 
+function getScheduleDataForAgile($lb_id,$sf_id){
+		
+	 $central_schedule_arr_for_agile = array();
+	 
+	 if($lb_id!=""){
+		 
+	 $query_lb = db_select('ld_inspection_schedule_details','s');
+	 $query_lb ->fields('s', array('id','district_name','sub_div_name','schedule_date','sub_div_code','district_code'));
+	 $query_lb->condition('s.confirm_flag', '1');
+	 $query_lb->condition('s.schedule_id', $lb_id, '=');
+     $query_lb->orderBy('s.sub_div_name','ASC');
+  	 $query_lb_rs = $query_lb->execute();
+	 $result_lb_data = $query_lb_rs->fetchAll();
+	 
+	 $query_sf = db_select('ld_inspection_schedule_details_sf', 's');
+	 $query_sf ->fields('s', array('id','area_zone','zone_type','schedule_date','office_id'));
+	 $query_sf->condition('s.confirm_flag', '1');
+	 $query_sf->condition('s.schedule_id', $sf_id, '=');
+     $query_sf->orderBy('s.area_zone','ASC');
+  	 $query_sf_rs = $query_sf->execute();
+	 $result_sf_data = $query_sf_rs->fetchAll();
+	 $j=0;
+	 foreach($result_lb_data as $data_lb){
+		$central_schedule_arr_for_agile[$j]['id'] 		= $data_lb->id;  
+		$central_schedule_arr_for_agile[$j]['location'] 		= $data_lb->sub_div_name; 
+		$central_schedule_arr_for_agile[$j]['schedule_date'] 	= $data_lb->schedule_date; 
+		$j++;
+	 }
+	 foreach($result_sf_data as $data_sf){
+		$central_schedule_arr_for_agile[$j]['id'] 		= $data_sf->id;  
+		$central_schedule_arr_for_agile[$j]['location'] 		= $data_sf->area_zone; 
+		$central_schedule_arr_for_agile[$j]['schedule_date'] 	= $data_sf->schedule_date; 
+		$j++;
+	 }
+	 //print_r($central_schedule_arr);
+	 //print_r($result_sf_data);
+	 
+	 //$cms_act_query_result_data = db_query("SELECT ar_mapping.id,ar_mapping.act_name,ar_mapping.rules_name,array_agg(ar_authority.authority_name) as authority_name, ar_area.area_name FROM ar_mapping JOIN ar_authority ON ar_mapping.authority_id LIKE CONCAT('%', ar_authority.id, '%') JOIN ar_area ON ar_mapping.area_id = ar_area.id GROUP BY ar_mapping.id,ar_area.area_name ORDER BY ar_mapping.id ASC");
+	 
+	 $central_schedule_arr_for_agile = unique_multidim_array($central_schedule_arr_for_agile,'location'); 
+	 
+	}
+	return $central_schedule_arr_for_agile;
+}
+	 
+//*******************agile lab part end*******************************//

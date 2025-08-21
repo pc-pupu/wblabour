@@ -1,0 +1,6 @@
+name = Webservice Map Tracking
+description = WebService APIs for Map Tracking.
+core = 7.x
+package = Webservice Map Tracking
+project = webservice_schemes
+dependencies[] = services

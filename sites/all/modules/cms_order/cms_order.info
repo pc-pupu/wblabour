@@ -1,0 +1,5 @@
+name = Cms Order
+description = A Cms Order Module
+package = Drupal 7 Development
+version = "7.x"
+core = 7.x

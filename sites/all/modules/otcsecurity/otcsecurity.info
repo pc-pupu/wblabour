@@ -1,0 +1,6 @@
+; $Id$
+name = Drupal Security
+description = Security Settings for the Drupal Websites
+package = OTC
+core = 7.x
+version = 7.x-1.0

@@ -1,0 +1,7 @@
+name = Ldapp Services
+description = WebService APIs for Apps.
+core = 7.x
+package = Ldapp Schemes
+project = Ldapp_schemes
+dependencies[] = services
+dependencies[] = rest_server

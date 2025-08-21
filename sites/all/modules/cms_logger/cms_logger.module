@@ -1,0 +1,41 @@
+
+<?php
+
+/**
+ * Implements hook_node_insert().
+ */
+function cms_logger_node_insert($node) {
+  // Log only for specific content types, e.g., Tender, Circular
+  if (in_array($node->type, ['tender', 'circular'])) {
+    global $user;
+    watchdog(
+      'cms_logger',
+      'Content of type %type created by user %user: %title',
+      array(
+        '%type' => $node->type,
+        '%user' => $user->name,
+        '%title' => $node->title,
+      ),
+      WATCHDOG_NOTICE
+    );
+  }
+}
+
+/**
+ * Implements hook_node_update().
+ */
+function cms_logger_node_update($node) {
+  if (in_array($node->type, ['tender', 'circular'])) {
+    global $user;
+    watchdog(
+      'cms_logger',
+      'Content of type %type updated by user %user: %title',
+      array(
+        '%type' => $node->type,
+        '%user' => $user->name,
+        '%title' => $node->title,
+      ),
+      WATCHDOG_NOTICE
+    );
+  }
+}

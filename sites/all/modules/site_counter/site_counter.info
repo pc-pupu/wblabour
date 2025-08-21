@@ -1,0 +1,4 @@
+name = Site Counter
+description = Site Counter Module
+package = Assets Management Module
+core = 7.x

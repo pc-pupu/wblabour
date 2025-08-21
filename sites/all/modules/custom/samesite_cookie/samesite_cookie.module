@@ -1,0 +1,28 @@
+<?php
+
+function samesite_cookie_init() {
+  if (session_id() === '') {
+    session_start();
+  }
+
+  if (isset($_COOKIE[session_name()])) {
+    $cookie_name = session_name();
+    $cookie_value = session_id();
+    $cookie_path = '/wblabour';
+    $cookie_lifetime = 0;
+    $cookie_secure = true; // true if using HTTPS
+    $cookie_httponly = true;
+
+    $cookie_header = sprintf(
+      'Set-Cookie: %s=%s; Path=%s; SameSite=Strict; %s %s',
+      rawurlencode($cookie_name),
+      rawurlencode($cookie_value),
+      $cookie_path,
+      $cookie_httponly ? 'HttpOnly;' : '',
+      $cookie_secure ? 'Secure;' : ''
+    );
+
+    header($cookie_header, false);
+  }
+}
+

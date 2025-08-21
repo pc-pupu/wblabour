@@ -1,0 +1,5 @@
+name = Cms log management
+description = Cms log management
+package = Custom
+version = "7.x"
+core = 7.x

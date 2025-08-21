@@ -1,0 +1,8 @@
+;$Id$
+name = Question Wizard Dashboard
+description = Admin Dashboard for Question Wizard
+package = Question Wizard Master Entry Module
+version = "7.x"
+core = 7.x
+files[] = question_dashboard.module
+;dependencies[] = autoload

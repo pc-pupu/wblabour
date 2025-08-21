@@ -1,0 +1,377 @@
+<?php
+
+function quesans_map_permission() {
+  return array(
+    'cmsquesansmap_per' => array(
+      'title' => t('Question Answer Map permission'),
+    )
+	
+  );
+}
+
+function quesans_map_menu(){
+
+  	
+  $items['cmsentry/quesansmap'] = array(
+	'title' => 'Question Answer Map',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('cmsquesansmap_form'),
+	'access arguments' => array('cmsquesansmap_per'),
+  );
+  
+   $items['cmsentry/quesansmapdel/%'] = array(
+	'title' => 'Question Answer Map',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('cmsquesansmap_del',2),
+	'access arguments' => array('cmsquesansmap_per'),
+  );
+  
+  $items['cmsentry/quesansmapedit/%'] = array(
+	'title' => 'Question Answer Map Edit',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('cmsquesansmap_edit',2),
+	'access arguments' => array('cmsquesansmap_per'),
+  );
+  
+  
+  
+  
+  return $items;
+  
+}
+
+function cmsquesansmap_del($form, &$form_state, $arg='') {
+	$query = db_delete('ar_mapping');
+	$query->condition('id', $arg);
+	$rs = $query->execute();
+	drupal_set_message("Your data has been deleted successfully");
+	drupal_goto('cmsentry/quesansmap');
+}
+
+function cmsquesansmap_edit($form, &$form_state, $arg=''){
+	drupal_add_css(drupal_get_path('module', 'quesans_map') . '/quesans_map.css');
+	$query = db_select('ar_mapping', 'm');
+	$query ->fields('m', array( 'id','act_name','rules_name','authority_id','area_id'));
+	$query->condition('m.id',trim($arg),'=');
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	//print_r($resultData);
+	//exit;
+	//$array_auth = array(3,1);
+	
+	
+	$form['authority'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+	 '#multiple' => TRUE,
+	 '#size' => 10,
+	 '#element_validate' => array('quesans_map_authority_validate'),
+     '#options' => authority_list(),
+	 '#default_value' => explode(",",trim($resultData['authority_id'])),
+	 //'#required' => TRUE,
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="authorityName form_error">Authority Name <span style="color:red;">*</span></label>',
+	 '#suffix' =>'</div>',
+	 );  
+	 
+	$form['area'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+	 //'#multiple' => TRUE,
+	 '#element_validate' => array('quesans_map_authority_validate'),
+     '#options' => area_list(),
+	 '#default_value' => $resultData['area_id'],
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<div class="col-md-6"><label for="areaName">Area Name <span style="color:red;">*</span></label>',
+	 '#suffix' =>'</div></fieldset>',
+	 ); 
+	 
+	 $form['act_area'] = array(
+	 '#title'=>'',
+	 '#type'=>'text_format',
+	 '#default_value' => $resultData['act_name'],
+	 '#format'=>'cms_manager',
+	 '#validated' => TRUE,
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="authorityName">Act Name</label>',
+	 '#suffix' =>'</div>',
+	 );  
+	 
+	 $form['rule_area'] = array(
+	 '#title'=>'',
+	 '#type'=>'text_format',
+	 '#default_value' => $resultData['rules_name'],
+	 '#format'=>'cms_manager',
+	 '#validated' => TRUE,
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<div class="col-md-6"><label for="authorityName">Rules Name</label>',
+	 '#suffix' =>'</div></fieldset>',
+	 );  
+	 
+	 $form['hid_map_id'] = array(
+	  '#type'=>'hidden',
+	  '#default_value' => isset($resultData['id']) ? $resultData['id'] : NULL,
+	 );
+	 
+	 $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Save',
+		'#attributes' => array('class'=>array('btn btn-primary')),
+		'#prefix' => '<div class="col-md-6">',  
+        '#suffix' => '</div>',
+     ); 
+	 
+	$form['map_list'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_map_list(),
+	  '#prefix' => '<div class="col-md-12">',  
+      '#suffix' => '</div>',
+    );
+	 
+	return  $form;
+}
+
+function cmsquesansmap_edit_submit($form, &$form_state){
+	$auth_code = '';
+	if($form_state['values']['authority']!=""){
+		foreach($form_state['values']['authority'] as $val){
+			$auth_code.= ','.$val;	
+		}
+		$authority_id = substr($auth_code,1);
+		//$authority_id = $form_state['values']['authority'];
+	}else{
+		$authority_id = 0;
+	}
+	if($form_state['values']['area']!=""){
+		$area_id = $form_state['values']['area'];
+	}else{
+		$area_id = 0;
+	}
+	
+	$data = array('authority_id'=>$authority_id,'area_id'=>$area_id,'act_name'=>$form_state['values']['act_area']['value'],'rules_name'=>$form_state['values']['rule_area']['value']);
+	$query = db_update('ar_mapping');
+	$query->fields(array('authority_id'=>$authority_id,
+						 'area_id'=>$area_id,
+ 						 'act_name'=>$form_state['values']['act_area']['value'],
+						 'rules_name'=>$form_state['values']['rule_area']['value']));
+	$query->condition('id', $form_state['values']['hid_map_id']);
+	$rs = $query->execute();
+	if($rs){
+		drupal_set_message("Your data has been updated successfully");
+		drupal_goto("cmsentry/quesansmap");
+	}
+}
+
+function quesans_map_authority_validate($element, &$form_state) {
+	 $value = $element['#value'];
+	  if ($value == "") {
+		  //echo "<pre>";
+		  //print_r($element);
+		form_error($element, 'please select '.t(trim($element['#parents'][0])));
+	  }
+}
+
+function cmsquesansmap_form($form, &$form_state){
+   global $base_root, $base_path;
+   drupal_add_css(drupal_get_path('module', 'quesans_map') . '/quesans_map.css'); 
+   drupal_add_css(drupal_get_path('module', 'quesans_map') . '/css/sky-forms.css');
+   drupal_add_css(drupal_get_path('module', 'quesans_map') . '/css/form-design.css');
+   
+   $form['question'] = array(
+	 '#title'=>'',
+	 '#type' => 'radios',
+	 '#element_validate' => array('quesans_map_authority_validate'),
+     '#options' => question_list(),
+	 '#attributes' => array('class'=>array('')),
+	 '#id'=>'radio1',
+	/*'#prefix'=>'<fieldset><div class="row"><section class="col col-4"><label class="input">Question<span id=\'star\'>*</span>',
+	 '#suffix' => '</label></section>'*/
+	 '#prefix' => '<fieldset><h4>Question</h4><div class="select-radio"><div class="radio radio-info">' ,
+	 '#suffix' => ' </div></div>',
+	 ); 
+	 
+	 $form['answer'] = array(
+	 '#title'=>'',
+	 '#type' => 'radios',
+	 '#element_validate' => array('quesans_map_authority_validate'),
+	 '#options' => array('Y'=>t('Yes'),'N'=>t('No')),
+	 '#default_value' => 'Y',
+	 '#attributes' => array('class'=>array('')),
+	 '#prefix'=>'<section class="col col-4 app-regs-gender"><label class="radios">Answer<span id=\'star\'>*</span>',
+	 '#suffix' =>'</label></section></div></fieldset>',
+	 ); 
+   	 
+   $form['nxtques'] = array(
+	 '#title'=>'',
+	 '#type' => 'checkboxes',
+	 //'#multiple' => TRUE,
+	 //'#size' => 10,
+	 '#element_validate' => array('quesans_map_authority_validate'),
+     //'#options' => authority_list(),
+	 '#options' => question_list(),
+	 '#attributes' => array('class'=>array('')),
+	 /*'#prefix'=>'<fieldset><div class="row"><section class="col col-4"><label class="input">Next Question<span id=\'star\'>*</span>',
+	 '#suffix' => '</label></section>',*/
+	 '#prefix' => '<fieldset><h4>Next Question</h4><div class="multi-selectbox"><div class="checkbox checkbox-primary">',
+	 '#suffix' => '</div></div>',
+	 );  
+	 
+	$form['service'] = array(
+	 '#title'=>'',
+	 '#type' => 'checkboxes',
+	 '#multiple' => TRUE,
+	 '#element_validate' => array('quesans_map_authority_validate'),
+     '#options' => service_list(),
+	 '#attributes' => array('class'=>array('')),
+	 '#prefix' => '<h4>Service</h4><div class="multi-selectbox"><div class="checkbox checkbox-primary">',
+	 '#suffix' => '</div></div></fieldset>',
+	 ); 
+	
+	$form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Submit',
+		'#attributes' => array('class'=>array('btn btn-success pull-right')),
+		'#prefix' => '<footer>',
+  		'#suffix' => '</footer>',
+     );
+	
+  	$form['reset'] = array(
+	   '#type' => 'markup',
+	   '#markup' => '<input type="reset" value="Reset" class="btn btn-success pull-right">',
+   );		
+	 
+	$form['quesans_list'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_quesans_list(),
+	  '#prefix' => '<div class="col-md-12">',  
+      '#suffix' => '</div>',
+    );
+	 
+	return  $form;
+	 
+ }
+ 
+
+ 
+ 
+ function get_quesans_list(){
+
+	 global $base_root, $base_path;
+	 
+	// $cms_act_query_result_data = db_query("SELECT ar_mapping.id,ar_mapping.act_name,ar_mapping.rules_name,array_agg(ar_authority.authority_name) as authority_name, ar_area.area_name FROM ar_mapping JOIN ar_authority ON ar_mapping.authority_id LIKE CONCAT('%', ar_authority.id, '%') JOIN ar_area ON ar_mapping.area_id = ar_area.id GROUP BY ar_mapping.id,ar_area.area_name ORDER BY ar_mapping.id ASC");
+	 
+	 
+	 
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+	 
+	 
+		 // Table settings.
+	$attributes['datatable_options'] = array(
+	  'bFilter'   => TRUE,
+	  'bInfo'     => TRUE,
+	);
+	// Define table columns
+	$header = array(
+          array('data'=> 'SL.NO'),
+		  array('data'=> 'Question'),
+          array('data' => 'Answer'),
+		  array('data' => 'Next Question'),
+		  array('data' => 'Service'),
+		  array('data' => 'Action'),
+      );
+	// Table data.
+	$i=0;
+	 foreach($cms_act_query_result_data as $data){
+		$i++;
+		$aa=$base_root.$base_path.'cmsentry/quesansmapdel/'.$data->id;
+		$edit=$base_root.$base_path.'cmsentry/quesansmapedit/'.$data->id;
+		$link_s=l(t('Delete'), $aa) ;
+		$edit_link_s=l(t('Edit'), $edit) ;
+		$rows[] = array(
+					$i,
+					$data->act_name,
+      				$data->rules_name,
+					str_replace( ",", '<br />', str_replace('"', "", substr($data->authority_name,2,-2))),
+					$data->area_name,
+					array('data' => $link_s.' | '.$edit_link_s ),	
+	  	);   
+	 }
+	 
+	// Render using Drupal's render API.
+	/*$build['datatable'] = array(
+	  '#theme' => 'datatable',
+	  '#header' => $header,
+	  '#rows' => $rows,
+	  '#attributes' => $attributes,
+	);*/
+	 
+	// Or, render using a theme function.
+	$variables = array(
+	  //'attributes' => $attributes,
+	  'header' => $header,
+	  'rows' => $rows,
+	  'attributes' => array('class' => array('table', 'table-bordered')),
+	);
+	$output = theme('datatable', $variables);
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+	
+	
+}
+ 
+ 
+ function cmsquesansmap_form_submit($form, &$form_state){
+	 $auth_code = '';
+	if($form_state['values']['authority']!=""){
+		foreach($form_state['values']['authority'] as $val){
+			$auth_code.= ','.$val;	
+		}
+		$authority_id = substr($auth_code,1);
+		//$authority_id = $form_state['values']['authority'];
+	}else{
+		$authority_id = 0;
+	}
+	if($form_state['values']['area']!=""){
+		$area_id = $form_state['values']['area'];
+	}else{
+		$area_id = 0;
+	}
+	
+	$data = array('authority_id'=>$authority_id,'area_id'=>$area_id,'act_name'=>$form_state['values']['act_area']['value'],'rules_name'=>$form_state['values']['rule_area']['value']);
+	
+	$id = db_insert('ld_question_answer_transaction')->fields($data)->execute();
+	drupal_set_message('Your Record has been inserted successfully!!');
+	
+ }
+ 
+ function question_list(){
+ // $default_select = array(""=>"- Select -");
+  $query  = db_select('ld_question_master','q')->fields('q',array('id','question'));
+  $result = $query->execute();
+  $list = array();
+  foreach ($result as $record) {
+    $list[$record->id] = t('@question', array(
+    '@question' => $record->question,
+    ));
+  }
+  //return ($default_select+$list);
+  return ($list);
+ 
+}
+
+function service_list(){
+ //$default_select = array(""=>"- Select -");
+  $query  = db_select('ld_service_master','s')->fields('s',array('id','service_name'));
+  $result = $query->execute();
+  $list = array();
+  foreach ($result as $record) {
+    $list[$record->id] = t('@service_name', array(
+    '@service_name' => $record->service_name,
+    ));
+  }
+  //return ($default_select+$list);
+  return ($list);
+ 
+}

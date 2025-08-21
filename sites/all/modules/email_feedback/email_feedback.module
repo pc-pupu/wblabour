@@ -1,0 +1,64 @@
+<?php
+
+function email_feedback_permission() {
+  return array(
+    'email_feedback_per' => array(
+      'title' => t('Email Feedback Permission'),
+    )
+	
+  );
+}
+
+function email_feedback_menu() {
+	$items=array();
+	
+	$items['email-feedback'] = array(
+		'title'=>'Email Feedback',
+		'page callback'=>'send_email_for_feedback',
+		//'page arguments'=>array('email_feedback_form'),
+		'access arguments' => array('email_feedback_per'),
+		'access callback'=>TRUE,
+		'type' => 	MENU_CALLBACK,
+	  );
+	
+	return $items;
+	
+}
+
+		  
+			
+
+	function send_email_for_feedback($dest='', $msg=''){
+		//echo("Hiiii email test"); exit;
+		
+		    $query = db_select('ld_users_details', 'us');
+			$query ->fields('us', array( 'email', 'email_feedback'));
+			$query->condition('us.email_feedback',1,'=');
+			$result = $query->execute();
+			$data = $result->fetchAll();
+		//echo("Hiiii email test"); exit;
+		//print_r($data); exit;
+		//foreach($data as $val){
+			$to = "wbnaren@gmail.com";
+			//$to = $val->email;
+			$subject = "Single Window for e-Service";
+			
+			$htmlContent = file_get_contents("plain-text.html");
+			// Set content-type header for sending HTML email
+			$headers = "MIME-Version: 1.0" . "\r\n";
+			$headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+			
+			// Additional headers
+			$headers .= "From: <grievance.wblabour@gmail.com>" . "\r\n";
+			//$headers .= 'Cc: grievance.wblabour@gmail.com' . "\r\n";
+			//$headers .= 'Bcc: grievance.wblabour@gmail.com' . "\r\n";
+			
+			// Send email
+			if(mail($to,$subject,$htmlContent,$headers)):
+			  echo $successMsg = "Email has sent successfully.";
+			else:
+			   echo $errorMsg = "Email sending fail.";
+			endif;
+		//}
+	}
+

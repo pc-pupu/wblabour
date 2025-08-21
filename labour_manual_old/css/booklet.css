@@ -1,0 +1,32 @@
+.head-block-section{
+font-size: 32pt; 
+color: #993366; 
+line-height: 1.1; 
+font-family: impact, sans-serif;	
+}
+.head-block-section-medium{
+	font-family: georgia, palatino, serif; color: #913664; font-size: 18pt;
+}
+
+.back-div-colr{
+	background: #e5ffe5 none repeat scroll 0 0;
+}
+.back-div-colr-yellow{
+	background: #ffffe5 none repeat scroll 0 0;
+}
+
+.back-div-colr-blue{
+	background: #CEF2FD none repeat scroll 0 0;
+}
+
+.employment_img{
+max-width: 87%;	
+}
+
+.para-width{
+alignment-adjust:text-after-edge;
+alignment-adjust:text-before-edge;
+alignment-baseline:!important;
+background-color:#CEF2FD;
+
+}

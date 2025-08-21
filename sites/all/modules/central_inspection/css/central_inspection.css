@@ -1,0 +1,49 @@
+.model_boxnew{
+	padding:20px;
+ 
+}
+.model_boxnew h1{
+	 color: #5977b9;
+    font-size: 20px;
+    font-weight: normal;
+    margin: 0 0 10px;
+    text-transform: uppercase;
+	}
+.model_boxnew h2{
+	color: #585858;
+    font-size: 15px;
+    font-weight: normal;
+    margin: 10px 0 10px;
+	}	
+	
+.model_boxnew p{
+	color: #808080;
+	font-size:13px;
+	margin:0 0 10px 0;
+	line-height:30px;
+	}
+	
+	
+	
+
+.dividernew {
+    border-bottom: 1px dashed #b5b5b5;
+}
+.ctools-modal-content{    border-radius: 5px;background: #fff8ed none repeat scroll 0 0; overflow:hidden; height:auto  !important;   border: 1px solid #f7931e;
+    border-radius: 5px;}
+.modal-content{ height:auto!important;}
+div.ctools-modal-content .modal-header{ padding:20px 0; height:50px; background:#124d77  !important; }
+div.ctools-modal-content a.close{color:#000000 !important;}
+div.ctools-modal-content .modal-header a{color:#000000 !important;}
+.close{ margin-top:10px;}
+.modal-title{ line-height:51px;}
+
+.dirchk { overflow:hidden; }
+.dirchk .form-item-directorate { overflow:hidden; }
+.dirchk .form-item-directorate .form-checkboxes { overflow:hidden; }
+.dirchk .form-item-directorate .form-checkboxes .form-item.form-type-checkbox { width:12%; float:left; }
+.dirchk .form-item-directorate .form-checkboxes .form-item.form-type-checkbox input{ float:left; margin-right: 6px; }
+.dirchk .form-item-directorate .form-checkboxes .form-item.form-type-checkbox label{ font-weight:bold; }
+
+
+

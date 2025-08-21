@@ -1,0 +1,8 @@
+;$Id$
+name = OTP LOGIN
+description = Otp Based Login using mobile number
+package = Applicant Registration Module
+version = "7.x"
+core = 7.x
+files[] = otp_login.module
+;dependencies[] = autoload

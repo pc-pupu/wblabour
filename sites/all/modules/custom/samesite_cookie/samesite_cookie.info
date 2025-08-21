@@ -1,0 +1,4 @@
+name = SameSite Cookie
+description = Manually sets SameSite=Strict for session cookies
+core = 7.x
+package = Custom

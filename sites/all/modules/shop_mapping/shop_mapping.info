@@ -1,0 +1,8 @@
+;$Id$
+name = Shop Mapping
+description = Shop Mapping
+package = Shop Mapping Module
+version = "7.x"
+core = 7.x
+files[] = shop_mapping.module
+;dependencies[] = autoload

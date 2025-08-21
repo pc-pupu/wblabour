@@ -1,0 +1,1421 @@
+<?php
+
+function boilersearch_form($form, &$form_state) {
+	
+	/*drupal_add_js('code/highstock.js');
+	//drupal_add_js('code/highcharts.js');
+	drupal_add_js('code/highcharts-3d.js');
+	drupal_add_js('code/modules/exporting.js');
+	drupal_add_js('code/modules/export-data.js');*/
+	
+	$from_dt ="";
+	$to_dt ="";
+	$district=array();
+	$district = isset($form_state['values']['district']) && !empty($form_state['values']['district']) ? $form_state['values']['district'] : NULL;	
+    //$subdivision = isset($form_state['values']['subdivision']) && !empty($form_state['values']['subdivision']) ? $form_state['values']['subdivision'] : '';
+	$from_dt = isset($form_state['values']['from_dt']) && !empty($form_state['values']['from_dt']) ? $form_state['values']['from_dt'] : '';	
+    $to_dt = isset($form_state['values']['to_dt']) && !empty($form_state['values']['to_dt']) ? $form_state['values']['to_dt'] : '';
+
+	$form['form_begin'] = array( 
+		'#prefix' => '<h3 class="page-heading mb-4">Directorate of Boilers Search</h3><div class="row mb-2"><div class="col-lg-12"><div class="card"><div class="card-body">',
+		'#suffix' => '' ,
+	);
+	
+	$form['search_info_start'] = array( 
+		'#prefix' => '<div class="row">',
+		'#suffix' => '' ,
+	);
+	
+	$form['district'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#id'=>'district_name',
+	   '#multiple' => true,
+	   '#options' => get_district_by_id(1),
+	   '#attributes' => array('class'=>array('district_name'), 'placeholder'=>'District', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp', 'multiple'=> 'multiple' ),
+	   '#prefix' => '<div id="ld_edit_emp_district_replace" class="col-md-3">',
+	   '#suffix' => '</div>'
+	);
+	
+	
+	/* $form['district'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#id'=>'district_name',
+	   '#options' => get_district_by_id(1),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'District', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   '#prefix' => '<div class="col-md-3" id="ld_edit_emp_district_replace"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);*/
+	
+	 //$value_district	=	isset($form_state['values']['district']) ? $form_state['values']['district'] : ''; 
+  
+/* if(!empty($district)){ 
+   $form['subdivision'] = array(
+	   '#title'=> '',
+	   '#type' => 'select',
+	   '#options' => common_custom_user_subdivisionlist_list_new($district), 
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter subdivision', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   '#prefix' => '<div class="col-xl-3" id="ld_empsubdv_replace"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);
+ }else{ 
+		$form['subdivision'] = array(
+		   '#title'=> '',
+		   '#type' => 'select',
+		   '#options' => array(''=>t('Select Sub-division')),
+		   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter subdivision', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+		   '#prefix' => '<div class="col-xl-3" id="ld_empsubdv_replace"><div class="selectpicker">',
+		   '#suffix' => '</div></div>',
+		);
+ }*/
+  $form['from_dt'] = array(
+	   '#title'=> '',
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array('form-control p-input datepikersecfrom'), 'placeholder'=>'From Date', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($district) ? "" : "",
+	   '#prefix' => '<div class="col-md-3 date-field"><span><i class="fa fa-calendar-alt"></i></span>',
+	   '#suffix' => '</div>'
+	);
+  $form['to_dt'] = array(
+	   '#title'=> '',
+	   '#type' => 'textfield', 
+	   '#attributes' => array('class'=>array('form-control p-input datepikersecto'), 'placeholder'=>'To Date', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   '#prefix' => '<div class="col-md-3 date-field"><span><i class="fa fa-calendar-alt"></i></span>',
+	   '#suffix' => '</div>'
+	);
+ $form['submit'] = array(
+	   '#title'=> '',
+	   '#type' => 'submit',
+	   '#value' => 'Search',
+	   '#attributes' => array('class'=>array('btn btn-primary'),'placeholder'=>''),
+	   '#prefix' => '<div class="col-md-3 mt-2">',
+	   '#suffix' => '</div></div></div></div>'
+	);
+  if($from_dt!="" && $to_dt!="" && sizeof($district)==1){
+	  //print_r($district); 
+	  //echo sizeof($district); echo array_pop(array_reverse($district));exit;
+		  $district_str_new ="";	
+		  $district_val = array_pop(array_reverse($district));
+		  $district_str_new = "(".$district_val.")";
+		  
+		  $to_dtsix = date('d-m-Y');
+		  $from_dtsix = date("d-m-Y", strtotime("-6 months", strtotime($to_dtsix))); 
+		  $my_web_service_data = array();
+		  $my_web_service_data = gerWebServiceDataForPrcBoiler($district_str_new,$from_dt,$to_dt);
+		  $my_web_service_data_lastsix = gerWebServiceDataForPrcBoiler($district_str_new,$from_dtsix,$to_dtsix);
+		  
+		  
+		  $total_appl = 0;
+		  $pending_appl = 0;
+		  $issued_appl = 0;
+		  $date_range = '';
+		  $boilertotal_appl ="";
+		  
+		  //print_r($my_web_service_data['result']); exit;
+		  
+		  foreach($my_web_service_data['result'] as $val){
+			 
+			  if($val['service_id']=='1'){
+				  $boiler_txt = 'Boiler/Economizer Total Registration';
+				  $boilertotal_appl .= ",".$val['total_application'];
+				  $boilerpending_appl .= ",".$val['pending_application'];
+				  $boilerissued_appl .= ",".$val['issued_application'];
+				  
+				  $boiler_tot += $val['total_application'];
+				  $boilerpending_tot += $val['pending_application'];
+				  $boilerissued_tot += $val['issued_application'];
+			  }
+			  if($val['service_id']=='2'){
+				  $renewal_txt = 'Boiler/Economizer Total Renewal';
+				  $renewaltotal_appl .= ",".$val['total_application'];
+				  $renewalpending_appl .= ",".$val['pending_application'];
+				  $renewalissued_appl .= ",".$val['issued_application'];
+				  
+				  
+				  $renewal_tot += $val['total_application'];
+				  $renewalpending_tot += $val['pending_application'];
+				  $renewalissued_tot += $val['issued_application'];
+			  }
+			  if($val['service_id']=='3'){
+				  $repairer_txt = 'Repairer/Erector Total Application';
+				  $repairertotal_appl .= ",".$val['total_application'];
+				  $repairerpending_appl .= ",".$val['pending_application'];
+				  $repairerissued_appl .= ",".$val['issued_application'];
+				  
+				  
+				  $repairer_tot += $val['total_application'];
+				  $repairerpending_tot += $val['pending_application'];
+				  $repairerissued_tot += $val['issued_application'];
+			  }
+			  if($val['service_id']=='4'){
+				  $manufacturer_txt = 'Manufacturer Total Application';
+				  $manufacturertotal_appl .= ",".$val['total_application'];
+				  $manufacturerpending_appl .= ",".$val['total_application'];
+				  $manufacturerissued_appl .= ",".$val['total_application'];
+				  
+				  $manufacturer_tot += $val['total_application'];
+				  $manufacturerpending_tot += $val['pending_application'];
+				  $manufacturerissued_tot += $val['issued_application'];
+			  }
+				
+		  }
+		  
+		   foreach($my_web_service_data_lastsix['result'] as $valsix){ 
+			  if($valsix['service_id']=='1'){
+				  $boiler_txt = 'Boiler/Economizer Total Registration';
+				  /*$boilertotal_appl .= ",".$valsix['total_application'];
+				  $boilerpending_appl .= ",".$valsix['pending_application'];
+				  $boilerissued_appl .= ",".$valsix['issued_application'];*/
+				  
+				  $boiler_tot6 += $valsix['total_application'];
+				  $boilerpending_tot6 += $valsix['pending_application'];
+				  $boilerissued_tot6 += $valsix['issued_application'];
+			  }
+			  if($valsix['service_id']=='2'){
+				  $renewal_txt = 'Boiler/Economizer Total Renewal';
+				 /* $renewaltotal_appl .= ",".$valsix['total_application'];
+				  $renewalpending_appl .= ",".$valsix['pending_application'];
+				  $renewalissued_appl .= ",".$valsix['issued_application'];*/
+				  
+				  
+				  $renewal_tot6 += $valsix['total_application'];
+				  $renewalpending_tot6 += $valsix['pending_application'];
+				  $renewalissued_tot6 += $valsix['issued_application'];
+			  }
+			  if($valsix['service_id']=='3'){
+				  $repairer_txt = 'Repairer/Erector Total Application';
+				  /*$repairertotal_appl .= ",".$valsix['total_application'];
+				  $repairerpending_appl .= ",".$valsix['pending_application'];
+				  $repairerissued_appl .= ",".$valsix['issued_application'];*/
+				  
+				  
+				  $repairer_tot6 += $valsix['total_application'];
+				  $repairerpending_tot6 += $valsix['pending_application'];
+				  $repairerissued_tot6 += $valsix['issued_application'];
+			  }
+			  if($valsix['service_id']=='4'){
+				  $manufacturer_txt = 'Manufacturer Total Application';
+				  /*$manufacturertotal_appl .= ",".$valsix['total_application'];
+				  $manufacturerpending_appl .= ",".$valsix['total_application'];
+				  $manufacturerissued_appl .= ",".$valsix['total_application'];*/
+				  
+				  $manufacturer_tot6 += $valsix['total_application'];
+				  $manufacturerpending_tot6 += $valsix['pending_application'];
+				  $manufacturerissued_tot6 += $valsix['issued_application'];
+			  }
+			}  	
+		  
+		  
+		  $boilertotal_appl = ltrim($boilertotal_appl,",");
+		  $boilerpending_appl = ltrim($boilerpending_appl,",");
+		  $boilerissued_appl = ltrim($boilerissued_appl,",");
+		  
+		  $renewaltotal_appl = ltrim($renewaltotal_appl,",");
+		  $renewalpending_appl = ltrim($renewalpending_appl,",");
+		  $renewalissued_appl = ltrim($renewalissued_appl,",");
+		  
+		  $repairertotal_appl = ltrim($repairertotal_appl,",");
+		  $repairerpending_appl = ltrim($repairerpending_appl,",");
+		  $repairerissued_appl = ltrim($repairerissued_appl,",");
+		  
+		  $manufacturertotal_appl = ltrim($manufacturertotal_appl,",");
+		  $manufacturerpending_appl = ltrim($manufacturerpending_appl,",");
+		  $manufacturerissued_appl = ltrim($manufacturerissued_appl,",");
+		  
+		  //echo $renewaltotal_appl; exit;
+		  
+		  //$date_range = $from_dt1.$to_date1;
+		  
+		  
+		  /*$from_dt1_str=implode("','",$from_dt);
+		  $from_dt1_str_new = "'".$from_dt1_str."'";*/
+		$start    = new DateTime(format_date(strtotime($from_dt), 'custom', 'Y-m-d'));
+		$start->modify('first day of this month');
+		$end      = new DateTime(format_date(strtotime($to_dt), 'custom', 'Y-m-d'));
+		$end->modify('first day of next month');
+		$interval = DateInterval::createFromDateString('1 month');
+		$period   = new DatePeriod($start, $interval, $end);
+		
+		foreach ($period as $dt) {
+			$date_range .= ",'".$dt->format("Y-m")."'";
+		}
+		$date_range = ltrim($date_range,",");
+		//$date_range_new = $date_range;
+		//echo $date_range;
+		//exit;
+		  
+		  
+		  //echo $from_dt; exit;
+		  
+		  /*$form['search_result'] = array( 
+			  '#type' => 'markup',
+			  '#markup' => $total_appl,
+			  '#prefix' => '<div class="col-xl-12">',
+			  '#suffix' => '</div>'
+		  );*/
+		  
+		 /* -------------------------------------------------- PIE BEGIN ------------------------------------------- */ 
+		  
+		drupal_add_js("jQuery(function () {
+			 setInterval(function(){
+				getDonate()
+			},10000);
+			 
+			function getDonate(){
+				Highcharts.chart('containerAllDistrict', {
+				credits: {
+					enabled: false
+				},
+				exporting: {
+					enabled: false
+				},
+				chart: {
+					type: 'pie',
+					options3d: {
+						enabled: true,
+						alpha: 45
+					}
+				},
+				title: {
+					text: 'Cumulative Total Application Information'
+				},
+				/*subtitle: {
+					text: '3D donut in Highcharts'
+				},*/
+				plotOptions: {
+					pie: {
+						slicedOffset: 70,
+						allowPointSelect: true,
+						cursor: 'pointer',
+						
+						innerSize: 100,
+						depth: 45
+					}
+				},
+				series: [{
+					name: 'Total Application',
+					data: [
+						['Total Registration', $boiler_tot],
+						['Registration Pending', $boilerpending_tot],
+						['Registration Issued', $boilerissued_tot],
+						['Total Renewal', $renewal_tot],
+						['Renewal Pending', $renewalpending_tot],
+						['Renewal Issued', $renewalissued_tot],
+						['Repairer/Erector Total Application', $repairer_tot],
+						['Repairer/Erector Pending Application', $repairerpending_tot],
+						['Repairer/Erector Issued Application', $repairerissued_tot],
+						['Manufacturer Total Application', $manufacturer_tot],
+						['Manufacturer Pending Application', $manufacturerpending_tot],
+						['Manufacturer Issued Application', $manufacturerissued_tot],
+					]
+				}]
+			});
+			}
+			
+			function getDonate1(){
+				Highcharts.chart('container12', {
+				credits: {
+					enabled: false
+				},
+				exporting: {
+					enabled: false
+				},
+				chart: {
+					type: 'pie',
+					options3d: {
+						enabled: true,
+						alpha: 45
+					}
+				},
+				title: {
+					text: 'Cumulative Total Application Information'
+				},
+				subtitle: {
+					text: ''
+				},
+				plotOptions: {
+					pie: {
+						innerSize: 100,
+						depth: 45
+					}
+				},
+				series: [{
+					name: 'Total Application',
+					data: [
+						['Total Registration', $boiler_tot6],
+						['Registration Pending', $boilerpending_tot6],
+						['Registration Issued', $boilerissued_tot6],
+						['Total Renewal', $renewal_tot6],
+						['Renewal Pending', $renewalpending_tot6],
+						['Renewal Issued', $renewalissued_tot6],
+						['Repairer/Erector Total Application', $repairer_tot6],
+						['Repairer/Erector Pending Application', $repairerpending_tot6],
+						['Repairer/Erector Issued Application', $repairerissued_tot6],
+						['Manufacturer Total Application', $manufacturer_tot6],
+						['Manufacturer Pending Application', $manufacturerpending_tot6],
+						['Manufacturer Issued Application', $manufacturerissued_tot6],
+					]
+				}]
+			});
+			}
+			
+			getDonate();
+			getDonate1();
+		
+		});",'inline');
+		
+		  $form['chartDonate1'] = array(
+			'#prefix' => '<div class="col-md-12 report_details"><div class="row"><div class="col-md-6"><div id="containerAllDistrict">',
+			'#suffix' => '</div></div>'
+		  ); 
+		  
+		  $form['chartDonate2'] = array(
+			'#prefix' => '<div class="col-md-6"><div id="container12">',
+			'#suffix' => '</div></div></div></div>'
+		  );
+		
+	  /* -------------------------------------------------- PIE END ------------------------------------------- */   
+		  
+	  /*----------------------------------------- BAR GRAPH BEGIN ----------------------------------------------- */
+		  
+		   drupal_add_js("jQuery(function () {
+			 setInterval(function(){
+				getHighBar()
+			},10000);
+			  
+		   function getHighBar(){
+			   var easeOutBounce = function (pos) {
+				if ((pos) < (1 / 2.75)) {
+					return (7.5625 * pos * pos);
+				}
+				if (pos < (2 / 2.75)) {
+					return (7.5625 * (pos -= (1.5 / 2.75)) * pos + 0.75);
+				}
+				if (pos < (2.5 / 2.75)) {
+					return (7.5625 * (pos -= (2.25 / 2.75)) * pos + 0.9375);
+				}
+				return (7.5625 * (pos -= (2.625 / 2.75)) * pos + 0.984375);
+			};
+			
+			Math.easeOutBounce = easeOutBounce;
+	
+			 Highcharts.chart('container2', {
+		credits: {
+			enabled: false
+		},
+		exporting: {
+			enabled: false
+		},
+		chart: {
+			type: 'column',
+			zoomType: 'xy'
+		},
+		title: {
+			text: 'Total, Pending, Issued Applications'
+		},
+		subtitle: {
+			 text: 'Column Graph'
+		},
+	
+		xAxis: {
+			title: {
+				text: 'DATE RANGE'
+			},
+			min:0,
+			max:3,
+			scrollbar:{
+				enabled: true	
+			},
+			categories: [$date_range] 
+		},
+		yAxis: {
+			title: {
+				text: 'Total no of application'
+			}
+		},
+		plotOptions: {
+			line: {
+				dataLabels: {
+					enabled: true
+				},
+				enableMouseTracking: true
+			}
+		},
+		series: [{
+			name: 'Boiler/Economizer Total Registration',
+			data: [$boilertotal_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}
+		},
+		 {
+			name: 'Boiler/Economizer Registration Pending',
+			data: [$boilerpending_appl],
+			animation: {
+				duration: 1500,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}
+		},
+		{
+			name: 'Boiler/Economizer Registration Issued',
+			data: [$boilerissued_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}
+		},
+		{
+			name: 'Boiler/Economizer Total Renewal ',
+			data: [$renewaltotal_appl],
+			animation: {
+				duration: 1500,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+		{
+			name: 'Boiler/Economizer Renewal Pending',
+			data: [$renewalpending_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+		{
+			name: 'Boiler/Economizer Renewal Issued',
+			data: [$renewalissued_appl],
+			animation: {
+				duration: 1500,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+		 {
+			name: 'Repairer/Erector Total Application',
+			data: [$repairertotal_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+		 {
+			name: 'Repairer/Erector Pending Application',
+			data: [$repairerpwnding_appl],
+			animation: {
+				duration: 1500,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+		 {
+			name: 'Repairer/Erector Issued Application',
+			data: [$repairerissued_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+		
+		{
+			name: 'Manufacturer Total Application',
+			data: [$manufacturertotal_appl],
+			animation: {
+				duration: 1500,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+		 {
+			name: 'Manufacturer Pending Application',
+			data: [$manufacturerpending_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+		 {
+			name: 'Manufacturer Issued Application',
+			data: [$manufacturerissued_appl],
+			animation: {
+				duration: 1500,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+		] });  
+		   }
+			getHighBar();
+	});",'inline');
+		  $form['columnchart'] = array(
+			'#prefix' => '<div class="col-md-12 report_details"><div id="container2">',
+			'#suffix' => '</div></div>'
+		  ); 
+		  
+	 /*----------------------------------------- BAR GRAPH END ----------------------------------------------- */
+	 
+	 
+	 
+	 /*------------------------------------------- LINE GRAPH BEGIN ----------------------------------------------*/
+	  
+	 drupal_add_js("jQuery(function () {
+			
+			 setInterval(function(){
+				getHighLine()
+			},10000);
+			 
+			function getHighLine(){
+				Highcharts.chart('container1', {
+				credits: {
+					enabled: false
+				},
+				exporting: {
+					enabled: false
+				},
+				chart: {
+					type: 'line',
+					zoomType: 'xy'
+				},
+				title: {
+					text: 'Total Number of Applications'
+				},
+				subtitle: {
+					 text: 'Line Graph'
+				},
+			
+				xAxis: {
+					title: {
+						text: 'DATE RANGE'
+					},
+					min:0,
+					max:5,
+					scrollbar:{
+						enabled: true	
+					},
+					categories: [$date_range] 
+				},
+				yAxis: {
+					title: {
+						text: 'Total no of application'
+					}
+				},
+				plotOptions: {
+					line: {
+						dataLabels: {
+							enabled: true
+						},
+						enableMouseTracking: true
+					}
+					
+				},
+				
+				/*tooltip: {
+					formatter: function () {
+					   if(this.series.name == 'CLRA') {	
+						return 'Extra data: <b>' + this.point.myData + '</b><br> Another Data: <b>' + this.point.myOtherData + '</b>';
+					   }
+					}
+				},*/
+				
+				series: [{
+					//id: 'CLR1',
+					name: '$boiler_txt',
+					data: [$boilertotal_appl]
+				},
+				 {
+					name: 'Boiler/Economizer Registration Pending',
+					data: [$boilerpending_appl]
+				},
+				{
+					name: 'Boiler/Economizer Registration Issued',
+					data: [$boilerissued_appl]
+				},
+				
+				 {
+					name: '$renewal_txt',
+					data: [$renewaltotal_appl]
+				},
+				{
+					name: 'Boiler/Economizer Renewal Pending',
+					data: [$renewalpending_appl]
+				},
+				{
+					name: 'Boiler/Economizer Renewal Issued',
+					data: [$renewalissued_appl]
+				},
+				
+				{
+					name: '$repairer_txt',
+					data: [$repairertotal_appl]
+				},
+				{
+					name: 'Repairer/Erector Pending Application',
+					data: [$repairerpending_appl]
+				},
+				{
+					name: 'Repairer/Erector Issued Application',
+					data: [$repairerissued_appl]
+				},
+				
+				{
+					name: '$manufacturer_txt',
+					data: [$manufacturertotal_appl]
+				},
+				{
+					name: 'Manufacturer Pending Application',
+					data: [$manufacturerpending_appl]
+				},
+				{
+					name: 'Manufacturer Issued Application',
+					data: [$manufacturerissued_appl]
+				},
+				] 
+			});
+			}
+			getHighLine();
+		
+		});",'inline');
+		
+		  $form['chart'] = array(
+			'#prefix' => '<div class="col-md-12 report_details"><div id="container1" style="min-width: 310px; height: 400px; margin: 0 auto">',
+			'#suffix' => '</div></div>'
+		  );
+		  
+		/*------------------------------------------- LINE GRAPH END ----------------------------------------------*/
+		 
+		  $form['tablechart'] = array(
+			'#prefix' => '<div class="col-md-12 report_details">'.tablechart($district_val,$boiler_tot,$boilerpending_tot,$boilerissued_tot,$renewal_tot,$renewalpending_tot,$renewalissued_tot,$repairer_tot,$repairerpending_tot,$repairerissued_tot,$manufacturer_tot,$manufacturerpending_tot,$manufacturerissued_tot,$from_dt,$to_dt),
+			'#suffix' => '</div>'
+		  ); 
+		  
+	}
+	if($from_dt!="" && $to_dt!="" && sizeof($district)>1){
+		  $district_str_new = "";
+		  $district_str = "(";
+		  foreach($district as $v){
+			  $district_str .= $v. ",";
+		  }
+		  $district_str_new = rtrim($district_str, ",").")";
+		  
+		  //echo $district_str_new; exit;
+		  	
+		  $district_data ="";
+		  $total_district_list = getDistrictAllList();
+		  
+		  /*$to_dt_cur_six = date('d-m-Y');
+		  $from_dt_cur_six = date("d-m-Y", strtotime("-6 months", strtotime($to_dt_cur_six)));*/ 
+		  
+		  $my_web_service_data_cur_six = array();
+		  $my_web_service_data_cur_six = gerWebServiceDataForMultipleDistrict($district_str_new,$from_dt,$to_dt);
+		  
+		 //print_r($my_web_service_data_cur_six); exit;
+		 
+		 $new_dist = array();
+		 foreach($total_district_list as $k=>$v){
+			 for($i=0; $i<sizeof($my_web_service_data_cur_six['result']); $i++){
+				 if($k == trim($my_web_service_data_cur_six['result'][$i]['district_code'])){
+					 if(!in_array($k,$new_dist)){
+						 $new_dist[$k]=$v;
+					 }
+				 }
+			 }
+		 }
+		 
+		 foreach($new_dist as $key=>$data){
+			 $district_data .= ",'".$data."'";
+			 
+			 $total_appl_reg = 0;
+			 $issued_application_reg = 0;
+			 $pending_application_reg = 0;
+			 $total_appl_renew = 0;
+			 $issued_application_renew = 0;
+			 $pending_application_renew = 0;
+			 
+			 for($i=0; $i<sizeof($my_web_service_data_cur_six['result']); $i++){
+				 if($key == trim($my_web_service_data_cur_six['result'][$i]['district_code'])){
+					 if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==1){
+						  $total_appl_reg += $my_web_service_data_cur_six['result'][$i]['total_application'];
+						  $issued_application_reg += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+						  $pending_application_reg += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+					  }
+					  if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==2){
+						  $total_appl_renew += $my_web_service_data_cur_six['result'][$i]['total_application'];
+						  $issued_application_renew += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+						  $pending_application_renew += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+					  }
+				 }
+			 }
+			$total_appl_reg_str .= ",".$total_appl_reg."";
+			$issued_application_reg_str .=  ",".$issued_application_reg."";
+			$pending_application_reg_str .= ",".$pending_application_reg."";
+			
+			$total_appl_renew_str .= ",".$total_appl_renew."";
+			$issued_application_renew_str .=  ",".$issued_application_renew."";
+			$pending_application_renew_str .= ",".$pending_application_renew."";
+			
+			
+			$tot = $total_appl_reg + $total_appl_renew;
+			$tot_issued =  $issued_application_reg+$issued_application_renew;
+			$tot_pending =  $pending_application_reg+$pending_application_renew;
+			
+			$issued_application_arr[$data] = round(($tot_issued / $tot )*100); 
+			$pending_application_arr[$data] = round(($tot_pending / $tot)*100);
+			 
+		 }
+		  $district_data_list = ltrim($district_data,",");
+		  
+		  $total_appl_reg_str = ltrim($total_appl_reg_str,",");
+		  $issued_application_reg_str =  ltrim($issued_application_reg_str,",");
+		  $pending_application_reg_str = ltrim($pending_application_reg_str,",");
+		  
+		  $total_appl_renew_str = ltrim($total_appl_renew_str,",");
+		  $issued_application_renew_str =  ltrim($issued_application_renew_str,",");
+		  $pending_application_renew_str = ltrim($pending_application_renew_str,",");
+		 
+		 
+		  arsort($issued_application_arr); 
+		  //print_r($issued_application_arr); exit;
+		  $leading = key($issued_application_arr); 
+		  
+		  arsort($pending_application_arr); 
+		  //print_r($pending_application_arr); exit;
+		  $lagging = key($pending_application_arr);
+		  
+		  /*------------------------------------------- BAR GRAPH ------------------------------------------- */
+		
+		  
+		   drupal_add_js("jQuery(function () {
+		Highcharts.chart('containerAllDistrict', {
+			credits: {
+				enabled: false
+			},
+			exporting: {
+				enabled: false
+			},
+			chart: {
+				type: 'column',
+				zoomType: 'xy'
+			},
+			title: {
+				text: 'Total, Pending, Issued Applications'
+			},
+			subtitle: {
+				 text: 'Last 6 month<br> Leading District: ".$leading." | Lagging District: ".$lagging."'
+			},
+		
+			xAxis: {
+				title: {
+					text: 'District Range'
+				},
+				min:0,
+				max:3,
+				scrollbar:{
+					enabled: true	
+				},
+				categories: [$district_data_list] 
+			},
+			yAxis: {
+				title: {
+					text: 'Total no of application'
+				}
+			},
+			plotOptions: {
+				line: {
+					dataLabels: {
+						enabled: true
+					},
+					enableMouseTracking: true
+				}
+			},
+			series: [{
+				name: 'Registration Total',
+				data: [$total_appl_reg_str]
+			},
+			 {
+				name: 'Registration Pending',
+				data: [$pending_application_reg_str]
+			},
+			{
+				name: 'Registration Issued',
+				data: [$issued_application_reg_str]
+			},
+			{
+				name: 'Renewal Total',
+				data: [$total_appl_renew_str ]	
+			},
+			{
+				name: 'Renewal Pending',
+				data: [$pending_application_renew_str]	
+			},
+			{
+				name: 'Renewal Issued',
+				data: [$issued_application_renew_str]	
+			},
+			/* {
+				name: 'MTW Total',
+				data: [$total_appl_mtw_str]	
+			},
+			 {
+				name: 'MTW Pending',
+				data: [$pending_application_mtw_str]	
+			},
+			 {
+				name: 'MTW Issued',
+				data: [$issued_application_mtw_str]	
+			},
+			
+			{
+				name: 'ISMW Total',
+				data: [$total_appl_ismw_str]	
+			},
+			 {
+				name: 'ISMW Pending',
+				data: [$pending_application_ismw_str]	
+			},
+			 {
+				name: 'ISMW Issued',
+				data: [$issued_application_ismw_str]	
+			},*/
+			] 
+		});
+	});",'inline');
+		  
+		  /*$form['containerSelectedDistrict'] = array(
+			'#prefix' => '<div class="col-md-12 report_details"><div id="containerSelectedDistrict">',
+			'#suffix' => '</div></div>'
+		  );*/
+		  $form['chartalldistrict'] = array(
+			'#prefix' => '<div class="col-md-12 report_details"><div id="containerAllDistrict">',
+			'#suffix' => '</div></div>'
+		  );
+  }
+  if($from_dt=="" && $to_dt=="" && sizeof($district)==0){
+	  //echo "onload"; exit;
+	  $district_data ="";
+		  $total_district_list = getDistrictAllList();
+		  
+		  $to_dt_cur_six = date('d-m-Y');
+		  $from_dt_cur_six = date("d-m-Y", strtotime("-6 months", strtotime($to_dt_cur_six))); 
+		  
+		  $my_web_service_data_cur = array();
+		  $my_web_service_data_cur_six = gerWebServiceDataForBoilersixAllDistrict($from_dt_cur_six,$to_dt_cur_six);
+		  
+		  foreach($total_district_list as $k=>$v){
+			
+			$total_appl_reg = 0;
+			$issued_application_reg = 0;
+			$pending_application_reg = 0;
+			
+			$total_appl_renew = 0;
+			$issued_application_renew = 0;
+			$pending_application_renew = 0;
+			
+			$district_data .= ",'".$v."'";
+			
+			
+			   
+				  
+				  for($i=0; $i<sizeof($my_web_service_data_cur_six['result']); $i++){
+					  if($k == trim($my_web_service_data_cur_six['result'][$i]['district_code'])){
+						  if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==1){
+							  $total_appl_reg += $my_web_service_data_cur_six['result'][$i]['total_application'];
+							  $issued_application_reg += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+							  $pending_application_reg += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+						  }
+						  if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==2){
+							  $total_appl_renew += $my_web_service_data_cur_six['result'][$i]['total_application'];
+							  $issued_application_renew += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+							  $pending_application_renew += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+						  }
+						  if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==3){
+							  $total_appl_repairer += $my_web_service_data_cur_six['result'][$i]['total_application'];
+							  $issued_application_repairer += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+							  $pending_application_repairer += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+						  }
+						  if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==4){
+							  $total_appl_manufacturer += $my_web_service_data_cur_six['result'][$i]['total_application'];
+							  $issued_application_manufacturer += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+							  $pending_application_manufacturer += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+						  }
+					  }
+				  }
+				  
+				  
+			  
+				$total_appl_reg_str .= ",".$total_appl_reg."";
+				$issued_application_reg_str .=  ",".$issued_application_reg."";
+				$pending_application_reg_str .= ",".$pending_application_reg."";
+				
+				$total_appl_renew_str .= ",".$total_appl_renew."";
+				$issued_application_renew_str .=  ",".$issued_application_renew."";
+				$pending_application_renew_str .= ",".$pending_application_renew."";
+				
+				$total_appl_repairer_str .= ",".$total_appl_repairer."";
+				$issued_application_repairer_str .= ",".$issued_application_repairer."";
+				$pending_application_repairer_str .= ",".$pending_application_repairer."";
+				
+				$total_appl_manufacturer_str .= ",".$total_appl_manufacturer."";
+				$issued_application_manufacturer_str .= ",".$issued_application_manufacturer."";
+				$pending_application_manufacturer_str .= ",".$pending_application_manufacturer."";
+				
+				
+				$tot = $total_appl_reg + $total_appl_renew;
+				$tot_issued =  $issued_application_reg+$issued_application_renew;
+				$tot_pending =  $pending_application_reg+$pending_application_renew;
+				
+				$issued_application_arr[$v] = round(($tot_issued / $tot )*100); 
+				$pending_application_arr[$v] = round(($tot_pending / $tot)*100);
+				
+		  }
+		  
+		  for($i=0; $i<sizeof($my_web_service_data_cur_six['result']); $i++){
+				if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==1){
+					$total_appl_reg_d += $my_web_service_data_cur_six['result'][$i]['total_application'];
+					$issued_application_reg_d += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+					$pending_application_reg_d += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+				}
+				if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==2){
+					$total_appl_renew_d += $my_web_service_data_cur_six['result'][$i]['total_application'];
+					$issued_application_renew_d += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+					$pending_application_renew_d += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+				}
+				if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==3){
+					$total_appl_repairer_d += $my_web_service_data_cur_six['result'][$i]['total_application'];
+					$issued_application_repairer_d += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+					$pending_application_repairer_d += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+				}
+				if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==4){
+					$total_appl_manufacturer_d += $my_web_service_data_cur_six['result'][$i]['total_application'];
+					$issued_application_manufacturer_d += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+					$pending_application_manufacturer_d += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+				}
+			}
+		  
+		  //echo "->".$issued_application_renew_d; exit;
+		  
+		  
+		  $district_data_list = ltrim($district_data,",");
+		  
+		  $total_appl_reg_str = ltrim($total_appl_reg_str,",");
+		  $issued_application_reg_str =  ltrim($issued_application_reg_str,",");
+		  $pending_application_reg_str = ltrim($pending_application_reg_str,",");
+		  
+		  $total_appl_renew_str = ltrim($total_appl_renew_str,",");
+		  $issued_application_renew_str =  ltrim($issued_application_renew_str,",");
+		  $pending_application_renew_str = ltrim($pending_application_renew_str,",");
+		  
+		  $total_appl_repairer_str = ltrim($total_appl_repairer_str,",");
+		  $issued_application_repairer_str =  ltrim($issued_application_repairer_str,",");
+		  $pending_application_repairer_str = ltrim($pending_application_repairer_str,",");
+		  
+		  $total_appl_manufacturer_str = ltrim($total_appl_manufacturer_str,",");
+		  $issued_application_manufacturer_str =  ltrim($issued_application_manufacturer_str,",");
+		  $pending_application_manufacturer_str = ltrim($pending_application_manufacturer_str,",");
+		  
+		  arsort($issued_application_arr); 
+		  //print_r($issued_application_arr); exit;
+		  $leading = key($issued_application_arr); 
+		  
+		  arsort($pending_application_arr); 
+		  //print_r($pending_application_arr); exit;
+		  $lagging = key($pending_application_arr);
+		  
+		  /*------------------------------------------- BAR GRAPH ------------------------------------------- */
+		
+		  
+		   drupal_add_js("jQuery(function () {
+		Highcharts.chart('containerAllDistrict', {
+			credits: {
+				enabled: false
+			},
+			exporting: {
+				enabled: false
+			},
+			chart: {
+				type: 'column',
+				zoomType: 'xy'
+			},
+			title: {
+				text: 'Total, Pending, Issued Applications'
+			},
+			subtitle: {
+				 text: 'Last 6 month<br> Leading District: ".$leading." | Lagging District: ".$lagging."'
+			},
+		
+			xAxis: {
+				title: {
+					text: 'District Range'
+				},
+				min:0,
+				max:2,
+				scrollbar:{
+					enabled: true	
+				},
+				categories: [$district_data_list] 
+			},
+			yAxis: {
+				title: {
+					text: 'Total no of application'
+				}
+			},
+			plotOptions: {
+				/*series: {
+					pointWidth: 15,
+					pointPadding : 0.001
+				},*/
+				line: {
+					dataLabels: {
+						enabled: true
+					},
+					enableMouseTracking: true
+				}
+			},
+			series: [{
+				name: 'Registration Total',
+				data: [$total_appl_reg_str]
+			},
+			 {
+				name: 'Registration Pending',
+				data: [$pending_application_reg_str]
+			},
+			{
+				name: 'Registration Issued',
+				data: [$issued_application_reg_str]
+			},
+			{
+				name: 'Renewal Total',
+				data: [$total_appl_renew_str ]	
+			},
+			{
+				name: 'Renewal Pending',
+				data: [$pending_application_renew_str]	
+			},
+			{
+				name: 'Renewal Issued',
+				data: [$issued_application_renew_str]	
+			},
+			{
+				name: 'Repairer Total',
+				data: [$total_appl_repairer_str]	
+			},
+			 {
+				name: 'Repairer Pending',
+				data: [$pending_application_repairer_str]	
+			},
+			 {
+				name: 'Repairer Issued',
+				data: [$issued_application_repairer_str]	
+			},
+			
+			{
+				name: 'Manufacturer Total',
+				data: [$total_appl_manufacturer_str]	
+			},
+			 {
+				name: 'Manufacturer Pending',
+				data: [$pending_application_manufacturer_str]	
+			},
+			 {
+				name: 'Manufacturer Issued',
+				data: [$issued_application_manufacturer_str]	
+			},
+			] 
+		});
+		
+		
+		function getDonateSix(){
+				Highcharts.chart('containerAllDistrictDonate', {
+				credits: {
+					enabled: false
+				},
+				exporting: {
+					enabled: false
+				},
+				chart: {
+					type: 'pie',
+					options3d: {
+						enabled: true,
+						alpha: 45
+					}
+				},
+				title: {
+					text: 'Cumulative Total Application Information'
+				},
+				subtitle: {
+					text: 'From Current Date to Last 6 Months'
+				},
+				plotOptions: {
+					pie: {
+						innerSize: 100,
+						depth: 45
+					}
+				},
+				series: [{
+					name: 'Total Application',
+					data: [
+						['Total Registration', $total_appl_reg_d],
+						['Registration Pending', $pending_application_reg_d],
+						['Registration Issued', $issued_application_reg_d],
+						['Total Renewal', $total_appl_renew_d],
+						['Renewal Pending', $pending_application_renew_d],
+						['Renewal Issued', $issued_application_renew_d],
+						['Repairer/Erector Total Application', $total_appl_repairer_d],
+						['Repairer/Erector Pending Application', $pending_application_repairer_d],
+						['Repairer/Erector Issued Application', $issued_application_repairer_d],
+						['Manufacturer Total Application', $total_appl_manufacturer_d],
+						['Manufacturer Pending Application', $pending_application_manufacturer_d],
+						['Manufacturer Issued Application', $issued_application_manufacturer_d],
+					]
+				}]
+			});
+			}
+			
+			getDonateSix();
+		
+	});",'inline');
+		  
+		  
+		  /*$form['chartDonatesix'] = array(
+			'#prefix' => '<div class="col-md-6"><div id="containerAllDistrictDonate">',
+			'#suffix' => '</div></div></div></div>'
+		  );*/
+  }
+  
+  $form['chartalldistrict'] = array(
+			'#prefix' => '<div class="col-md-12 report_details"><div id="containerAllDistrict">',
+			'#suffix' => '</div></div>'
+		  );
+  
+   /*$form['chart_blank'] = array(
+		'#prefix' => '<div id="containerAllDistrict">',
+		'#suffix' => '</div>'
+	  );*/
+  
+  $form['search_info_end'] = array( 
+	  '#prefix' => '',
+	  '#suffix' => '</div>' ,
+  );	
+  
+ $form['form_end'] = array( 
+  '#prefix' => '',
+  '#suffix' => '</div>' ,
+ );
+	  
+  return  $form;
+
+}
+
+function boilersearch_form_submit($form, &$form_state) {
+	$form_state['rebuild'] = TRUE;
+}
+
+/*function get_ajax_load_new($form, $form_state){
+	$commands = array();
+	$commands[] = ajax_command_replace('#ld_edit_emp_district_replace', drupal_render($form['district']));
+	$commands[] = ajax_command_replace('#ld_empsubdv_replace', drupal_render($form['subdivision']));
+	return array('#type' => 'ajax', '#commands' => $commands);
+}*/
+
+function gerWebServiceDataForBoilersixAllDistrict($from_dt_cur_six,$to_dt_cur_six){
+	//echo "-->"; exit;
+	$mydata = array();
+	if($from_dt_cur_six!="" && $to_dt_cur_six!=""){
+		$service_url 	= 	"https://wbboilers.gov.in/labourdept/eservices/getEServiceStatisticsDistrictwise";
+		
+		$ch 			= 	curl_init();
+		$headers		=	array();
+		$curl_post_data = 	array(
+			//"service_id" 	=> "1",
+			//"district_code" => $district,
+			//"sub_div_code"  => $subdivision,       
+			"from_date" 	=> $from_dt_cur_six,
+			"to_date" 		=> $to_dt_cur_six
+		);
+		$headers[]		=	'Accept: application/json';
+		$headers[]		=	'Content-Type: application/json';
+		$headers[] 		= 	'charset=utf-8';
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_URL, $service_url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode( $curl_post_data ) );
+		curl_setopt($ch, CURLOPT_POST, true);
+		$results		=	curl_exec($ch);
+		$errors			=	curl_error($ch);
+		curl_close($ch);
+		$x				=	json_encode( $results );
+		$prsecallboilers	= 	json_decode(json_decode(trim($x)), TRUE);
+		
+		//$tmp= print_r(json_decode($results)); //exit;
+		//print_r($tmp);
+		//exit;
+		return $prsecallboilers;
+	}else{
+		return $mydata;
+	}
+}
+
+function gerWebServiceDataForPrcBoiler($district='',$from_dt='',$to_dt=''){
+	$mydata = array();
+	if($district!="" && $from_dt!="" && $to_dt!=""){
+		//$service_url 	= 	"https://wbboilers.gov.in/labourdept/eservices/getEServiceStatistics";
+		$service_url 	= 	"https://wbboilers.gov.in/labourdept/eservices/getEServiceStatisticsDistrictwise";
+		$ch 			= 	curl_init();
+		$headers		=	array();
+		$curl_post_data = 	array(
+			"district_code" => $district,
+			"from_date" 	=> $from_dt,
+			"to_date" 		=> $to_dt
+		);
+		$headers[]		=	'Accept: application/json';
+		$headers[]		=	'Content-Type: application/json';
+		$headers[] 		= 	'charset=utf-8';
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_URL, $service_url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode( $curl_post_data ) );
+		curl_setopt($ch, CURLOPT_POST, true);
+		$results		=	curl_exec($ch);
+		$errors			=	curl_error($ch);
+		curl_close($ch);
+		$x				=	json_encode( $results );
+		$prsecwblc 		= 	json_decode(json_decode(trim($x)), TRUE);
+		
+		//$tmp= print_r(json_decode($results)); //exit;
+		//print_r($tmp);
+		//exit;
+		return $prsecwblc;
+	}else{
+		return $mydata;
+	}
+}
+
+function gerWebServiceDataForMultipleDistrict($district_str='',$from_dt='',$to_dt=''){
+	$mydatasix = array();
+	if($district_str!="" && $from_dt!="" && $to_dt!=""){
+		//$service_url 	= 	"https://wbboilers.gov.in/labourdept/eservices/getEServiceStatistics";
+		$service_url 	= 	"https://wbboilers.gov.in/labourdept/eservices/getEServiceStatisticsDistrictwise";
+		
+		$ch 			= 	curl_init();
+		$headers		=	array();
+		$curl_post_data = 	array(
+			//"service_id" 	=> "1",
+			"district_code" => $district_str,
+			//"sub_div_code"  => $subdivision,       
+			"from_date" 	=> $from_dt,
+			"to_date" 		=> $to_dt
+		);
+		$headers[]		=	'Accept: application/json';
+		$headers[]		=	'Content-Type: application/json';
+		$headers[] 		= 	'charset=utf-8';
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_URL, $service_url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode( $curl_post_data ) );
+		curl_setopt($ch, CURLOPT_POST, true);
+		$results		=	curl_exec($ch);
+		$errors			=	curl_error($ch);
+		curl_close($ch);
+		$x				=	json_encode( $results );
+		$prsecwblcsix 		= 	json_decode(json_decode(trim($x)), TRUE);
+		
+		//$tmp= print_r(json_decode($results)); //exit;
+		//print_r($tmp);
+		//exit;
+		return $prsecwblcsix;
+	}else{
+		return $mydatasix;
+	}
+}
+
+
+function tablechart($district='',$boiler_tot=0,$boilerpending_tot=0,$boilerissued_tot=0,$renewal_tot=0,$renewalpending_tot=0,$renewalissued_tot=0,$repairer_tot=0,$repairerpending_tot=0,$repairerissued_tot=0,$manufacturer_tot=0,$manufacturerpending_tot=0,$manufacturerissued_tot=0,$from_dt,$to_dt){
+	$dist_list = get_district_by_id(1);
+	
+	//print_r($dist_list);
+	//exit;
+	$mytable ="";
+	$mytable .="<div class='table-responsive add_establishment'><h5>Search Result of Boiler from $from_dt to $to_dt</h5>";
+	$mytable.='<table width="100%" border="1" cellspacing="0" cellpadding="0" class="table table-striped">
+			<thead>
+			  <tr>
+				<th rowspan="2">District</th>
+				<th colspan="3" align="center">Boiler/Economizer Registration</th>
+				<th colspan="3" align="center">Boiler/Economizer Renewal</th>
+				<th colspan="3" align="center">Repairer/Erector</th>
+				<th colspan="3" align="center">Manufacturer</th>
+			  </tr>
+			  </thead>
+			  <tbody>
+			  <tr>
+				<td>&nbsp;</td>
+				<td>Total</td>
+				<td>Pending</td>
+				<td>Issued</td>
+				<td>Total</td>
+				<td>Pending</td>
+				<td>Issued</td>
+				<td>Total</td>
+				<td>Pending</td>
+				<td>Issued</td>
+				<td>Total</td>
+				<td>Pending</td>
+				<td>Issued</td>
+			  </tr>';
+			  foreach($dist_list as $k=>$v){
+				  if($k==$district){
+					$mytable.='<tr>
+					<td>'.$v.'</td>
+					<td>'.$boiler_tot.'</td>
+					<td>'.$boilerpending_tot.'</td>
+					<td>'.$boilerissued_tot.'</td>
+					<td>'.$renewal_tot.'</td>
+					<td>'.$renewalpending_tot.'</td>
+					<td>'.$renewalissued_tot.'</td>
+					<td>'.$repairer_tot.'</td>
+					<td>'.$repairerpending_tot.'</td>
+					<td>'.$repairerissued_tot.'</td>
+					<td>'.$manufacturer_tot.'</td>
+					<td>'.$manufacturerpending_tot.'</td>
+					<td>'.$manufacturerissued_tot.'</td>
+				  </tr>';  
+				  }/*else if($v!="- Select District -"){
+				  $mytable.='<tr>
+					<td>'.$v.'</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+				  </tr>';
+				  }*/
+			  }
+			$mytable.='</tbody></table>';
+			$mytable.="</div>";
+	return $mytable;
+}
+
+

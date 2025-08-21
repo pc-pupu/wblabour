@@ -1,0 +1,7 @@
+name = SSDG Webservice
+description = WebService APIs for SSDG Schemes.
+core = 7.x
+package = SSDG Webservice Schemes
+project = webservice_schemes
+dependencies[] = services
+dependencies[] = rest_server

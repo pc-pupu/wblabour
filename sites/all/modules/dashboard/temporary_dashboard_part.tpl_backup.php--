@@ -1,0 +1,1974 @@
+<?php global $base_root,$base_path,$user;?>
+<?php
+$query = db_select('ld_users_details', 'us');
+$query->leftJoin('users', 'u', 'u.uid=us.uid');
+$query ->fields('u', array( 'name'));
+$query ->fields('us', array( 'fname','mname','lname','gender','dob','mobile','email','pincode','state','district','subdivision','areatype','block','panchayat','policestation','postoffice','address','ldapplicationflag'));
+$query->condition('us.uid',trim($user->uid),'=');
+$result = $query->execute();
+$data = $result->fetchObject();
+if($data->ldapplicationflag=='1'){
+	drupal_goto('dashboard1');
+}
+?>
+<!--start body here-->
+<link href="<?php print $base_path ?>sites/all/modules/dashboard/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+<link href="<?php print $base_path ?>sites/all/modules/dashboard/vendors/font-awesome/css/font-awesome.css" rel="stylesheet">
+<!-- NProgress -->
+<link href="<?php print $base_path ?>sites/all/modules/dashboard/vendors/nprogress/nprogress.css" rel="stylesheet">
+<!-- iCheck -->
+<link href="<?php print $base_path ?>sites/all/modules/dashboard/vendors/iCheck/skins/flat/green.css" rel="stylesheet">
+
+<!-- bootstrap-progressbar -->
+<link href="<?php print $base_path ?>sites/all/modules/dashboard/vendors/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css" rel="stylesheet">
+<!-- JQVMap -->
+<link href="<?php print $base_path ?>sites/all/modules/dashboard/vendors/jqvmap/dist/jqvmap.min.css" rel="stylesheet"/>
+<!-- bootstrap-daterangepicker -->
+<link href="<?php print $base_path ?>sites/all/modules/dashboard/vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
+<link href="<?php print $base_path ?>sites/all/modules/dashboard/build/css/tmpdashboard.css" rel="stylesheet">
+<!-- Custom Theme Style -->
+<link href="<?php print $base_path ?>sites/all/modules/dashboard/build/css/custom.css" rel="stylesheet">
+
+<div class="whitebg2">
+  <div class="about_body"> 
+    <!-- container starts here -->
+    <div class="container">
+      <div class="row">
+        <?php //print $breadcrumb; ?>
+        <div class="col-md-12 col-sm-9 col-xs-12 profile_details">
+          <div class="col-sm-12"> 
+            <!-- <h4 class="brief"><i>Welcome on Board</i></h4>-->
+            <div class="right col-xs-5 text-center"> 
+              
+              <!-- <div class="temporary-id-panel"><a href="#" class="btn temporary-id">Temporary ID - <?php if(!empty($data->name)){ echo $data->name;}else{ echo "N/A";}?>(48hr valid)</a></div>-->
+              <div class="text-center myprofilepic"> <img src="<?php print $base_path ?>sites/all/modules/dashboard/images/user.png" alt="" class="img-circle img-responsive#"></div>
+              <div class="sidebar-widget"> 
+                <!-- <h4>Profile Completion</h4>--> 
+                <!--<canvas width="150" height="80" id="chart_gauge_01" class="" style="width: 160px; height: 100px;"></canvas>-->
+                <h2>
+                  <?php if(!empty($data->fname) && (!empty($data->lname))){echo $data->fname." ".$data->mname." ".$data->lname;}else{ echo "N/A";}?>
+                </h2>
+                
+                <a href="<?php echo $base_root.$base_path?>wizard" class="btn btn-warning eservice services-dashboard">Apply for E-services</a> 
+                <!--<canvas width="150" height="80" id="chart_gauge_01" class="custom-spedo-meter"></canvas>
+                <div class="goal-wrapper"> <span id="gauge-text" class="gauge-value pull-left">0</span> <span class="gauge-value pull-left">%</span> <span id="goal-text" class="goal-value pull-right">100%</span> </div>--> 
+              </div>
+            </div>
+            <div class="left col-xs-7"> 
+              <!-- <h2><?php if(!empty($data->fname) && (!empty($data->lname))){echo $data->fname." ".$data->mname." ".$data->lname;}else{ echo "N/A";}?></h2>-->
+              <div class="temporary-id-panel">
+              <div class="temporary-id">Temporary ID -<?php if(!empty($data->name)){ echo $data->name;}else{ echo "N/A";}?></div>
+              <div class="temporary-id-pane-note">This Id is valid for 48hrs & after 48hrs you will not be eligible to avail these services.</div>
+              </div>
+              
+              <table class="data table table-striped no-margin">
+                <thead>
+                  <tr>
+                    <th><i class="fa fa-birthday-cake"></i> DOB :
+                      <?php if(!empty($data->dob)){ echo format_date(strtotime($data->dob), 'custom', 'd-m-Y');}else{ echo "N/A";}?>
+                      </li></th>
+                  </tr>
+                  <tr>
+                    <th><i class="fa fa-envelope"></i> Email :
+                      <?php if(!empty($data->email)){ echo $data->email;}else{ echo "N/A";}?></th>
+                  </tr>
+                  <tr>
+                    <th><i class="fa fa-phone"></i> Phone :
+                      <?php if(!empty($data->mobile)){ echo $data->mobile;}else{ echo "N/A";}?></th>
+                  </tr>
+                  <tr>
+                    <th class="hidden-phone"><i class="fa fa-map-marker"></i> Pin :
+                      <?php if(!empty($data->pincode)){ echo $data->pincode;}else{ echo "N/A";}?></th>
+                  </tr>
+                  <tr>
+                    <th><i class="fa fa-building"></i> Address:
+                      <?php if(!empty($data->address)){ echo $data->address;}else{ echo "N/A";}?></th>
+                  </tr>
+                </thead>
+              </table>
+              <!-- <a href="<?php echo $base_root.$base_path?>wizard" class="btn btn-warning eservice">Apply for E-services</a>--> 
+            </div>
+          </div>
+        </div>
+       
+        
+          <div class="container">
+            <div class="row">
+              <div class="col-sm-12 tabbable-panel Main_tab">
+              
+                <h3>Comprehensive Information Sheet</h3>
+               
+                <div class="tabbable-line MTab_nav_holder">
+                  <ul class="nav nav-tabs MTab_nav">
+                    <li class="active sop"> <a href="#sop" data-toggle="tab">Standard Operating Procedure</a> </li>
+                    <li class="timeline"> <a href="#timeline" data-toggle="tab">Timelines</a> </li>
+                    <li class="checklist"> <a href="#checklist" data-toggle="tab">Checklists</a> </li>
+                    <li class="sip"> <a href="#sip" data-toggle="tab">Standard Inspection Procedure</a> </li>
+                    <li class="inspection"> <a href="#checklist-for-inspection" data-toggle="tab">Checklist for Inspection</a> </li>
+                  </ul>
+                </div>
+                <div class="tab-content Main_tab_content">
+                  <div class="tab-pane active" id="sop">
+                    <div class="tabbable tabs-left">
+                      <ul class=" col-sm-2 nav nav-tabs" role="tablist">
+                        <li role="presentation" class="active"><a href="#Pre-Operation" aria-controls="home" role="tab" data-toggle="tab">Pre Operation</a></li>
+                        <li role="presentation"><a href="#Pre-Establishment" aria-controls="home" role="tab" data-toggle="tab">Pre Establishment</a></li>
+                        <li role="presentation"><a href="#Post-Operation" aria-controls="home" role="tab" data-toggle="tab">Others</a></li>
+                      </ul>
+                      <div class="col-sm-10 tab-content STab_content">
+                        <div class="tab-pane active" id="Pre-Operation">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Pre-Operation-Boilers" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Pre-Operation-Commissionerate" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Pre-Operation-Factory" data-toggle="tab">Directorate of Factories</a> </li>
+                                <li> <a href="#Pre-Operation-Shop" data-toggle="tab">Shops and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Pre-Operation-Boilers">
+                                <div class="panel-group Custom_AC_tab" role="tablist" aria-multiselectable="true">
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#section1" aria-expanded="true" class="">Standard Operating Procedure for Registration of Boilers <span class="glyphicon glyphicon-minus pull-right"></span></a> </h4>
+                                    </div>
+                                    <div id="section1" class="panel-collapse collapse in" aria-expanded="true">
+                                      <div class="panel-body">
+                                        <p>1) Submission of registration folder along with application for registration/erection of boiler.</p>
+                                        <p>2) Erection Meeting for registration/erection of the boiler.</p>
+                                        <p>3) Submission of requisite fees and Travelling Allowances for registration/erection.</p>
+                                        <p>4) Approval of drawing of pipe lines.</p>
+                                        <p>5) Approval of contractor/erector.</p>
+                                        <p>6) Welding Procedure Specification approval.</p>
+                                        <p>7) Simulation Test of Welders.</p>
+                                        <p>8) Material inspection of boiler and pipe lines.</p>
+                                        <p>9) Physical and chemical testing of pipe lines</p>
+                                        <p>10) Fit-up inspection of pressure parts of boiler and pipe lines.</p>
+                                        <p>11) Inspection after completion of welding and NDT marking for boiler and pipe lines.</p>
+                                        <p>12) Submission of satisfactory NDT report.</p>
+                                        <p>13) Post weld heat treatment if required.</p>
+                                        <p>14) PMI testing for all alloy steel materials of boiler and pipe lines.</p>
+                                        <p>15) Approval of pressure parts calculation of boiler.</p>
+                                        <p>16) Hydraulic test of boiler and pipe lines.</p>
+                                        <p>17) Approval of form-IIIA of pipe lines.</p>
+                                        <p>18) Issue of Provisional certificate of boiler.</p>
+                                        <p>19) Steam Test of boiler.</p>
+                                        <p>20) Allotment of registration number of boiler.</p>
+                                        <p>21) Engraving of registration number of boiler.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#section2" aria-expanded="true" class=""> Standard Operating Procedure for Renewal of certificate of Boilers <span class="glyphicon pull-right glyphicon-plus"></span></a> </h4>
+                                    </div>
+                                    <div id="section2" class="panel-collapse collapse" aria-expanded="true">
+                                      <div class="panel-body">
+                                        <p>1) Application for renewal of certificate along with <strong>Form-B No.1</strong> duly filled in.</p>
+                                        <p>2) Submission of requisite fees for inspection of boiler in the head of accounts: “<strong>0230-00-103-001-14</strong>” – Service fees (14) online by <strong>IFMS-GRIPS</strong> portal in <a href="http://www.wbfin.nic.in/" target="_blank">www.wbfin.nic.in</a>.</p>
+                                        <p>3) Submission of requisite Travelling Allowance in the head of accounts: “<strong>0230-00-103-002-27</strong>” – Other Receipts (27) online by <strong>IFMS-GRIPS</strong> portal in <a href="http://www.wbfin.nic.in/" target="_blank">www.wbfin.nic.in</a></p>
+                                        <p>4) Dry and thorough inspection of boiler.</p>
+                                        <p>5) Hydraulic Test of Boiler.</p>
+                                        <p>6) Issuance of Provisional Certificate of the boiler after satisfactory hydraulic test.</p>
+                                        <p>7) Issuance of Final Certificate of the boiler.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#section3" aria-expanded="true" class=""> Standard Operating Procedure for Repair of Boiler <span class="glyphicon pull-right glyphicon-plus"></span></a></h4>
+                                    </div>
+                                    <div id="section3" class="panel-collapse collapse" aria-expanded="true">
+                                      <div class="panel-body">
+                                        <p>1) Submission of requisite fees for re-inspection under repair of boiler in the head of accounts: “<strong>0230-00-103-001-14</strong>” – Service fees (14) online by <strong>IFMS-GRIPS</strong> portal in <a href="http://www.wbfin.nic.in/" target="_blank">www.wbfin.nic.in</a>.</p>
+                                        <p>2) Submission of requisite Travelling Allowance in the head of accounts: “0230-00-103-002-27” – Other Receipts (27) online by IFMS-GRIPS portal in <a href="http://www.wbfin.nic.in/" target="_blank">www.wbfin.nic.in</a>.</p>
+                                        <p>3) Approval of contractor/repairer.</p>
+                                        <p>4) Welding Procedure Specification approval.</p>
+                                        <p>5) Simulation Test of Welders.</p>
+                                        <p>6) Material inspection for repair of boiler.</p>
+                                        <p>7) Physical and chemical testing of materials to be used for repair.</p>
+                                        <p>8) Fit-up inspection of pressure parts of boiler under repair.</p>
+                                        <p>9) Inspection after completion of welding and NDT marking for boiler under repair.</p>
+                                        <p>10) Submission of satisfactory NDT report.</p>
+                                        <p>11) Post weld heat treatment if required.</p>
+                                        <p>12) PMI testing for all alloy steel materials of boiler under repair.</p>
+                                        <p>13) Hydraulic test of boiler under repair.</p>
+                                        <p>14) Issuance of Provisional certificate of boiler.</p>
+                                        <p>15) Issuance of Final Certificate of boiler.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#section4" aria-expanded="true" class=""> Standard Operating Procedure for Transfer of Ownership of Boiler <span class="glyphicon pull-right glyphicon-plus"></span></a> </h4>
+                                    </div>
+                                    
+                                    <!--<div id="section1" class="panel-collapse collapse in">-->
+                                    <div id="section4" class="panel-collapse collapse" aria-expanded="true">
+                                      <div class="panel-body">
+                                        <p>1) Application for transfer of ownership of boiler by the proposed owner.</p>
+                                        <p>2) Submission of requisite fees in the head of accounts: “<strong>0230-00-103-001-14</strong>” –Service fees (14) online by IFMS-GRIPS portal in <a href="http://www.wbfin.nic.in/" target="_blank">www.wbfin.nic.in</a>.</p>
+                                        <p>3) Submission of requisite documents as per Check List.</p>
+                                        <p>4) Scrutiny of Documents.</p>
+                                        <p>5) Physical Verification of boiler along with documents proposed owners’ premises.</p>
+                                        <p>6) Physical Verification of documents in the previous owners’ premises.</p>
+                                        <p>7) Hearing of previous owners, if required.</p>
+                                        <p>8) Hearing of Proposed owners.</p>
+                                        <p>9) Issuance of Transfer of ownership order in favour of the proposed owners.</p>
+                                        <p>10) Issuance of certificate of boiler in favour of the new owners after satisfactory inspection in the prescribed manner.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#section5" aria-expanded="true" class=""> Standard Operating Procedure for Remnant Life Assessment (RLA) of Boiler <span class="glyphicon pull-right glyphicon-plus"></span></a> </h4>
+                                    </div>
+                                    
+                                    <!--<div id="section1" class="panel-collapse collapse in">-->
+                                    <div id="section5" class="panel-collapse collapse" aria-expanded="true">
+                                      <div class="panel-body">
+                                        <p>1) Meeting for RLA study with the Owners along with Approved RLA Organisation and approved contractor.</p>
+                                        <p>2) Submission of requisite fees for inspection under RLA of boiler in the head of accounts: “<strong>0230-00-103-001-14</strong>” – Service fees (14) online by IFMS-GRIPS portal in <a href="http://www.wbfin.nic.in/" target="_blank">www.wbfin.nic.in</a>.</p>
+                                        <p>3) Submission of requisite Travelling Allowance in the head of accounts: “<strong>0230-00-103-002-27</strong>” – Other Receipts (27) online by <strong>IFMS-GRIPS</strong> portal in<a href="http://www.wbfin.nic.in/" target="_blank">www.wbfin.nic.in</a></p>
+                                        <p>4) Approval RLA scheme.</p>
+                                        <p>5) Dry and thorough inspection of boiler.</p>
+                                        <p>6) Inspection for RLA study with approved RLA organisation.</p>
+                                        <p>7) Necessary tests for RLA.</p>
+                                        <p>8) Submission of report by the RLA organisation.</p>
+                                        <p>9) Issuance of certificate of boiler.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#section6" aria-expanded="true" class=""> Standard Operating Procedure for Registration of Economiser <span class="glyphicon pull-right glyphicon-plus"></span></a> </h4>
+                                    </div>
+                                    
+                                    <!--<div id="section1" class="panel-collapse collapse in">-->
+                                    <div id="section6" class="panel-collapse collapse" aria-expanded="true">
+                                      <div class="panel-body">
+                                        <p>1) Submission of registration folder along with application for registration/erection of economiser.</p>
+                                        <p>2) Erection Meeting for registration/erection of the economiser.</p>
+                                        <p>3) Submission of requisite fees and Travelling Allowances for registration/erection.</p>
+                                        <p>4) Approval of drawing of pipe lines.</p>
+                                        <p>5) Approval of contractor/erector.</p>
+                                        <p>6) Welding Procedure Specification approval.</p>
+                                        <p>7) Simulation Test of Welders.</p>
+                                        <p>8) Material inspection of economiser and pipe lines.</p>
+                                        <p>9) Physical and chemical testing of pipe lines</p>
+                                        <p>10) Fit-up inspection of pressure parts of economiser and pipe lines.</p>
+                                        <p>11) Inspection after completion of welding and NDT marking for economiser and pipe lines.</p>
+                                        <p>12) Submission of satisfactory NDT report.</p>
+                                        <p>13) Post weld heat treatment if required.</p>
+                                        <p>14) PMI testing for all alloy steel materials of economiser and pipe lines.</p>
+                                        <p>15) Approval of pressure parts calculation of economiser.</p>
+                                        <p>16) Hydraulic test of economiser and pipe lines.</p>
+                                        <p>17) Approval of form-IIIA of pipe lines.</p>
+                                        <p>18) Issue of Provisional certificate of economiser.</p>
+                                        <p>19) Allotment of registration number of economiser.</p>
+                                        <p>20) Engraving of registration number of economiser.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#section7" aria-expanded="true" class=""> Standard Operating Procedure for Erection of Steam and Feed Pipe Lines <span class="glyphicon pull-right glyphicon-plus"></span></a></h4>
+                                    </div>
+                                    
+                                    <!--<div id="section1" class="panel-collapse collapse in">-->
+                                    <div id="section7" class="panel-collapse collapse" aria-expanded="true">
+                                      <div class="panel-body">
+                                        <p>1) Erection Meeting for installation of pipe lines.</p>
+                                        <p>2) Approval of drawing of pipe lines.</p>
+                                        <p>3) Submission of application for erection of pipe lines.</p>
+                                        <p>4) Submission of requisite Travelling Allowances for erection of pipe lines.</p>
+                                        <p>5) Approval of contractor/erector.</p>
+                                        <p>6) Welding Procedure Specification approval.</p>
+                                        <p>7) Simulation Test of Welders.</p>
+                                        <p>8) Material inspection of pipe lines.</p>
+                                        <p>9) Physical and chemical testing of pipe lines</p>
+                                        <p>10) Fit-up inspection of pressure parts of pipe lines.</p>
+                                        <p>11) Inspection after completion of welding and NDT marking for pipe lines.</p>
+                                        <p>12) Submission of satisfactory NDT report.</p>
+                                        <p>13) Post weld heat treatment if required.</p>
+                                        <p>14) PMI testing for all alloy steel materials of pipe lines.</p>
+                                        <p>15) Hydraulic test of pipe lines.</p>
+                                        <p>16) Submission of form-IIIA of pipe lines along with requisite fees for inspection.</p>
+                                        <p>17) Approval of form-IIIA of pipe lines.</p>
+                                        <p>18) Issue of Identification Number for pipe lines.</p>
+                                        <p>19) Engraving of Identification number of pipe lines.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#section8" aria-expanded="true" class=""> Standard Operating Procedure for Erection of Boilers <span class="glyphicon pull-right glyphicon-plus"></span></a> </h4>
+                                    </div>
+                                    
+                                    <div id="section8" class="panel-collapse collapse" aria-expanded="true">
+                                      <div class="panel-body">
+                                        <p>1) Submission of registration folder along with application for registration/erection of boiler.</p>
+                                        <p>2) Erection Meeting for registration/erection of the boiler.</p>
+                                        <p>3) Submission of requisite fees and Travelling Allowances for registration/erection.</p>
+                                        <p>4) Approval of drawing of pipe lines.</p>
+                                        <p>5) Approval of contractor/erector.</p>
+                                        <p>6) Welding Procedure Specification approval.</p>
+                                        <p>7) Simulation Test of Welders.</p>
+                                        <p>8) Material inspection of boiler and pipe lines.</p>
+                                        <p>9) Physical and chemical testing of pipe lines</p>
+                                        <p>10) Fit-up inspection of pressure parts of boiler and pipe lines.</p>
+                                        <p>11) Inspection after completion of welding and NDT marking for boiler and pipe lines.</p>
+                                        <p>12) Submission of satisfactory NDT report.</p>
+                                        <p>13) Post weld heat treatment if required.</p>
+                                        <p>14) PMI testing for all alloy steel materials of boiler and pipe lines.</p>
+                                        <p>15) Approval of pressure parts calculation of boiler.</p>
+                                        <p>16) Hydraulic test of boiler and pipe lines.</p>
+                                        <p>17) Issue of FORM II C.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#section9" aria-expanded="true" class=""> Standard Operating Procedure for Erection of Economiser <span class="glyphicon pull-right glyphicon-plus"></span></a> </h4>
+                                    </div>
+                                    
+                                    <!--<div id="section1" class="panel-collapse collapse in">-->
+                                    <div id="section9" class="panel-collapse collapse" aria-expanded="true">
+                                      <div class="panel-body">
+                                        <p>1) Submission of registration folder along with application for registration/erection of economiser.</p>
+                                        <p>2) Erection Meeting for registration/erection of the economiser.</p>
+                                        <p>3) Submission of requisite fees and Travelling Allowances for registration/erection.</p>
+                                        <p>4) Approval of drawing of pipe lines.</p>
+                                        <p>5) Approval of contractor/erector.</p>
+                                        <p>6) Welding Procedure Specification approval.</p>
+                                        <p>7) Simulation Test of Welders.</p>
+                                        <p>8) Material inspection of economiser and pipe lines.</p>
+                                        <p>9) Physical and chemical testing of pipe lines</p>
+                                        <p>10) Fit-up inspection of pressure parts of economiser and pipe lines.</p>
+                                        <p>11) Inspection after completion of welding and NDT marking for economiser and pipe lines.</p>
+                                        <p>12) Submission of satisfactory NDT report.</p>
+                                        <p>13) Post weld heat treatment if required.</p>
+                                        <p>14) PMI testing for all alloy steel materials of economiser and pipe lines.</p>
+                                        <p>15) Approval of pressure parts calculation of economiser.</p>
+                                        <p>16) Hydraulic test of economiser and pipe lines.</p>
+                                        <p>17) Issue of FORM II C.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#section10" aria-expanded="true" class="">Standard Operating Procedure for Manufacturing of Boilers <span class="glyphicon pull-right glyphicon-plus"></span></a></h4>
+                                    </div>
+                                    <div id="section10" class="panel-collapse collapse" aria-expanded="true">
+                                      <div class="panel-body">
+                                        <p>1) Submission of application with fees and approved drawing.</p>
+                                        <p>2) Welding Procedure Specification approval.</p>
+                                        <p>3) Welder qualification test.</p>
+                                        <p>4) Material inspection of boiler and pipe lines.</p>
+                                        <p>5) Physical and chemical testing of Raw Materials if not directly purchased from manufacturer.</p>
+                                        <p>6) Fit-up inspection of pressure parts of boiler and pipe lines.</p>
+                                        <p>7) Inspection after completion of welding and NDT marking for boiler and pipe lines.</p>
+                                        <p>8) Submission of satisfactory NDT report.</p>
+                                        <p>9) Post weld heat treatment if required.</p>
+                                        <p>10) PMI testing for all alloy steel materials of boiler and pipe lines.</p>
+                                        <p>11) Hydraulic test of boiler and pipe lines.</p>
+                                        <p>12) Final Inspection and Stamping.</p>
+                                        <p>13) Issue of Manufacturer Certificate.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#section11" aria-expanded="true" class=""> Standard Operating Procedure for Manufacturing of Economiser <span class="glyphicon pull-right glyphicon-plus"></span></a></h4>
+                                    </div>
+                                    
+                                    <!--<div id="section1" class="panel-collapse collapse in">-->
+                                    <div id="section11" class="panel-collapse collapse" aria-expanded="true">
+                                      <div class="panel-body">
+                                        <p>1) Submission of application with fees and approved drawing.</p>
+                                        <p>2) Welding Procedure Specification approval.</p>
+                                        <p>3) Welder qualification test.</p>
+                                        <p>4) Material inspection.</p>
+                                        <p>5) Physical and chemical testing of Raw Materials if not directly purchased from manufacturer.</p>
+                                        <p>6) Fit-up inspection of pressure parts.</p>
+                                        <p>7) Inspection after completion of welding and NDT marking.</p>
+                                        <p>8) Submission of satisfactory NDT report.</p>
+                                        <p>9) Post weld heat treatment if required.</p>
+                                        <p>10) PMI testing for all alloy steel materials.</p>
+                                        <p>11) Hydraulic test.</p>
+                                        <p>12) Final Inspection and Stamping.</p>
+                                        <p>13) Issue of Manufacturer Certificate.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#section12" aria-expanded="true" class=""> Standard Operating Procedure for Approval / Recognition of Manufacturer <span class="glyphicon pull-right glyphicon-plus"></span></a></h4>
+                                    </div>
+                                    
+                                    <!--<div id="section1" class="panel-collapse collapse in">-->
+                                    <div id="section12" class="panel-collapse collapse" aria-expanded="true">
+                                      <div class="panel-body">
+                                        <p>1) Submission of application in Standard Format.</p>
+                                        <p>2) Inspection of Premises, Verification of Manpower along with their Experience and Machineries.</p>
+                                        <p>3) Report Submission to the Director.</p>
+                                        <p>4) Issue of Approval Letter by Director after necessary interaction.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#section13" aria-expanded="true" class=""> Standard Operating Procedure for Approval of Erectors <span class="glyphicon pull-right glyphicon-plus"></span></a></h4>
+                                    </div>
+                                    
+                                    <!--<div id="section1" class="panel-collapse collapse in">-->
+                                    <div id="section13" class="panel-collapse collapse" aria-expanded="true">
+                                      <div class="panel-body">
+                                        <p>1) Submission of Application in standard format (FORM - XVIII as per IBR).</p>
+                                        <p>2) Submission of requisite fees for inspection of boiler in the head of accounts : "0230-00-103-001-14"- Service fees (14) online by IFMS-GRIPS portal in <a href="http://www.wbifms.gov.in">www.wbifms.gov.in</a>.</p>
+                                        <p>3) Submission of requisite Travelling Allowance in the head of accounts : "0230-00-103-002-27"- Other Receipts (27) online by IFMS-GRIPS portal in <a href="http://www.wbifms.gov.in">www.wbifms.gov.in</a>.</p>
+                                        <p>4) Inspection of machineries available as per submitted doucuments, premises at the given address.</p>
+                                        <p>5) Verification of Technical Personnel as per submitted list and their experience.</p>
+                                        <p>6) Submission of report to the Director.</p>
+                                        <p>7) Issue of Approval Letter by Director after necessary interaction.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Operation-Commissionerate">
+                                <h2>Coming Soon</h2>
+                                <!--<div class="panel-group Custom_AC_tab" role="tablist" aria-multiselectable="true">
+                                  <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab">
+                                      <h4 class="panel-title"> <a data-toggle="collapse" data-parent="#accordion" href="#MTab_1-STab_1-InTTab_1-AC1" aria-expanded="true">REGISTRATION OF PRINCIPAL EMPLOYER UNDER CONTRACT LABOUR (REGULATION & ABOLITION) ACT, 1970</a> </h4>
+                                    </div>
+                                    <div id="MTab_1-STab_1-InTTab_1-AC1" class="panel-collapse collapse in" role="tabpanel" >
+                                      <div class="panel-body">
+                                        <div class="sop_cntainer_box">
+                                          <div class="sop_content">
+                                            <div class="step_ord">Step-1</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong><span title="Principal Employer...">Principal Employer</span>.<br>
+                                              <strong>Activity:- </strong>The applicant shall open ‘www.wblc.gov.in’ and will select e services and Registration of <span title="Principal Employer...">Principal Employer</span> thereafter. A guide line will appear agreeing which he/she will land up in the log in page. If the applicant is an already registered user, he/she will log in using the credentials. For a new user he/she fills up a Common Application Form(CAF) in the Portal of wblc.gov.in, which includes mainly applicant’s Personal Information including PAN/Voters ID/Aadhar/Driving License, Trade License Number, any other unique number tagged with that establishment, Contact Information, Establishment Information, Number of workers employed, Login Information etc. with Preferred User name &amp; Password and create a User Credential. </div>
+                                          </div>
+                                          <div class="sop_content">
+                                            <div class="step_ord">Step-2</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong><span title="Principal Employer...">Principal Employer</span>.<br>
+                                              <strong>Activity:- </strong>Logs into the system with the valid credentials and captcha and lands up in the Dashboard. </div>
+                                          </div>
+                                          <div class="sop_content">
+                                            <div class="step_ord">Step-3</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong><span title="Principal Employer...">Principal Employer</span>.<br>
+                                              <strong>Activity:- </strong>Selects NEW REGISTRATION from menu and applies for online Registration of <span title="Principal Employer...">Principal Employer</span> under the Contract Labour (Regulation and Abolition) Act , 1970 by filling up necessary information in the Form and uploads self-certified copies of required documents.<br>
+                                              <strong>Documents Involved: </strong>I.Valid Trade License, II.Articles of Association and Memorandum of Association/Partnership Deed, III.Factory License if any, IV.Other certificates of registration in case of other than company, proprietorship or partnership firm like cooperative, Trustees etc., V.Any other document in support of correctness of the particulars mentioned in the application if required </div>
+                                          </div>
+                                          <div class="sop_content">
+                                            <div class="step_ord">Step-4</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong><span title="Principal Employer...">Principal Employer</span>.<br>
+                                              <strong>Activity:- </strong>Add valid contractor information into the system. </div>
+                                          </div>
+                                          <div class="sop_content">
+                                            <div class="step_ord">Step-5</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong><span title="Principal Employer...">Principal Employer</span>.<br>
+                                              <strong>Activity:- </strong>Views the Filled in Information in the Application Preview Section before Final Submission or in case of correction rolls back to earlier sections and makes corrections and submit the application. The application is then reverted back to concerned officials according to jurisdiction  for verification. </div>
+                                          </div>
+                                          <div class="sop_content">
+                                            <div class="step_ord">Step-6</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong>Inspector concerned<br>
+                                              <strong>Activity:- </strong>Logs into the system with credentials and lands up in the Dashboard and selects the application from the Application List. </div>
+                                          </div>
+                                          <div class="sop_content">
+                                            <div class="step_ord">Step-7</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong>Inspector concerned<br>
+                                              <strong>Activity:- </strong>He views the application and verifies details along with uploaded documents one by one and marks Tick (√) which he finds correct and leaves the one as not verified which he finds Incorrect. </div>
+                                          </div>
+                                          <div class="sop_content">
+                                            <div class="step_ord">Step-8</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong>Inspector concerned<br>
+                                              <strong>Activity:- </strong>He may reverts back to applicant for Correction / Rectification with remarks in case any correction or rectification is required or can forward it to the ALC for approval or rejection. </div>
+                                          </div>
+                                          <div class="sop_content">
+                                            <div class="step_ord">Step-9</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong><span title="Principal Employer...">Principal Employer</span>.<br>
+                                              <strong>Activity:- </strong>Logs into the system with the credentials and views the status of application marked for correction if sent back by the Inspector, makes the corrections and resubmits the application. </div>
+                                          </div>
+                                          <div class="sop_content">
+                                            <div class="step_ord">Step-10</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong>Inspector concerned<br>
+                                              <strong>Activity:- </strong>Logs into the system with Credentials, verifies or re-verifies the application as in the case may be, if found satisfactory forwards the same to the ALC concerned.. </div>
+                                          </div>
+                                          <div class="sop_content">
+                                            <div class="step_ord">Step-11</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong>ALC of the Subdivision/RLO<br>
+                                              <strong>Activity:- </strong>Logs into the system with the credentials and views all the applications forwarded by Inspectors and if found satisfactory allows for Payment by the applicant. In case ALC finds something that is not satisfactory in the application he may revert it back either to the applicant or the Inspector as he deems fit.<br>
+                                              ALC can also reject the application if finds so after observing principles of natural justice. </div>
+                                          </div>
+                                          <div class="sop_content">
+                                            <div class="step_ord">Step-12</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong><span title="Principal Employer...">Principal Employer</span>.<br>
+                                              <strong>Activity:- </strong>Views application status in the Dashboard marked as PAYMENT (PAY NOW) by ALC and makes payment Online through GRIPS. <br>
+                                              After successfull payment of fees statutory FORM-I is automatically generated. Applicant can digitally/in-hand signs the FORM-I and upload it. After FORM-I is successfully uploaded, an acknowledgement is generated. <br>
+                                              In case it is returned back by the ALC he views on the Dashboard the status of application marked for correction and makes the necessary corrections and resubmits the application.<br>
+                                              <strong>Documents Involved: </strong>FORM-I </div>
+                                          </div>
+                                          <div class="sop_content">
+                                            <div class="step_ord">Step-13</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong>ALC of the Subdivision/RLO<br>
+                                              <strong>Activity:- </strong>Logs into the system with the credentials. After satisfactory payment and correct FORM-I is uploaded with signature, ALC issues Digitally signed Registration Certificate&ndash; FORM-II and Uploads in the system. FORM-Vs for Contractors engaged under the <span title="Principal Employer...">Principal Employer</span> are automatically generated. </div>
+                                          </div>
+                                          <div class="sop_content">
+                                            <div class="step_ord">Step-14</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong><span title="Principal Employer...">Principal Employer</span>.<br>
+                                              <strong>Activity:- </strong>Logs into the system with the Credentials and Views the FORM-V, digitally/in-hand signs and send via e-mail or through SMS the Unique number of Form-V to Contractors for applying of License. </div>
+                                          </div>
+                                          <div class="sop_content">
+                                            <div class="step_ord">Note:</div>
+                                            <div class="res_activity"> <strong>Responsibility: </strong><span title="Principal Employer...">Principal Employer</span>.<br>
+                                              <strong>Activity:- </strong>Track Status of Application through SMS Alerts generated through the System starting from Creating Login Credentials, Submission of Application, Correction Required, Payment of Fees , Status of Approval or Rejection , Status on Issue of Registration Certificate and viewing through his dashboard. </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab">
+                                      <h4 class="panel-title"> <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#MTab_1-STab_1-InTTab_1-AC2" aria-expanded="false">LICENSING OF CONTRACTORS UNDER CONTRACT LABOUR (REGULATION & ABOLITION) ACT, 1970</a> </h4>
+                                    </div>
+                                    <div id="MTab_1-STab_1-InTTab_1-AC2" class="panel-collapse collapse" role="tabpanel">
+                                      <div class="panel-body"> Coming Soon </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab">
+                                      <h4 class="panel-title"> <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#MTab_1-STab_1-InTTab_1-AC3" aria-expanded="false">REGISTRATION OF ESTABLISHMENT UNDER BUILDING AND OTHER CONSTRUCTION WORKERS ACT 1996 AND RULES 2004</a> </h4>
+                                    </div>
+                                    <div id="MTab_1-STab_1-InTTab_1-AC3" class="panel-collapse collapse" role="tabpanel">
+                                      <div class="panel-body">Coming Soon</div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab">
+                                      <h4 class="panel-title"> <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#MTab_1-STab_1-InTTab_1-AC4" aria-expanded="false">REGISTRATION OF PRINCIPAL EMPLOYER UNDER INTER STATE MIGRANT WORKMEN (REGULATION OF EMPLOYMENT AND CONDITIONS OF SERVICE) ACT, 1979</a> </h4>
+                                    </div>
+                                    <div id="MTab_1-STab_1-InTTab_1-AC4" class="panel-collapse collapse" role="tabpanel">
+                                      <div class="panel-body">Coming Soon</div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab">
+                                      <h4 class="panel-title"> <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#MTab_1-STab_1-InTTab_1-AC5" aria-expanded="false">INSPECTION NOTE - UPLOAD BY INSPECTORS & DOWNLOAD BY APPLICANT</a> </h4>
+                                    </div>
+                                    <div id="MTab_1-STab_1-InTTab_1-AC5" class="panel-collapse collapse" role="tabpanel">
+                                      <div class="panel-body">Coming Soon</div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab">
+                                      <h4 class="panel-title"> <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#MTab_1-STab_1-InTTab_1-AC6" aria-expanded="false">INSPECTOR RANDOMIZATION - FOR DEPUTY LABOUR COMMISSIONER (DLC) & ASSISTANT LABOUR COMMISSIONER (ALC)</a> </h4>
+                                    </div>
+                                    <div id="MTab_1-STab_1-InTTab_1-AC6" class="panel-collapse collapse" role="tabpanel">
+                                      <div class="panel-body">Coming Soon</div>
+                                    </div>
+                                  </div>
+                                </div>--> 
+                              </div>
+                              
+                              <div class="tab-pane fade in" id="Pre-Operation-Factory">
+                              <div class="panel-group Custom_AC_tab" role="tablist" aria-multiselectable="true">
+                                <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"> <a data-toggle="collapse" data-parent="#accordion" href="#sop-pre-op-factory1">Registration and Grant of Factory licence </a> </h4>
+                                    </div>
+                                    <div id="sop-pre-op-factory1" class="panel-collapse collapse in">
+                                      <div class="panel-body">
+                                        <p> a) Persons authorised by the designated officer (as approved by the controlling officer) shall receive the application and issue acknowledgement in Form No.1 prescribed under The West Bengal Right to Public Services act. 2013 & rules framed thereunder, subject to receipt of the enclosures as per annexed checklist.</p>
+                                        <p>b) The designated officer as well as officers higher in rank as per existing office procedure shall verify the application and other documents and visit the site as per requirement.</p>
+                                        <p>c) Information regarding recommendation or rectification or rejection of the application (with reasons stated thereof), as applicable during the entire process of verification of application will be intimated to the applicant within the stipulated period of service.</p>
+                                        <p>d) Information regarding rectification shall be informed to the applicant by way of "Letter for rectification" which is to be complied by the applicant within 7 days of the issue of the same, so as to provide the aforesaid service within the stipulated period, failing which the application will be liable for rejection.</p>
+                                        <p>e) The rejection under this Act (i.e. West Bengal Right to Public Services Act, 2013) shall not entail the applicant to claim any aberration from the provisions of the Factories Act, 1948 and Rules framed thereunder.</p>
+                                        <p>f) Once the application is rejected, the applicant will he required to submit a fresh application forthwith in compliance of the provisions of the Factories Act. 1948 and Rules framed there under alongwith the details of fees deposited in the earlier applications together with supporting documents.</p>
+                                        <p>g) Registration and licence is to be collected from the Head office of the designated officer by the applicant or by his authorised representative.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                              </div>    
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Operation-Shop">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="tab-pane" id="Pre-Establishment">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Pre-Establishment-Boilers" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Pre-Establishment-Commissionerate" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Pre-Establishment-Factory" data-toggle="tab">Directorate of Factories</a> </li>
+                                <li> <a href="#Pre-Establishment-Shop" data-toggle="tab">Shops and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Pre-Establishment-Boilers">
+                                <h2>Not Applicable</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Establishment-Commissionerate">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              
+                              <div class="tab-pane fade in" id="Pre-Establishment-Factory">
+                               
+                               
+                               
+                               <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"> <a data-toggle="collapse" data-parent="#accordion" href="#sop-pre-est-factory1">Approval of Factory Plan </a> </h4>
+                                    </div>
+                                    <div id="sop-pre-est-factory1" class="panel-collapse collapse in">
+                                      <div class="panel-body">
+                                        <p> a) Persons authorised by the designated officer (as approved by the controlling officer) shall receive the application and issue acknowledgement in Form No.1 prescribed under The West Bengal Right to Public Services act. 2013 & rules framed thereunder, subject to receipt of the enclosures as per annexed checklist..</p>
+                                        <p>b)The designated officer as well as officers higher in rank as per existing office procedure shall scrutinize the plan and other documents and visit the site as per requirement.</p>
+                                        <p>c) Information regarding recommendation or rectification or rejection of a plan (with reasons stated thereof), as applicable during the entire process of plan scrutiny will be intimated to the applicant within the stipulated period of service.</p>
+                                        <p>d) Information regarding rectification shall be informed to the applicant by way of "Letter for rectification" which is to be complied by the applicant within 7 days of the issue of the same, so as to provide the aforesaid service within the stipulated period, failing which the application will be liable for rejection.</p>
+                                        <p>e) The rejection under this Act (i.e. West Bengal Right to Public Services Act, 2013) shall not entail the applicant to claim any aberration from the provisions of the Factories Act, 1948 and Rules framed thereunder.</p>
+                                        <p>f) Once the application is rejected, the applicant will be required to submit a fresh application forthwith in compliance of the provisions of the Factories Act. 1948 and Rules framed thereunder.</p>
+                                        <p>g) Approved plan is to he collected from the Head office of the designated officer by the applicant or by his authorised representative.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                               
+                               
+                               
+                               
+                               
+                               
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Establishment-Shop">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="tab-pane" id="Post-Operation">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Post-Operation-Boilers" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Post-Operation-Commissionerate" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Post-Operation-Factory" data-toggle="tab">Directorate of Factories</a> </li>
+                                <li> <a href="#Post-Operation-Shop" data-toggle="tab">Shops and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Post-Operation-Boilers">
+                                <div class="panel-group Custom_AC_tab" role="tablist" aria-multiselectable="true">
+                                  <h2>Not Applicable</h2>
+                                </div>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Commissionerate">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Factory">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Shop">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tab-pane" id="timeline">
+                    <div class="tabbable tabs-left">
+                      <ul class=" col-sm-2 nav nav-tabs" role="tablist">
+                        <li role="presentation" class="active"><a href="#Pre-Operation-timeline" aria-controls="home" role="tab" data-toggle="tab">Pre Operation</a></li>
+                        <li role="presentation"><a href="#Pre-Establishment-timeline" aria-controls="home" role="tab" data-toggle="tab">Pre Establishment</a></li>
+                        <li role="presentation"><a href="#Post-Operation-timeline" aria-controls="home" role="tab" data-toggle="tab">Others</a></li>
+                      </ul>
+                      <div class="col-sm-10 tab-content STab_content">
+                        <div class="tab-pane active" id="Pre-Operation-timeline">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Pre-Operation-Boilers-timeline" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Pre-Operation-Commissionerate-timeline" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Pre-Operation-Factory-timeline" data-toggle="tab">Directorate of Factories</a> </li>
+                                <li> <a href="#Pre-Operation-Shop-timeline" data-toggle="tab">Shops and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Pre-Operation-Boilers-timeline">
+                                <div class="panel-group Custom_AC_tab" role="tablist" aria-multiselectable="true">
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"> <a data-toggle="collapse" data-parent="#accordion" href="#Pre-Operation-Boilers-timeline1">Timeline for Service Delivery, Directorate of Boilers (GoWB) </a> </h4>
+                                    </div>
+                                    <div id="Pre-Operation-Boilers-timeline1" class="panel-collapse collapse in">
+                                      <div class="panel-body">
+                                        <div class="timeline">
+                                          <table border="1" cellpadding="0" cellspacing="0" class="table" style="width:100%">
+                                            <thead>
+                                              <tr>
+                                                <th rowspan="2">Sl. No.</th>
+                                                <th rowspan="2">Services</th>
+                                                <th rowspan="2">Designated Officer</th>
+                                                <th rowspan="2">Stipulated Time Limit</th>
+                                                <th colspan="2">Appellate Officer</th>
+                                                <th colspan="2">Reviewing Officer</th>
+                                              </tr>
+                                              <tr>
+                                                <th>Designation</th>
+                                                <th>Stipulated Time Limit</th>
+                                                <th>Designation</th>
+                                                <th>Stipulated Time Limit</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                              <tr>
+                                                <td>1.</td>
+                                                <td>Issuance of provisional order of Boiler under Form V.</td>
+                                                <td>Assistant Director of Boilers/Deputy Director of Boilers as applicable.</td>
+                                                <td>15days after satisfactory inspection</td>
+                                                <td>Joint Director of Boilers</td>
+                                                <td>45Days</td>
+                                                <td>Director of Boilers</td>
+                                                <td>60Days</td>
+                                              </tr>
+                                              <tr>
+                                                <td>2.</td>
+                                                <td>Issuance of Final Certificate of Boiler under Form VI.</td>
+                                                <td>Assistant Director of Boilers/Deputy Director of Boilers as applicable.</td>
+                                                <td>6 months after satisfactory inspection</td>
+                                                <td>Joint Director of Boilers</td>
+                                                <td>45Days</td>
+                                                <td>Director of Boilers</td>
+                                                <td>60Days</td>
+                                              </tr>
+                                              <tr>
+                                                <td>3.</td>
+                                                <td>Examination of Boiler under Registration.</td>
+                                                <td>Assistant Director of Boilers/Deputy Director of Boilers as applicable.</td>
+                                                <td>30days from the date of receipt of the application for Registration</td>
+                                                <td>Joint Director of Boilers</td>
+                                                <td>45Days</td>
+                                                <td>Director of Boilers</td>
+                                                <td>60Days</td>
+                                              </tr>
+                                              <tr>
+                                                <td>4.</td>
+                                                <td>Inspection of Boilers for renewal of certificates.</td>
+                                                <td>Assistant Director of Boilers/Deputy Director of Boilers as applicable.</td>
+                                                <td>15days from the date of receipt of the application.</td>
+                                                <td>Joint Director of Boilers</td>
+                                                <td>45Days</td>
+                                                <td>Director of Boilers</td>
+                                                <td>60Days</td>
+                                              </tr>
+                                            </tbody>
+                                          </table>
+                                         <br /> <p><strong>Click <a href="https://wbboilers.gov.in/sites/default/files/time-lines-for-service-delivery.pdf" target="_blank">
+                                         <strong style="color:#C30">HERE</strong></a> to view / download the timeline for the delivery of different services of Directorate of Boilers (GoWB) - Part 1 <br>
+                                            </strong></p><br /> 
+                                          <table border="1" cellpadding="0" cellspacing="0" class="table" style="width:100%">
+                                            <thead>
+                                              <tr>
+                                                <th rowspan="2">Sl. No.</th>
+                                                <th rowspan="2">Services</th>
+                                                <th rowspan="2">Designated Officer</th>
+                                                <th rowspan="2">Stipulated Time Limit</th>
+                                                <th colspan="2">Appellate Officer</th>
+                                                <th colspan="2">Reviewing Officer</th>
+                                              </tr>
+                                              <tr>
+                                                <th>Designation</th>
+                                                <th>Stipulated Time Limit</th>
+                                                <th>Designation</th>
+                                                <th>Stipulated Time Limit</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                              <tr>
+                                                <td>5.</td>
+                                                <td>Issuance of Certificate of Boilers/Economiser, their components, etc. during manufacturing.</td>
+                                                <td>Assistant Director of Boilers/Dy.Director of Boilers as applicable.</td>
+                                                <td>30days after submission of complete authentic documents and fees.</td>
+                                                <td>Joint Director of Boilers</td>
+                                                <td>45Days</td>
+                                                <td>Director of Boilers</td>
+                                                <td>60Days</td>
+                                              </tr>
+                                              <tr>
+                                                <td>6.</td>
+                                                <td>Examination and approval of Drawings.</td>
+                                                <td>Assistant Director of Boilers/Dy.Director of Boilers as applicable.</td>
+                                                <td>45days after submission of complete authentic drawings, documents and fees.</td>
+                                                <td>Joint Director of Boilers</td>
+                                                <td>45Days</td>
+                                                <td>Director of Boilers</td>
+                                                <td>60Days</td>
+                                              </tr>
+                                              <tr>
+                                                <td>7.</td>
+                                                <td>Change of Ownership of Boilers/Economiser.</td>
+                                                <td>Assistant Director of Boilers/Dy.Director of Boilers as applicable.</td>
+                                                <td>60days after submission of complete authentic documents and fees.</td>
+                                                <td>Joint Director of Boilers</td>
+                                                <td>45Days</td>
+                                                <td>Director of Boilers</td>
+                                                <td>60Days</td>
+                                              </tr>
+                                              <tr>
+                                                <td>8.</td>
+                                                <td>Approval of Repairer/Erectors/MAnufacturer of Boiler and Pipe Line/Endorsement of Repairer/Erectors of Boiler and Pipe Line.</td>
+                                                <td>Assistant Director of Boilers/Dy.Director of Boilers as applicable.</td>
+                                                <td>30days after submission of complete authentic documents and fees.</td>
+                                                <td>Joint Director of Boilers</td>
+                                                <td>45Days</td>
+                                                <td>Director of Boilers</td>
+                                                <td>60Days</td>
+                                              </tr>
+                                              <tr>
+                                                <td>9.</td>
+                                                <td>Registration Of Steam and Feed Pipe Lines.</td>
+                                                <td>Assistant Director of Boilers/Dy.Director of Boilers as applicable.</td>
+                                                <td>30days after submission of complete authentic documents and fees.</td>
+                                                <td>Joint Director of Boilers</td>
+                                                <td>45Days</td>
+                                                <td>Director of Boilers</td>
+                                                <td>60Days</td>
+                                              </tr>
+                                              <tr>
+                                                <td>10.</td>
+                                                <td>Testing of Materials at Testing Laboratory.</td>
+                                                <td>Inspecting Officer/Superintendent of testing laboratory.</td>
+                                                <td>7days after completion of testing.</td>
+                                                <td>Joint Director of Boilers</td>
+                                                <td>45Days</td>
+                                                <td>Director of Boilers</td>
+                                                <td>60Days</td>
+                                              </tr>
+                                              <tr>
+                                                <td>11.</td>
+                                                <td>Issuance of Erection Certificate of Boilers/Economiser.</td>
+                                                <td>Assistant Director of Boilers/Dy.Director of Boilers as applicable.</td>
+                                                <td>30days after completion of hydraulic test of Boilers/Econamiser.</td>
+                                                <td>Joint Director of Boilers</td>
+                                                <td>45Days</td>
+                                                <td>Director of Boilers</td>
+                                                <td>60Days</td>
+                                              </tr>
+                                            </tbody>
+                                          </table>
+                                         <br />  <p><strong>Click <a href="https://wbboilers.gov.in/sites/default/files/time-lines-for-service-delivery-rest.pdf" target="_blank">
+                                         <strong style="color:#C30">HERE</strong></a> to view / download the timeline for the delivery of different services of Directorate of Boilers (GoWB) - Part 2</strong></p><br /> 
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Operation-Commissionerate-timeline">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Operation-Factory-timeline">
+                                <div class="panel-group Custom_AC_tab" role="tablist" aria-multiselectable="true">
+                           		 <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"> <a>Registration and Grant of Factory licence <strong style="float:right">65 DAYS</strong></a> </h4>
+                                    </div>
+                                    </div>
+                                </div>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Operation-Shop-timeline">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="tab-pane" id="Pre-Establishment-timeline">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Pre-Establishment-Boilers-timeline" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Pre-Establishment-Commissionerate-timeline" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Pre-Establishment-Factory-timeline" data-toggle="tab">Directorate of Factories</a> </li>
+                                <li> <a href="#Pre-Establishment-Shop-timeline" data-toggle="tab">Shops and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Pre-Establishment-Boilers-timeline">
+                                <h2>Not Applicable</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Establishment-Commissionerate-timeline">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Establishment-Factory-timeline">
+                              <div class="panel-group Custom_AC_tab" role="tablist" aria-multiselectable="true">
+                           		 <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"> <a>Approval of Factory Plan	<strong style="float:right">50 DAYS</strong></a> </h4>
+                                    </div>
+                                    </div>
+                                </div>    
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Establishment-Shop-timeline">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="tab-pane" id="Post-Operation-timeline">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Post-Operation-Boilers-timeline" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Post-Operation-Commissionerate-timeline" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Post-Operation-Factory-timeline" data-toggle="tab">Factory</a> </li>
+                                <li> <a href="#Post-Operation-Shop-timeline" data-toggle="tab">Shops and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Post-Operation-Boilers">
+                                <div class="panel-group Custom_AC_tab" role="tablist" aria-multiselectable="true">
+                                  <h2>Not Applicable</h2>
+                                </div>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Commissionerate">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Factory">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Shop">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tab-pane" id="checklist">
+                    <div class="tabbable tabs-left">
+                      <ul class=" col-sm-2 nav nav-tabs" role="tablist">
+                        <li role="presentation" class="active"><a href="#Pre-Operation-checklist" aria-controls="home" role="tab" data-toggle="tab">Pre Operation</a></li>
+                        <li role="presentation"><a href="#Pre-Establishment-checklist" aria-controls="home" role="tab" data-toggle="tab">Pre Establishment</a></li>
+                        <li role="presentation"><a href="#Post-Operation-checklist" aria-controls="home" role="tab" data-toggle="tab">Others</a></li>
+                      </ul>
+                      <div class="col-sm-10 tab-content STab_content">
+                        <div class="tab-pane active" id="Pre-Operation-timeline">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Pre-Operation-Boilers-checklist" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Pre-Operation-Commissionerate-checklist" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Pre-Operation-Factory-checklist" data-toggle="tab">Directorate of Factories</a> </li>
+                                <li> <a href="#Pre-Operation-Shop-checklist" data-toggle="tab">Shops and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Pre-Operation-Boilers-checklist">
+                                <div class="panel-group Custom_AC_tab" id="boiler-checkList">
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checkList" href="#boiler-checkList1" class="collapsed">Check List for Registration of Boiler </a></h4>
+                                    </div>
+                                    <div id="boiler-checkList1" class="panel-collapse collapse in">
+                                      <div class="panel-body">
+                                        <p>1) Application for registration of the Boilers addressed to the Director of Boilers, W.B</p>
+                                        <p>2) Registration Folder containing form-II, form-III and form-IVA of IBR, original drawings of boiler and other relevant documents.</p>
+                                        <p>3) Requisite fees for registration of the boiler in the head of accounts: “0230-00-103-001-14” – Service fees(14) online by IFMS-GRIPS portal in <a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a>.</p>
+                                        <p>4) Requisite T.A for inspection of the boiler in the head of accounts: “<strong>0230-00-103-002-27</strong>” – Other Receipts(27) online by IFMS-GRIPS portal in <a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a>.</p>
+                                        <p>5) Original Certificates of all Mountings and Fittings.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checkList" href="#boiler-checkList2" class="collapsed">Check List for approval of Drawings </a></h4>
+                                    </div>
+                                    <div id="boiler-checkList2" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>1) Application for approval of drawing.</p>
+                                        <p>2) Three copies of all relevant drawings.</p>
+                                        <p>3) Requisite fees for scrutiny of drawings in the head of accounts:</p>
+                                        <p>“<strong>0230-00-103-001-14</strong>” – Service fees(14) online by IFMS-GRIPS portal in <a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a></p>
+                                        <p>4) All relevant reference drawings.</p>
+                                        <p>5) Flexibility analysis report, if required.</p>
+                                        <p>6) Valve schedule</p>
+                                        <p>7) Pressure parts calculation.</p>
+                                        <p>8) P &amp; I Diagram of the whole system.</p>
+                                        <p>9) Feed pump characteristic curve.</p>
+                                        <p>10) Copy of Existing Drawings.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checkList" href="#boiler-checkList3" class="collapsed">Check List for Renewal of Certificate of boiler </a></h4>
+                                    </div>
+                                    <div id="boiler-checkList3" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>1) Application for renewal of certificate along with form-B No.1 duly filled in.</p>
+                                        <p>2) Requisite fees for inspection of boiler in the head of accounts: “<strong>0230-00-103-001-14</strong>” – <strong>Service fees (14)</strong> online by <strong>IFMS-GRIPS</strong> portal in <a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a></p>
+                                        <p>3) Requisite Travelling Allowance in the head of accounts: “<strong>0230-00-103-002-27</strong>” – Other Receipts (27) online by IFMS-GRIPS portal in <a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a></p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"> <a data-toggle="collapse" data-parent="#boiler-checkList" href="#boiler-checkList4" class="collapsed">Check List for Transfer of Ownership of Boiler </a></h4>
+                                    </div>
+                                    <div id="boiler-checkList4" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>1) Application for change of ownership by the proposed owner.</p>
+                                        <p>2) Sell letter.</p>
+                                        <p>3) Self Declaration for No Objection Certificate from the seller of the boiler for change of ownership of boiler.</p>
+                                        <p>4) Self Declaration of the proposed owner for change of ownership of boiler.</p>
+                                        <p>5) Requisite fees for change of ownership in the head of accounts: “<strong>0230-00-103-001-14</strong>” – Service fees(14) online by <strong>IFMS-GRIPS</strong> portal in <a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a></p>
+                                        <p>6) Copy of Trade license, Electric Bill, Voter Card, PAN Card etc.</p>
+                                        <p>7) Passport size Photograph of proposed owner.</p>
+                                        <p>8) Other relevant documents if required.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checkList" href="#boiler-checkList5" class="collapsed">Check List for endorsement of contractor / erector of boiler </a></h4>
+                                    </div>
+                                    <div id="boiler-checkList5" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>1) Forwarding letter by the owner.</p>
+                                        <p>2) Application in prescribed format.</p>
+                                        <p>3) Requisite fees for endorsement in the head of accounts: “<strong>0230-00-103-001-14</strong>” – Service fees(14) online by IFMS-GRIPS portal in <a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a></p>
+                                        <p>4) Copy of drawing approval letter in case of new erection or modification of boiler / pipe line.</p>
+                                        <p>5) Copy of repairing report in case of repairing.</p>
+                                        <p>6) Documents of manpower of the contractor/erector.</p>
+                                        <p>7) List of machineries of the contractor.</p>
+                                        <p>8) Documents of experience of the contractor/erector.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checkList" href="#boiler-checkList6" class="collapsed">Check List for Remnant Life Assessment of Boiler </a></h4>
+                                    </div>
+                                    <div id="boiler-checkList6" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>1) Application for RLA study.</p>
+                                        <p>2) Submission of scheme of RLA for the proposed boiler.</p>
+                                        <p>3) Submission of requisite fees for inspection of boiler in the head of accounts: “<strong>0230-00-103-001-14</strong>” – Service fees(14) online by <strong>IFMS-GRIPS</strong> portal in <strong><a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a></strong></p>
+                                        <p>4) Requisite T.A for inspection of the boiler in the head of accounts:“<strong>0230-00-103-002-27</strong>” – Other Receipts(27) online by <strong>IFMS-GRIPS</strong> portal in <a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a></p>
+                                        <p>5) Submission of documents of the approved RLA organisation who will conduct the <strong>RLA studies</strong>.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checkList" href="#boiler-checkList7" class="collapsed">Check List for submission of Form-IIIA for Identification Number of Pipe Lines </a></h4>
+                                    </div>
+                                    <div id="boiler-checkList7" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>1) Application for approval of Form-IIIA.</p>
+                                        <p>2) Submission of requisite fees for inspection of pipe lines in the head of accounts: “<strong>0230-00-103-001-14</strong>” – Service fees(14) online by IFMS-GRIPS portal in <a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a>.</p>
+                                        <p>3) Submission of Form-IIIA for steam pipe line duly filled in.</p>
+                                        <p>4) Submission of Form-IIIA for feed pipe lines duly filled in.</p>
+                                        <p>5) copy of all relevant drawings of steam and feed pipe lines.</p>
+                                        <p>6) Copy of Drawing approval letter.</p>
+                                        <p>7) IBR certificates of all components of pipes and fittings ( like- Form IIIA, Form-IIIB, Form IIIC, Form-IIID, Form-IIIE, Form-IIIF, Form-IIIG etc.)</p>
+                                        <p>8) Copy of Contractor’s approval letter.</p>
+                                        <p>9) All NDT reports.</p>
+                                        <p>10) Post weld heat treatment report and stress relieving charts</p>
+                                        <p>11) PMI report.</p>
+                                        <p>12) Copy of all inspection reports of pipe lines under erection.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checkList" href="#boiler-checkList8" class="collapsed">Check List for Registration of Economiser </a></h4>
+                                    </div>
+                                    <div id="boiler-checkList8" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>1) Application for registration of the economiser addressed to the Director of Boilers, W.B</p>
+                                        <p>2) Registration Folder containing form-VII, form-VIII, original drawings of economiser and other relevant documents.</p>
+                                        <p>3) Requisite fees for registration of the economiser in the head of accounts: “<strong>0230-00-103-001-14</strong>” – Service fees(14) online by <strong>IFMS-GRIPS</strong> portal in <strong><a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a></strong></p>
+                                        <p>4) Requisite T.A for inspection of the boiler in the head of accounts: “<strong>0230-00-103-002-27</strong>” – Other Receipts(27) online by IFMS-GRIPS portal in <strong> <a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a></strong></p>
+                                        <p>5) Original Certificates of all Mountings and Fittings.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checkList" href="#boiler-checkList9" class="collapsed">Check List for Erection of Boiler</a></h4>
+                                    </div>
+                                    <div id="boiler-checkList9" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>1) Application for erection of the Boilers addressed to the Director of Boilers, W.B</p>
+                                        <p>2) Registration Folder containing form-II, form-III and form-IVA of IBR, original drawings of boiler and other relevant documents.</p>
+                                        <p>3) Requisite fees for erection of the boiler in the head of accounts: “0230-00-103-001-14” – Service fees(14) online by IFMS-GRIPS portal in <a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a>.</p>
+                                        <p>4) Requisite T.A for inspection of the boiler in the head of accounts: “<strong>0230-00-103-002-27</strong>” – Other Receipts(27) online by IFMS-GRIPS portal in <a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a>.</p>
+                                        <p>5) Original Certificates of all Mountings and Fittings.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checkList" href="#boiler-checkList10" class="collapsed">Check List for Manufacturing of Boiler </a></h4>
+                                    </div>
+                                    <div id="boiler-checkList10" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>1) Application addressed to DOB.</p>
+                                        <p>2) Requisite Fees.</p>
+                                        <p>3) Original Approved Drawings.</p>
+                                        <p>4) Original Certificate of all Raw Materials.</p>
+                                        <p>5) Certificate of Welding Consumables and Welders.</p>
+                                        <p>6) Approved WPS.</p>
+                                        <p>7) Calibration Certificate of Instruments.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading"> <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checkList" href="#boiler-checkList11" class="collapsed">
+                                    Check List for Erection of Economiser</a></h4>
+                                      </h4>
+                                    </div>
+                                    <div id="boiler-checkList11" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>1) Application for erection of the economiser addressed to the Director of Boilers, W.B</p>
+                                        <p>2) Registration Folder containing form-VII, form-VIII, original drawings of economiser and other relevant documents.</p>
+                                        <p>3) Requisite fees for erection of the economiser in the head of accounts: “<strong>0230-00-103-001-14</strong>” – Service fees(14) online by <strong>IFMS-GRIPS</strong> portal in <strong><a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a></strong></p>
+                                        <p>4) Requisite T.A for inspection of the economiser&nbsp;in the head of accounts: “<strong>0230-00-103-002-27</strong>” – Other Receipts(27) online by IFMS-GRIPS portal in <strong> <a href="http://www.wbfin.nic.in">www.wbfin.nic.in</a></strong></p>
+                                        <p>5) Original Certificates of all Mountings and Fittings.</p>
+                                        <p>6) Experience Certificate in the related field.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checkList12" href="#boiler-checkList1" class="collapsed">Check List for Manufacturing of Economizer </a></h4>
+                                    </div>
+                                    <div id="boiler-checkList12" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>1) Application addressed to DOB.</p>
+                                        <p>2) Requisite Fees.</p>
+                                        <p>3) Original Approved Drawings.</p>
+                                        <p>4) Original Certificate of all Raw Materials.</p>
+                                        <p>5) Certificate of Welding Consumables and Welders.</p>
+                                        <p>6) Approved WPS.</p>
+                                        <p>7) Calibration Certificate of Instruments.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checkList" href="#boiler-checkList13" class="collapsed">Check List for Approval and Renewal of Manufacturer </a></h4>
+                                    </div>
+                                    <div id="boiler-checkList13" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>1) Forwarding Letter by the applicant.</p>
+                                        <p>2) Application to Director along with duly filled Form in prescribed format.</p>
+                                        <p>3) Copy of Trade License, Lease Deed (if applicable), Tenancy Deed (if applicable), Photo Identity Proof.</p>
+                                        <p>4) List of Machineries as mentioned in the Form.</p>
+                                        <p>5) List of Technical Personnel along with experience.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checkList14" href="#boiler-checkList1" class="collapsed">Check List for Approval and Renewal of Erector </a></h4>
+                                    </div>
+                                    <div id="boiler-checkList14" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>1) Forwarding Letter by the applicant.</p>
+                                        <p>2) Application to Director along with duly filled Form in prescribed format.</p>
+                                        <p>3) Copy of Trade License, Lease Deed (if applicable), Tenancy Deed (if applicable), Photo Identity Proof.</p>
+                                        <p>4) List of Machineries as mentioned in the Form.</p>
+                                        <p>5) List of Technical Personnel along with experience.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Operation-Commissionerate-checklist">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Operation-Factory-checklist">
+                                <div class="panel-group Custom_AC_tab" id="boiler-checkList">
+                                  <div class="panel panel-default panel-faq">
+                                  <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        <a data-toggle="collapse" data-parent="#factory-checkList" href="#factory-checkList1" class="collapsed">
+                                         Registration & Licensing of Factories </a>
+                                    </h4>
+                                  </div>
+                                 <div id="factory-checkList1" class="panel-collapse collapse in">
+                                   <div class="panel-body">
+                                     <p>a) Duly filled in Common Application Form in duplicate.</p>
+                                     <p>b) Authenticated documents regarding deposition of fees.</p>
+                                     <p>c) Authenticated copy of Consent to operate issued by West Bengal pollution control Board for the factories having a hazardous process a 
+                                           defined under section 2 (cb) read with Schedule-I of the Factories Act, 1948 as amended or a Declaration for Exempted Category industries as 										   notified by West Bengal pollution control Board.</p>
+                                     <p>d) Authenticated copy of Purchase Deed/Lease Deed/Rent Receipt as the case may be in respect of the premises to be used as factory.</p>
+                                     <p>e) Authenticated copy of Trade Licence.</p>
+                                     <p>f) For Limited and Private Limited company-Authenticated copy of Memorandum of Article of Association For Partnership Firm-Authenticated copy 
+                                           of Partnership Deed.</p>
+                                     <p>g) Declaration duly signed by the occupier. showing the date of starting of manufacturing process (exact date) along with no. of workers 
+                                           engaged therein on that date and installed power, as applicable.</p>
+                                     <p>h) List of machineries along with HP/KW duly signed by the occupier.</p>
+                                     <p>i) Health and Safety policy, in case a hazardous process.</p>
+                                    </div>
+                                   </div>
+                                </div>
+                              
+                                </div>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Operation-Shop-checklist">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="tab-pane" id="Pre-Establishment-checklist">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Pre-Establishment-Boilers-checklist" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Pre-Establishment-Commissionerate-checklist" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Pre-Establishment-Factory-checklist" data-toggle="tab">Directorate of Factories</a> </li>
+                                <li> <a href="#Pre-Establishment-Shop-checklist" data-toggle="tab">Shops and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Pre-Establishment-Boilers-checklist">
+                                <h2>Not Applicable</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Establishment-Commissionerate-checklist">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Establishment-Factory-checklist">
+                               <div class="panel-group Custom_AC_tab" id="boiler-checkList">  
+                                <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title">
+                                          <a data-toggle="collapse" data-parent="#factory-checkList" href="#factory-checkList2" class="collapsed">Approval of Factory Plan </a>
+                                      </h4>
+                                    </div>
+                                   <div id="factory-checkList2" class="panel-collapse collapse in">
+                                     <div class="panel-body">
+                                        <p> a) Duly filled in Common Application Form (Part A & Part B).</p>
+                                        <p> b) Flow chart of the manufacturing process along with brief description.</p>
+                                        <p> c) Authenticated copy of Consent to establish from WBPCB.</a>.</p>
+                                        <p> d) Factory plan in duplicate for Kolkata/Howrah and 3 copies for regional offices.</a>.</p>
+                                        <p> e) Declaration, duly signed by the occupier, stating whether any process or activity of the factory is a hazardous process as defined under                                                section 2(cb) read with Schedule 1 of the Factories Act.1948 as amended.</p>
+                                      </div>
+                                     </div>
+                                  </div>
+                              </div> 
+                                
+                                
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Establishment-Shop-checklist">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="tab-pane" id="Post-Operation-checklist">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Post-Operation-Boilers-checklist" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Post-Operation-Commissionerate-checklist" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Post-Operation-Factory-checklist" data-toggle="tab">Directorate of Factories</a> </li>
+                                <li> <a href="#Post-Operation-Shop-checklist" data-toggle="tab">Shops and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Post-Operation-Boilers-checklist">
+                                <div class="panel-group Custom_AC_tab" role="tablist" aria-multiselectable="true">
+                                  <h2>Not Applicable</h2>
+                                </div>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Commissionerate-checklist">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Factory-checklist">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Shop-checklist">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tab-pane" id="sip">
+                    <div class="tabbable tabs-left">
+                      <ul class="col-sm-2 nav nav-tabs" role="tablist">
+                        <li role="presentation" class="active"><a href="#Pre-Operation-sip" aria-controls="home" role="tab" data-toggle="tab">Pre Operation</a></li>
+                        <li role="presentation"><a href="#Pre-Establishment-sip" aria-controls="home" role="tab" data-toggle="tab">Pre Establishment</a></li>
+                        <li role="presentation"><a href="#Post-Operation-sip" aria-controls="home" role="tab" data-toggle="tab">Others</a></li>
+                      </ul>
+                      <div class="col-sm-10 tab-content STab_content">
+                        <div class="tab-pane active" id="Pre-Operation-sip">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Pre-Operation-Boilers-sip" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Pre-Operation-Commissionerate-sip" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Pre-Operation-Factory-sip" data-toggle="tab">Directorate of Factories</a> </li>
+                                <li> <a href="#Pre-Operation-Shop-sip" data-toggle="tab">Shops and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Pre-Operation-Boilers-sip">
+                                <div class="panel-group Custom_AC_tab" id="boiler-sip">
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading active-faq">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-sip" href="#boiler-sip1">Standard Inspection Procedure for Dry and Thorough Inspection </a></h4>
+                                    </div>
+                                    <div id="boiler-sip1" class="panel-collapse in">
+                                      <div class="panel-body">
+                                        <p>a) Checking Registration Number of the Boiler.</p>
+                                        <p>b) Carry out thorough visual inspection of boiler inside and outside after proper cleaning.</p>
+                                        <p>c) Checking defects like crack, erosion, corrosion, bulging, pitting, deformation of pressure parts etc.</p>
+                                        <p>d) Checking of thickness of pressure parts.</p>
+                                        <p>e) Checking of Mountings and Fittings.</p>
+                                        <p>f) Witnessing Non-destructive Testing if required</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-sip" href="#boiler-sip2">Standard Inspection Procedure for Ground Inspection of Boiler under Registration / Erection </a></h4>
+                                    </div>
+                                    <div id="boiler-sip2" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>a) Verification of documents of pressure parts with relevant IBR certificates.</p>
+                                        <p>b) Verification of the approved drawings and documents.</p>
+                                        <p>c) Checking of the facsimile of the makers’ stamp and other identification marking with Form-II or other relevant IBR certificates.</p>
+                                        <p>d) Checking of the leading dimension of the pressure parts with the approved drawing.</p>
+                                        <p>e) Checking of the general condition of the pressure parts (like denting, deformation, crack pitting etc.).</p>
+                                        <p>f) Checking of all Mountings and Fittings with relevant IBR document.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-sip" href="#boiler-sip3">Standard Inspection Procedure for Material Inspection </a></h4>
+                                    </div>
+                                    <div id="boiler-sip3" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>a) Verification of the approved drawing corresponding to the material and documents.</p>
+                                        <p>b) Checking of the pressure part material with relevant IBR certificate and approved drawing (Name of Part, Material Specification, Heat No., Cast No., Class, Size, Identification Number, Stamping etc.)</p>
+                                        <p>c) Checking of leading dimension of the pressure parts with the approved drawing.</p>
+                                        <p>d) Checking of the general condition of the pressure parts visually.</p>
+                                        <p>e) Selection of Samples for Physical and Chemical testing if required.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-sip" href="#boiler-sip4">Standard Inspection Procedure for Fit-up / Tack weld Inspection </a></h4>
+                                    </div>
+                                    <div id="boiler-sip4" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>a) Verification of the approved drawing.</p>
+                                        <p>b) Verification of the Welder’s Certificate.</p>
+                                        <p>c) Verification of the certificates of the Welding Consumables.</p>
+                                        <p>d) Verification of the approval of the Contractor for the particular job.</p>
+                                        <p>e) Verification of the approved Welding Procedure Specification.</p>
+                                        <p>f) Verification of the satisfactory result of the site Simulation Test.</p>
+                                        <p>g) Verification of the satisfactory Check Test result of the pipe/tube/plate.</p>
+                                        <p>h) Checking of the Root gap, Weld groove profile, Alignment of the pressure parts to be welded as per approved drawing etc.</p>
+                                        <p>i) Ensure weld joint area to be free from rust, scale, oil, grease, crack etc.</p>
+                                        <p>j) Check provision for baking of electrode for low hydrogen electrode.</p>
+                                        <p>k) Check weld joint identification number.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-sip" href="#boiler-sip5">Standard Inspection Procedure for Visual Inspection of Welding </a></h4>
+                                    </div>
+                                    <div id="boiler-sip5" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>a) Visual inspection for checking the general condition of welding (like Spatter, Undercut, Reinforcement, Surface Crack, Leg length, Surface condition etc.)</p>
+                                        <p>b) Checking alignment of the pressure parts.</p>
+                                        <p>c) Witnessing Magnetic Particle Test, Dye Penetrant Test, Hardness Test etc. if required.</p>
+                                        <p>d) Selection of welded joints for Non-destructive Testing like Radiographic Testing, Ultrasonic Testing etc.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-sip" href="#boiler-sip6">Standard Inspection Procedure for Hydraulic Test </a></h4>
+                                    </div>
+                                    <div id="boiler-sip6" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>a) Verification of the satisfactory Non-destructive Testing report of the welded joints.</p>
+                                        <p>b) Verification of the Positive Material Identification (PMI) Report.</p>
+                                        <p>c) Verification of the Pressure Parts Calculation approval.</p>
+                                        <p>d) Verification of all previous Inspection Reports and PWHT Charts.</p>
+                                        <p>e) Checking of calibration certificate of pressure gauge.</p>
+                                        <p>f) Witnessing Hydraulic Test carried out as per Indian Boiler Regulations. 1950.</p>
+                                        <p>g) Checking of Deflection, Distortion and extension of pressure parts during Hydraulic Test.</p>
+                                        <p>h) Thorough Checking of the pressure parts during Hydraulic Test for detecting any leakage or sweating.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-sip" href="#boiler-sip7">Standard Inspection Procedure for Steam Test of Boiler </a></h4>
+                                    </div>
+                                    <div id="boiler-sip7" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>a) Verification of the Provisional Order of the Boiler.</p>
+                                        <p>b) Witnessing the Steam Test as per Indian Boiler Regulations, 1950.</p>
+                                        <p>c) Checking of the Popping Pressure, Reset Pressure, Percentage Blow Down, Accumulation, Lift, Chattering etc. during Steam Test.</p>
+                                        <p>d) Checking of the performance of all Mountings and Fittings during Steam Test.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-sip" href="#boiler-sip8">Standard Inspection Procedure for Final Inspection </a></h4>
+                                    </div>
+                                    <div id="boiler-sip8" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>a) To carry out thorough visual inspection.</p>
+                                        <p>b) Checking dimension and configuration as per approved drawing.</p>
+                                        <p>c) Check the Identification Mark on the job.</p>
+                                        <p>d) Stamp the pressure part with the Official Seal (Ashoka Emblem).</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-sip" href="#boiler-sip9">Standard Inspection Procedure for Forming Operation (Bending, Forging, Swaging etc.) </a></h4>
+                                    </div>
+                                    <div id="boiler-sip9" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>a) Witness forming process as per approved drawing.</p>
+                                        <p>b) Check starting and finishing temperature of forming operation, R/D ratio, ovality for tube/pipe, forging ratio etc. as per approved drawing.</p>
+                                        <p>c) Suggest post forming heat treatment, if required.</p>
+                                        <p>d) Select and stamp test pieces for check test.</p>
+                                        <p>e) Review heat treatment chart and all testing reports.</p>
+                                        <p>f) Carry out visual inspection, hardness, thickness test etc. and measure final dimension as per approved drawing.</p>
+                                        <p>g) Check the identification mark and stamp it with the official seal (Ashoka Emblem).</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-sip" href="#boiler-sip10">Standard Procedure for Scrutiny of Drawing </a></h4>
+                                    </div>
+                                    <div id="boiler-sip10" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p><strong>a) Verification of the following reference documents:</strong></p>
+                                        <p>i) P&amp;I Diagram</p>
+                                        <p>ii) Feed pump characteristic curve</p>
+                                        <p>iii) Flexibility analysis report</p>
+                                        <p>iv) Copy of existing drawing.</p>
+                                        <p>&nbsp;</p>
+                                        <p><strong>b) Checking of title block with the following:</strong></p>
+                                        <p>&nbsp;</p>
+                                        <p>i) Owners / Makers name and address.</p>
+                                        <p>ii) Title of drawing</p>
+                                        <p>iii) Drawing No. and revision No.</p>
+                                        <p>&nbsp;</p>
+                                        <p><strong>c) Checking of the following Design data:</strong></p>
+                                        <p>&nbsp;</p>
+                                        <p>i) Code of design, inspection and testing.</p>
+                                        <p>ii) Design Pressure of component.</p>
+                                        <p>iii) Design Temperature of component.</p>
+                                        <p>iv) Hydraulic test pressure.</p>
+                                        <p>v) Related boiler Number.</p>
+                                        <p>vi) Boiler design pressure.</p>
+                                        <p>vii) Boiler design temperature.</p>
+                                        <p>&nbsp;</p>
+                                        <p><strong>d) Notes to be checked:</strong></p>
+                                        <p>&nbsp;</p>
+                                        <p>i) Process of forming</p>
+                                        <p>ii) Post forming heat treatment requirement.</p>
+                                        <p>iii) Testing of welded joints.</p>
+                                        <p>iv) Post weld heat treatment requirement.</p>
+                                        <p>v) Location of hydraulic test.</p>
+                                        <p>vi) Slope of piping.</p>
+                                        <p>vii) Revision Note</p>
+                                        <p>&nbsp;</p>
+                                        <p><strong>e) Bill of materials to be checked:</strong></p>
+                                        <p>&nbsp;</p>
+                                        <p>i) Part Number.</p>
+                                        <p>ii) Description of part.</p>
+                                        <p>iii) Size or Dimension of part (O/D, thickness, length etc.) in mm.</p>
+                                        <p>iv) Quantity of material.</p>
+                                        <p>v) Class / Rating of part etc.</p>
+                                        <p>&nbsp;</p>
+                                        <p><strong>f) Other details to be checked: </strong></p>
+                                        <p>&nbsp;</p>
+                                        <p>i) Design Criteria.</p>
+                                        <p>ii) Selection of proper material</p>
+                                        <p>iii) Strength calculation.</p>
+                                        <p>iv) Part no. marking.</p>
+                                        <p>v) Support type and location.</p>
+                                        <p>vi) Drainage.</p>
+                                        <p>vii) Venting.</p>
+                                        <p>viii) Direction of flow.</p>
+                                        <p>ix) Reference welding figure no with configuration.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-sip" href="#boiler-sip11">Standard Inspection Procedure for Approval / Recognition of Manufacturer </a></h4>
+                                    </div>
+                                    <div id="boiler-sip11" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>a) Scrutiny if Submitted Documents.</p>
+                                        <p>b) Inspection of Premises, Verification of Manpower along with their Experience and Machineries.</p>
+                                        <p>c) Submission of Report</p>
+                                        <p>d) Technical Discussion.</p>
+                                        <p>e) Issuance of Recognition Certificate.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-sip" href="#boiler-sip12">Standard Inspection Procedure for Approval of Erectors </a></h4>
+                                    </div>
+                                    <div id="boiler-sip12" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p>a) Scrutiny if Submitted Documents.</p>
+                                        <p>b) Inspection of Premises, Verification of Manpower along with their Experience and Machineries.</p>
+                                        <p>c) Submission of Report</p>
+                                        <p>d) Technical Discussion.</p>
+                                        <p>e) Issuance of Recognition Certificate.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Operation-Commissionerate-sip">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Operation-Factory-sip">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Operation-Shop-sip">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="tab-pane" id="Pre-Establishment-sip">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Pre-Establishment-Boilers-sip" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Pre-Establishment-Commissionerate-sip" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Pre-Establishment-Factory-sip" data-toggle="tab">Directorate of Factories</a> </li>
+                                <li> <a href="#Pre-Establishment-Shop-sip" data-toggle="tab">Shops and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Pre-Establishment-Boilers-sip">
+                                <h2>Not Applicable</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Establishment-Commissionerate-sip">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Establishment-Factory-sip">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Establishment-Shop-sip">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="tab-pane" id="Post-Operation-sip">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Post-Operation-Boilers-sip" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Post-Operation-Commissionerate-sip" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Post-Operation-Factory-sip" data-toggle="tab">Directorate of Factories</a> </li>
+                                <li> <a href="#Post-Operation-Shop-sip" data-toggle="tab">Shops and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Post-Operation-Boilers-sip">
+                                <div class="panel-group Custom_AC_tab" role="tablist" aria-multiselectable="true">
+                                  <h2>Not Applicable</h2>
+                                </div>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Commissionerate-sip">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Factory-sip">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Shop-sip">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tab-pane" id="checklist-for-inspection">
+                    <div class="tabbable tabs-left">
+                      <ul class=" col-sm-2 nav nav-tabs" role="tablist">
+                        <li role="presentation" class="active"><a href="#Pre-Operation-checklist-for-inspection" aria-controls="home" role="tab" data-toggle="tab">Pre Operation</a></li>
+                        <li role="presentation"><a href="#Pre-Establishment-checklist-for-inspection" aria-controls="home" role="tab" data-toggle="tab">Pre Establishment</a></li>
+                        <li role="presentation"><a href="#Post-Operation-checklist-for-inspection" aria-controls="home" role="tab" data-toggle="tab">Others</a></li>
+                      </ul>
+                      <div class="col-sm-10 tab-content STab_content">
+                        <div class="tab-pane active" id="Pre-Operation-checklist-for-inspection">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Pre-Operation-Boilers-checklist-for-inspection" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Pre-Operation-Commissionerate-checklist-for-inspection" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Pre-Operation-Factory-checklist-for-inspection" data-toggle="tab">Directorate of Factories</a> </li>
+                                <li> <a href="#Pre-Operation-Shop-checklist-for-inspection" data-toggle="tab">Shops and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Pre-Operation-Boilers-checklist-for-inspection">
+                                <div class="panel-group Custom_AC_tab" id="boiler-checklist-for-inspection">
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading active-faq">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checklist-for-inspection" href="#boiler-checklist-for-inspection1">Registration of Boilers under The Boilers Act, 1923</a></h4>
+                                    </div>
+                                    <div id="boiler-checklist-for-inspection1" class="panel-collapse in">
+                                      <div class="panel-body">
+                                        <p><strong>a)	Check List for Registration of Boiler</strong></p>
+                                        <p>i).	Application for registration of the Boilers addressed to the Director of Boilers, W.B</p>
+                                        <p>ii).	Registration Folder containing form-II, form-III and form-IVA of IBR, original drawings of boiler and other relevant documents.</p>
+                                        <p>iii).	Requisite fees for registration of the boiler in the head of accounts: “0230-00-103-001-14” – Service fees(14) online by IFMS-GRIPS portal in www.wbfin.nic.in.</p>
+                                        <p>iv).	Requisite T.A for inspection of the boiler in the head of accounts: “0230-00-103-002-27” – Other Receipts(27) online by IFMS-GRIPS portal in www.wbfin.nic.in.</p>
+                                        <p>v).	Original Certificates of all Mountings and Fittings.</p>
+                                        <p><strong>b)	Check List for approval of Drawings </strong></p>
+                                        <p>i).	Application for approval of drawing.</p>
+                                        <p>ii).	Three copies of all relevant drawings.</p>
+                                        <p>iii).	Requisite fees for scrutiny of drawings in the head of accounts:“0230-00-103-001-14” – Service fees(14) online by IFMS-GRIPS portal in www.wbfin.nic.in</p>
+                                        <p>iv).	All relevant reference drawings.</p>
+                                        <p>v).	Flexibility analysis report, if required.</p>
+                                        <p>vi).	Valve schedule</p>
+                                        <p>vii).	Pressure parts calculation.</p>
+                                        <p>viii).	P & I Diagram of the whole system.</p>
+                                        <p>ix).	Feed pump characteristic curve.</p>
+                                        <p>x).	Copy of Existing Drawings.</p>
+                                        <p><strong>c)	Check List for submission of Form-IIIA for Identification Number of Pipe Lines</strong></p>
+                                        <p>i).	Application for approval of Form-IIIA.</p>
+                                        <p>ii).	Submission of requisite fees for inspection of pipe lines in the head of accounts: “0230-00-103-001-14” – Service fees(14) online by IFMS-GRIPS portal in www.wbfin.nic.in.</p>
+                                        <p>iii).	Submission of Form-IIIA for steam pipe line duly filled in.</p>
+                                        <p>iv).	Submission of Form-IIIA for feed pipe lines duly filled in.</p>
+                                        <p>v).	copy of all relevant drawings of steam and feed pipe lines.</p>
+                                        <p>vi).	Copy of Drawing approval letter.</p>
+                                        <p>vii).	IBR certificates of all components of pipes and fittings ( like- Form IIIA, Form-IIIB, Form IIIC, Form-IIID, Form-IIIE, Form-IIIF, Form-IIIG etc.)</p>
+                                        <p>viii).	Copy of Contractor’s approval letter.</p>
+                                        <p>ix).	All NDT reports.</p>
+                                        <p>x).	Post weld heat treatment report and stress relieving charts</p>
+                                        <p>xi).	PMI report.</p>
+                                        <p>xii).	Copy of all inspection reports of pipe lines under erection.</p>
+                                        <p><strong>d)	Check List for Erection of Boiler</strong></p>
+                                        <p>i).	Application for erection of the Boilers addressed to the Director of Boilers, W.B</p>
+                                        <p>ii).	Registration Folder containing form-II, form-III and form-IVA of IBR, original drawings of boiler and other relevant documents.</p>
+                                        <p>iii).	Requisite fees for erection of the boiler in the head of accounts: “0230-00-103-001-14” – Service fees(14) online by IFMS-GRIPS portal in www.wbfin.nic.in.</p>
+                                        <p>iv).	Requisite T.A for inspection of the boiler in the head of accounts: “0230-00-103-002-27” – Other Receipts(27) online by IFMS-GRIPS portal in www.wbfin.nic.in.</p>
+                                        <p>v).	Original Certificates of all Mountings and Fittings.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checklist-for-inspection" href="#boiler-checklist-for-inspection2">Renewal of Certificate of Boilers under The Boilers Act, 1923</a></h4>
+                                    </div>
+                                    <div id="boiler-checklist-for-inspection2" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p><strong>a)	Check List for Renewal of Certificate of boiler</strong></p>
+                                        <p>i).	Application for renewal of certificate along with form-B No.1 duly filled in.</p>
+                                        <p>ii).	Requisite fees for inspection of boiler in the head of accounts: “0230-00-103-001-14” – Service fees (14) online by IFMS-GRIPS portal in www.wbfin.nic.in</p>
+                                        <p>iii).	Requisite Travelling Allowance in the head of accounts: “0230-00-103-002-27” – Other Receipts (27) online by IFMS-GRIPS portal in www.wbfin.nic.in</p>
+                                        <p><strong>b)	Check List for Remnant Life Assessment of Boiler</strong></p>
+                                        <p>i).	Application for RLA study.</p>
+                                        <p>ii).	Submission of scheme of RLA for the proposed boiler.</p>
+                                        <p>iii).	Submission of requisite fees for inspection of boiler in the head of accounts: “0230-00-103-001-14” – Service fees(14) online by IFMS-GRIPS portal in www.wbfin.nic.in</p>
+                                        <p>iv).	Requisite T.A for inspection of the boiler in the head of accounts:“0230-00-103-002-27” – Other Receipts(27) online by IFMS-GRIPS portal in www.wbfin.nic.in</p>
+                                        <p>v).	Submission of documents of the approved RLA organization who will conduct the RLA studies.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checklist-for-inspection" href="#boiler-checklist-for-inspection3">Approval of Boiler manufacture & Renewal there of</a></h4>
+                                    </div>
+                                    <div id="boiler-checklist-for-inspection3" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p><strong>a)	Check List for Approval and Renewal of Manufacturer</strong></p>
+                                        <p>i).	Forwarding Letter by the applicant.</p>
+                                        <p>ii).	Application to Director along with duly filled Form in prescribed format.</p>
+                                        <p>iii).Copy of Trade License, Lease Deed (if applicable), Tenancy Deed (if applicable), and Photo Identity Proof.</p>
+                                        <p>iv).	List of Machineries as mentioned in the Form.</p>
+                                        <p>v).	List of Technical Personnel along with experience.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="panel panel-default panel-faq">
+                                    <div class="panel-heading">
+                                      <h4 class="panel-title"><a data-toggle="collapse" data-parent="#boiler-checklist-for-inspection" href="#boiler-checklist-for-inspection4">Approval of Boiler Erector & Renewal there of</a></h4>
+                                    </div>
+                                    <div id="boiler-checklist-for-inspection4" class="panel-collapse collapse">
+                                      <div class="panel-body">
+                                        <p><strong>a)	Check List for Approval and Renewal of Erector</strong></p>
+                                        <p>i).	Forwarding Letter by the applicant.</p>
+                                        <p>ii).	Application to Director along with duly filled Form in prescribed format.</p>
+                                        <p>iii).	Copy of Trade License, Lease Deed (if applicable), Tenancy Deed (if applicable), and Photo Identity Proof.</p>
+                                        <p>iv).	List of Machineries as mentioned in the Form.</p>
+                                        <p>v).	 List of Technical Personnel along with experience.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Operation-Commissionerate-checklist-for-inspection">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Operation-Factory-checklist-for-inspection">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Operation-Shop-checklist-for-inspection">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="tab-pane" id="Pre-Establishment-checklist-for-inspection">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Pre-Establishment-Boilers-checklist-for-inspection" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Pre-Establishment-Commissionerate-checklist-for-inspection" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Pre-Establishment-Factory-checklist-for-inspection" data-toggle="tab">Directorate of Factories</a> </li>
+                                <li> <a href="#Pre-Establishment-Shop-checklist-for-inspection" data-toggle="tab">Shop and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Pre-Establishment-Boilers-checklist-for-inspection">
+                                <h2>Not Applicable</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Establishment-Commissionerate-checklist-for-inspection">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Establishment-Factory-checklist-for-inspection">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Pre-Establishment-Shop-checklist-for-inspection">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="tab-pane" id="Post-Operation-checklist-for-inspection">
+                          <div class="tabbable-panel InTopTab">
+                            <div class="tabbable-line">
+                              <ul class="nav nav-tabs tabtop  tabsetting">
+                                <li class="active"> <a href="#Post-Operation-Boilers-checklist-for-inspection" data-toggle="tab">Directorate of Boilers</a> </li>
+                                <li> <a href="#Post-Operation-Commissionerate-checklist-for-inspection" data-toggle="tab">Labour Commissionerate</a> </li>
+                                <li> <a href="#Post-Operation-Factory-checklist-for-inspection" data-toggle="tab">Directorate of Factories</a> </li>
+                                <li> <a href="#Post-Operation-Shop-checklist-for-inspection" data-toggle="tab">Shop and Establishment</a> </li>
+                              </ul>
+                            </div>
+                            <div class="tab-content InTTab_content">
+                              <div class="tab-pane active fade in" id="Post-Operation-Boilers-checklist-for-inspection">
+                                <div class="panel-group Custom_AC_tab" role="tablist" aria-multiselectable="true">
+                                  <h2>Not Applicable</h2>
+                                </div>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Commissionerate-checklist-for-inspection">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Factory-checklist-for-inspection">
+                                <h2>Coming Soon</h2>
+                              </div>
+                              <div class="tab-pane fade in" id="Post-Operation-Shop-checklist-for-inspection">
+                                <h2>Coming Soon</h2>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!--Main_tab_content---> 
+            </div>
+            <!--Main_tab---> 
+          </div>
+          <!--end_row--> 
+       
+      </div>
+    </div>
+  </div>
+  <!--end body here--> 
+  
+</div>
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<?php /*?><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script> 
+<script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/textresize.js"></script> 
+<!-- Include all compiled plugins (below), or include individual files as needed --> 
+<script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/bootstrap.min.js"></script> 
+<script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/news.js"></script> 
+<script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/news2.js"></script> 
+<script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/owl.carousel.min.js"></script> 
+<script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/jquery.scrollUp.js"></script> 
+<script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/script.js"></script> 
+<script type="text/javascript" src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/tickerme.min.js"></script> 
+<script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/wow.min.js"></script> 
+
+<!----slid4e_menu-----> 
+<script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/jasny-bootstrap.min.js"></script> 
+<script src="<?php print $base_root.$base_path?>sites/all/themes/labourdept/js/main.js"></script> 
+
+<!-- jQuery --> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/jquery/dist/jquery.min.js"></script> 
+<!-- Bootstrap --> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/bootstrap/dist/js/bootstrap.min.js"></script> 
+<!-- FastClick --> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/fastclick/lib/fastclick.js"></script> 
+<!-- NProgress --> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/nprogress/nprogress.js"></script> 
+<!-- Chart.js --> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/Chart.js/dist/Chart.min.js"></script> <?php */?>
+<!-- gauge.js --> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/gauge.js/dist/gauge.min.js"></script> 
+<!-- bootstrap-progressbar --> 
+<?php /*?><script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/bootstrap-progressbar/bootstrap-progressbar.min.js"></script> 
+<!-- iCheck --> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/iCheck/icheck.min.js"></script> 
+<!-- Skycons --> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/skycons/skycons.js"></script> 
+<!-- Flot -->
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/Flot/jquery.flot.js"></script> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/Flot/jquery.flot.pie.js"></script> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/Flot/jquery.flot.time.js"></script> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/Flot/jquery.flot.stack.js"></script> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/Flot/jquery.flot.resize.js"></script> 
+<!-- Flot plugins --> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/flot.orderbars/js/jquery.flot.orderBars.js"></script> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/flot-spline/js/jquery.flot.spline.min.js"></script> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/flot.curvedlines/curvedLines.js"></script> 
+<!-- DateJS --> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/DateJS/build/date.js"></script> 
+<!-- JQVMap --> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/jqvmap/dist/jquery.vmap.js"></script> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/jqvmap/dist/maps/jquery.vmap.world.js"></script> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js"></script> 
+<!-- bootstrap-daterangepicker --> <?php */?>
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/moment/min/moment.min.js"></script> 
+<script src="<?php print $base_path ?>sites/all/modules/dashboard/vendors/bootstrap-daterangepicker/daterangepicker.js"></script> 
+
+<!-- Custom Theme Scripts --> 
+<script src="<?php print $base_root.$base_path?>sites/all/modules/dashboard/build/js/custom.min.js"></script> 
+
+<!-- sticky header starts--> 
+<script>
+$(window).scroll(function() {
+    if ($(this).scrollTop() > 1){  
+        $('.header').addClass("sticky");
+    }
+    else{
+        $('.header').removeClass("sticky");
+    }
+});
+</script> 
+<!-- sticky header ends--> 
+
+<!-- js for the tooltip starts--> 
+<script>
+$(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();  
+	
+	$('.boxbgcolor1sub').each(function() {
+        animationHover(this, 'bounce');
+		animationClick(this, 'bounce');
+    }); 
+	
+});
+
+</script> 
+
+<!-- js for the tooltip ends--> 
+
+<script>
+// Carousel Auto-Cycle
+  $(document).ready(function() {
+    $('.carousel').carousel({
+      interval: 1000
+    })
+	
+	 $('.carousel1').carousel({
+      interval: 3000
+    })
+	
+	
+	$('.toggle').click(function (event) {
+        event.preventDefault();
+        var target = $(this).attr('href');
+        $(target).toggleClass('hidden show');
+	 });
+	
+  });
+  
+  
+  
+$(function() {
+	var Accordion = function(el, multiple) {
+		this.el = el || {};
+		this.multiple = multiple || false;
+
+		// Variables privadas
+		var links = this.el.find('.link');
+		// Evento
+		links.on('click', {el: this.el, multiple: this.multiple}, this.dropdown)
+	}
+
+	Accordion.prototype.dropdown = function(e) {
+		var $el = e.data.el;
+			$this = $(this),
+			$next = $this.next();
+
+		$next.slideToggle();
+		$this.parent().toggleClass('open');
+
+		if (!e.data.multiple) {
+			$el.find('.submenu').not($next).slideUp().parent().removeClass('open');
+		};
+	}	
+
+	var accordion = new Accordion($('#accordion'), false);
+	var accordion = new Accordion($('#accordion1'), true);
+});
+
+  
+</script>
+
+<script type="text/javascript">
+jQuery('.collapse').on('shown.bs.collapse', function(){
+jQuery(this).parent().find(".glyphicon-plus").removeClass("glyphicon-plus").addClass("glyphicon-minus");
+}).on('hidden.bs.collapse', function(){ 
+jQuery(this).parent().find(".glyphicon-minus").removeClass("glyphicon-minus").addClass("glyphicon-plus");
+});
+</script>

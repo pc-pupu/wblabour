@@ -1,0 +1,148 @@
+<?php
+ 
+/**
+ * Implementation of hook_block_info().
+ */
+function top_links_block_info() {
+  $blocks['my-block-id'] = array(
+    'info' => t('Top Links Block'),
+  );
+  return $blocks;
+}
+ 
+/**
+ * Implementation of hook_block_view().
+ */
+function top_links_block_view($delta='') {
+  $block = array();
+  switch ($delta) {
+    case 'my-block-id':
+      $block['content'] = top_links_contents();
+      break;
+  }
+  return $block;
+}
+
+function top_links_contents() {
+	return theme('top_links_template');
+}
+
+function top_links_theme(){
+    return array(
+        	'top_links_template' => array(
+            'template' => 'top_links',
+   	        ),
+    );
+}
+
+
+ 
+/**
+ * custom html block
+ * @return string
+ */
+function top_links_contents1() {
+drupal_add_js(drupal_get_path('module', 'top_links') .'/js/top_menu.js');
+
+$query = db_select('menu_links', 'ml');
+$query->leftJoin('url_alias', 'ua', 'ml.link_path = ua.source');
+$query->fields('ml', array('menu_name', 'link_path', 'link_title', 'has_children', 'mlid'));
+$query->fields('ua', array('alias'));
+$query->condition('ml.menu_name', 'main-menu');
+$query->condition('ml.depth', 1);
+$query->condition('ml.hidden', 0);
+$query->orderBy('ml.weight', 'asc');
+$result = $query->execute();
+
+
+$top_links ='';
+$cnt = 0;
+		while($record = $result->fetchObject()) {
+		$cnt++;
+						if($record->alias)
+						$first_level_path = $record->alias;
+						else 
+						$first_level_path = $record->link_path;
+
+						$top_links .= '<li style="height:40px;">';
+						$top_links .= '<a href="/pds/'.$first_level_path.'" style="padding-top:13px;">'.$record->link_title.'</a>';
+
+						if($record->has_children == 1 )
+						{
+						$top_links .= '<ul>';
+						
+$query2 = db_select('menu_links', 'ml');
+$query2->leftJoin('url_alias', 'ua', 'ml.link_path = ua.source');
+$query2->fields('ml', array('menu_name', 'link_path', 'link_title', 'has_children', 'mlid'));
+$query2->fields('ua', array('alias'));
+$query2->condition('ml.menu_name', 'main-menu');
+$query2->condition('ml.depth', 2);
+$query2->condition('ml.plid', $record->mlid);
+$query2->condition('ml.hidden', 0);
+$query2->orderBy('ml.weight', 'asc');
+$result2 = $query2->execute();
+
+
+						while($record2 = $result2->fetchObject()) {
+						if($record2->alias)
+						$second_level_path = $record2->alias;
+						else 
+						$second_level_path = $record2->link_path;
+
+					    $top_links .= '<li><a href="/pds/'.$second_level_path.'">'.$record2->link_title.'</a>'; 
+						
+						
+								if($record2->has_children == 1)
+								{
+								$top_links .= '<ul>';
+
+$query3 = db_select('menu_links', 'ml');
+$query3->leftJoin('url_alias', 'ua', 'ml.link_path = ua.source');
+$query3->fields('ml', array('menu_name', 'link_path', 'link_title', 'has_children', 'mlid'));
+$query3->fields('ua', array('alias'));
+$query3->condition('ml.menu_name', 'main-menu');
+$query3->condition('ml.depth', 3);
+$query3->condition('ml.plid', $record2->mlid);
+$query3->condition('ml.hidden', 0);
+$query3->orderBy('ml.weight', 'asc');
+$result3 = $query3->execute();
+
+
+						while($record3 = $result3->fetchObject()) {
+						if($record3->alias)
+						$third_level_path = $record3->alias;
+						else 
+						$third_level_path = $record3->link_path;
+
+
+								$top_links .= '<li><a href="/pds/'.$third_level_path.'">'.$record3->link_title.'</a></li>'; 
+								}
+								$top_links .= '</ul>';
+								}
+								$top_links .= '</li>';
+						}
+						$top_links .= '</ul>';
+						}
+						$top_links .= '</li>';
+		}
+
+
+
+
+if($cnt == 0)
+{
+	$top_links .= '<li style="height:40px; background:none;">';
+	$top_links .= 'No Links Found';
+	$top_links .= '</li>';
+}
+
+
+
+  return '<div id="navigation">
+ <ul id="menu" class="clear">'.$top_links.'</ul>
+</div>';
+}
+
+//// Modified on 04-05-2015
+
+?>

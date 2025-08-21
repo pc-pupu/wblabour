@@ -1,0 +1,10 @@
+;$Id$
+
+name = Act and Rules Search
+description = Act and Rules Service Notice Area Search module.
+package = Act and Rules
+version = "7.x"
+core = 7.x
+files[] = actrules.module
+
+;dependencies[] = autoload

@@ -1,0 +1,9 @@
+;$Id$
+
+name = court
+description = A Court module.
+package = Drupal 7 Development
+core = 7.x
+files[] = courtmst.module
+
+;dependencies[] = autoload

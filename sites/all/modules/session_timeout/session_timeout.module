@@ -1,0 +1,39 @@
+<?php
+
+function session_timeout_init() {
+  global $user;
+
+  // Skip for anonymous users or during maintenance (cron, install, etc.)
+  if ($user->uid == 0 || defined('MAINTENANCE_MODE')) {
+    return;
+  }
+
+  $timeout_seconds = 900; // Change to 900 for 15 minutes in production
+
+  // Use current time and check session
+  $last_activity = isset($_SESSION['last_activity']) ? $_SESSION['last_activity'] : time();
+  $current_time = time();
+
+  // Check if user is inactive for too long
+  if (($current_time - $last_activity) > $timeout_seconds) {
+    // Clear session before redirecting
+    $_SESSION = array(); // Clear session variables
+    if (ini_get("session.use_cookies")) {
+      $params = session_get_cookie_params();
+      setcookie(session_name(), '', time() - 42000,
+        $params["path"], $params["domain"],
+        $params["secure"], $params["httponly"]
+      );
+    }
+
+    session_destroy();
+    drupal_session_destroy();
+
+    // Important: redirect properly to logout
+    drupal_goto('user/logout');
+    exit;
+  }
+
+  // Update last activity time
+  $_SESSION['last_activity'] = $current_time;
+}

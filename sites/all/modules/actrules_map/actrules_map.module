@@ -1,0 +1,404 @@
+<?php
+
+function actrules_map_permission() {
+  return array(
+    'cmsactrulesmap_per' => array(
+      'title' => t('CMS Act permission'),
+    )
+	
+  );
+}
+
+function actrules_map_menu(){
+
+  	
+  $items['cmsentry/actrulesmap'] = array(
+	'title' => 'CMS Act Rules Map',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('cmsactrulesmap_form'),
+	'access arguments' => array('cmsactrulesmap_per'),
+  );
+  
+   $items['cmsentry/actrulesmapdel/%'] = array(
+	'title' => 'CMS Act Rules Map',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('cmsactrulesmap_del',2),
+	'access arguments' => array('cmsactrulesmap_per'),
+  );
+  
+  $items['cmsentry/actrulesmapedit/%'] = array(
+	'title' => 'CMS Act Rules Map Edit',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('cmsactrulesmap_edit',2),
+	'access arguments' => array('cmsactrulesmap_per'),
+  );
+  
+  
+  
+  
+  return $items;
+  
+}
+
+function cmsactrulesmap_del($form, &$form_state, $arg='') {
+	$query = db_delete('ar_mapping');
+	$query->condition('id', $arg);
+	$rs = $query->execute();
+	drupal_set_message("Your data has been deleted successfully");
+	drupal_goto('cmsentry/actrulesmap');
+}
+
+function cmsactrulesmap_edit($form, &$form_state, $arg=''){
+	drupal_add_css(drupal_get_path('module', 'actrules_map') . '/actrules_map.css');
+	$query = db_select('ar_mapping', 'm');
+	$query ->fields('m', array( 'id','act_name','rules_name','authority_id','area_id'));
+	$query->condition('m.id',trim($arg),'=');
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	//print_r($resultData);
+	//exit;
+	//$array_auth = array(3,1);
+	
+	
+	$form['authority'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+	 '#multiple' => TRUE,
+	 '#size' => 10,
+	 '#element_validate' => array('actrules_map_authority_validate'),
+     '#options' => authority_list(),
+	 '#default_value' => explode(",",trim($resultData['authority_id'])),
+	 //'#required' => TRUE,
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="authorityName form_error">Authority Name <span style="color:red;">*</span></label>',
+	 '#suffix' =>'</div>',
+	 );  
+	 
+	$form['area'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+	 //'#multiple' => TRUE,
+	 '#element_validate' => array('actrules_map_authority_validate'),
+     '#options' => area_list(),
+	 '#default_value' => $resultData['area_id'],
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<div class="col-md-6"><label for="areaName">Area Name <span style="color:red;">*</span></label>',
+	 '#suffix' =>'</div></fieldset>',
+	 ); 
+	 
+	 $form['act_area'] = array(
+	 '#title'=>'',
+	 '#type'=>'text_format',
+	 '#default_value' => $resultData['act_name'],
+	 '#format'=>'cms_manager',
+	 '#validated' => TRUE,
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="authorityName">Act Name</label>',
+	 '#suffix' =>'</div>',
+	 );  
+	 
+	 $form['rule_area'] = array(
+	 '#title'=>'',
+	 '#type'=>'text_format',
+	 '#default_value' => $resultData['rules_name'],
+	 '#format'=>'cms_manager',
+	 '#validated' => TRUE,
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<div class="col-md-6"><label for="authorityName">Rules Name</label>',
+	 '#suffix' =>'</div></fieldset>',
+	 );  
+	 
+	 $form['hid_map_id'] = array(
+	  '#type'=>'hidden',
+	  '#default_value' => isset($resultData['id']) ? $resultData['id'] : NULL,
+	 );
+	 
+	 $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Save',
+		'#attributes' => array('class'=>array('btn btn-primary')),
+		'#prefix' => '<div class="col-md-6">',  
+        '#suffix' => '</div>',
+     ); 
+	 
+	$form['map_list'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_map_list(),
+	  '#prefix' => '<div class="col-md-12">',  
+      '#suffix' => '</div>',
+    );
+	 
+	return  $form;
+}
+
+function cmsactrulesmap_edit_submit($form, &$form_state){
+	$auth_code = '';
+	if($form_state['values']['authority']!=""){
+		foreach($form_state['values']['authority'] as $val){
+			$auth_code.= ','.$val;	
+		}
+		$authority_id = substr($auth_code,1);
+		//$authority_id = $form_state['values']['authority'];
+	}else{
+		$authority_id = 0;
+	}
+	if($form_state['values']['area']!=""){
+		$area_id = $form_state['values']['area'];
+	}else{
+		$area_id = 0;
+	}
+	
+	$data = array('authority_id'=>$authority_id,'area_id'=>$area_id,'act_name'=>$form_state['values']['act_area']['value'],'rules_name'=>$form_state['values']['rule_area']['value']);
+	$query = db_update('ar_mapping');
+	$query->fields(array('authority_id'=>$authority_id,
+						 'area_id'=>$area_id,
+ 						 'act_name'=>$form_state['values']['act_area']['value'],
+						 'rules_name'=>$form_state['values']['rule_area']['value']));
+	$query->condition('id', $form_state['values']['hid_map_id']);
+	$rs = $query->execute();
+	if($rs){
+		drupal_set_message("Your data has been updated successfully");
+		drupal_goto("cmsentry/actrulesmap");
+	}
+}
+
+function actrules_map_authority_validate($element, &$form_state) {
+	 $value = $element['#value'];
+	  if ($value == "") {
+		  //echo "<pre>";
+		  //print_r($element);
+		form_error($element, 'please select '.t(trim($element['#parents'][0])));
+	  }
+}
+
+function cmsactrulesmap_form($form, &$form_state){
+   global $base_root, $base_path;
+   drupal_add_css(drupal_get_path('module', 'actrules_map') . '/actrules_map.css'); 
+   	 
+   $form['authority'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+	 '#multiple' => TRUE,
+	 '#size' => 10,
+	 '#element_validate' => array('actrules_map_authority_validate'),
+     '#options' => authority_list(),
+	 //'#required' => TRUE,
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="authorityName form_error">Authority Name <span style="color:red;">*</span></label>',
+	 '#suffix' =>'</div>',
+	 );  
+	 
+	$form['area'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+	 //'#multiple' => TRUE,
+	 '#element_validate' => array('actrules_map_authority_validate'),
+     '#options' => area_list(),
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<div class="col-md-6"><label for="areaName">Area Name <span style="color:red;">*</span></label>',
+	 '#suffix' =>'</div></fieldset>',
+	 ); 
+	 
+	/* $form['service'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+     '#options' => service_list(),
+	 '#validated' => TRUE,
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="authorityName">Service Name</label>',
+	 '#suffix' =>'</div>',
+	 );  
+	 
+	$form['notification'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+     '#options' => notification_list(),
+	 '#validated' => TRUE,
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<div class="col-md-6"><label for="areaName">Notification Name</label>',
+	 '#suffix' =>'</div></fieldset>',
+	 );
+	 
+	 
+	 $form['rules'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+     '#options' => rules_list(),
+	 '#validated' => TRUE,
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="authorityName">Rules Name</label>',
+	 '#suffix' =>'</div>',
+	 );  
+	 
+	$form['act'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+     '#options' => act_list(),
+	 '#validated' => TRUE,
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<div class="col-md-6"><label for="areaName">Act Name</label>',
+	 '#suffix' =>'</div></fieldset>',
+	 );*/
+	 
+	 $form['act_area'] = array(
+	 '#title'=>'',
+	 '#type'=>'text_format',
+	 '#format'=>'cms_manager',
+	 '#validated' => TRUE,
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="authorityName">Act Name</label>',
+	 '#suffix' =>'</div>',
+	 );  
+	 
+	 $form['rule_area'] = array(
+	 '#title'=>'',
+	 '#type'=>'text_format',
+	 '#format'=>'cms_manager',
+	 '#validated' => TRUE,
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<div class="col-md-6"><label for="authorityName">Rules Name</label>',
+	 '#suffix' =>'</div></fieldset>',
+	 );  
+	 
+	 $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Save',
+		'#attributes' => array('class'=>array('btn btn-primary')),
+		'#prefix' => '<div class="col-md-6">',  
+        '#suffix' => '</div>',
+     ); 
+	 
+	$form['map_list'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_map_list(),
+	  '#prefix' => '<div class="col-md-12">',  
+      '#suffix' => '</div>',
+    );
+	 
+	return  $form;
+	 
+ }
+ 
+
+ 
+ 
+ function get_map_list(){
+
+	 global $base_root, $base_path;
+	 
+	 $cms_act_query_result_data = db_query("SELECT ar_mapping.id,ar_mapping.act_name,ar_mapping.rules_name,array_agg(ar_authority.authority_name) as authority_name, ar_area.area_name FROM ar_mapping JOIN ar_authority ON ar_mapping.authority_id LIKE CONCAT('%', ar_authority.id, '%') JOIN ar_area ON ar_mapping.area_id = ar_area.id GROUP BY ar_mapping.id,ar_area.area_name ORDER BY ar_mapping.id ASC");
+	 
+	 
+	 
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+	 
+	 
+		 // Table settings.
+	$attributes['datatable_options'] = array(
+	  'bFilter'   => TRUE,
+	  'bInfo'     => TRUE,
+	);
+	// Define table columns
+	$header = array(
+          array('data'=> 'SL.NO'),
+		  array('data'=> 'Act'),
+          array('data' => 'Rules'),
+		  array('data' => 'Authority'),
+		  array('data' => 'Area'),
+		  array('data' => 'Action'),
+      );
+	// Table data.
+	$i=0;
+	 foreach($cms_act_query_result_data as $data){
+		$i++;
+		$aa=$base_root.$base_path.'cmsentry/actrulesmapdel/'.$data->id;
+		$edit=$base_root.$base_path.'cmsentry/actrulesmapedit/'.$data->id;
+		$link_s=l(t('Delete'), $aa) ;
+		$edit_link_s=l(t('Edit'), $edit) ;
+		$rows[] = array(
+					$i,
+					$data->act_name,
+      				$data->rules_name,
+					str_replace( ",", '<br />', str_replace('"', "", substr($data->authority_name,2,-2))),
+					$data->area_name,
+					array('data' => $link_s.' | '.$edit_link_s ),	
+	  	);   
+	 }
+	 
+	// Render using Drupal's render API.
+	/*$build['datatable'] = array(
+	  '#theme' => 'datatable',
+	  '#header' => $header,
+	  '#rows' => $rows,
+	  '#attributes' => $attributes,
+	);*/
+	 
+	// Or, render using a theme function.
+	$variables = array(
+	  //'attributes' => $attributes,
+	  'header' => $header,
+	  'rows' => $rows,
+	  'attributes' => array('class' => array('table', 'table-bordered')),
+	);
+	$output = theme('datatable', $variables);
+  
+
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+	
+	
+}
+ 
+ 
+ function cmsactrulesmap_form_submit($form, &$form_state){
+	 $auth_code = '';
+	if($form_state['values']['authority']!=""){
+		foreach($form_state['values']['authority'] as $val){
+			$auth_code.= ','.$val;	
+		}
+		$authority_id = substr($auth_code,1);
+		//$authority_id = $form_state['values']['authority'];
+	}else{
+		$authority_id = 0;
+	}
+	if($form_state['values']['area']!=""){
+		$area_id = $form_state['values']['area'];
+	}else{
+		$area_id = 0;
+	}
+	
+	$data = array('authority_id'=>$authority_id,'area_id'=>$area_id,'act_name'=>$form_state['values']['act_area']['value'],'rules_name'=>$form_state['values']['rule_area']['value']);
+	$id = db_insert('ar_mapping')->fields($data)->execute();
+	drupal_set_message('Your Record has been inserted successfully!!');
+	
+ }
+ 
+ function authority_list(){
+  $default_select = array(""=>"- Select -");
+  $query  = db_select('ar_authority','o')->fields('o',array('id','authority_name','authority_code'));
+  $result = $query->execute();
+  $list = array();
+  foreach ($result as $record) {
+    $list[$record->id] = t('@authority_name', array(
+    '@authority_name' => $record->authority_name,
+    ));
+  }
+  return ($default_select+$list);
+ 
+}
+
+function area_list(){
+  $default_select = array(""=>"- Select -");
+  $query  = db_select('ar_area','o')->fields('o',array('id','area_name','area_code'));
+  $result = $query->execute();
+  $list = array();
+  foreach ($result as $record) {
+    $list[$record->id] = t('@area_name', array(
+    '@area_name' => $record->area_name,
+    ));
+  }
+  return ($default_select+$list);
+ 
+}

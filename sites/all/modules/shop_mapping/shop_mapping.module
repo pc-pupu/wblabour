@@ -1,0 +1,1190 @@
+<?php
+
+function shop_mapping_init(){
+  drupal_add_js(drupal_get_path('module', 'shop_mapping') . '/js/jquery.validationEngine.js');
+  drupal_add_js(drupal_get_path('module', 'shop_mapping') . '/js/jquery.validationEngine-en.js');
+  drupal_add_css(drupal_get_path('module', 'shop_mapping') . '/css/validationEngine.jquery.css');
+  drupal_add_css(drupal_get_path('module', 'dashboard') . '/build/css/custom.css');
+  drupal_add_js(drupal_get_path('module', 'shop_mapping') . '/js/appreg.js');
+}
+
+function shop_mapping_menu() {
+	$items=array();
+	
+	$items['uam-reg']=array(
+		'title'=>'UM Registration',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('um_reg_form'),
+		'access arguments' => array('access content'),
+		'access callback'=>TRUE
+	);
+	
+	$items['shop-mapping-gp']=array(
+		'title'=>'Shop Mapping GP',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('shop_mapping_form'),
+		'access arguments' => array('access content'),
+		'access callback'=>TRUE,
+	);
+	$items['shop-mapping-ps']=array(
+		'title'=>'Shop Mapping Police Station',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('shop_mapping_form_police_station'),
+		'access arguments' => array('access content'),
+		'access callback'=>TRUE,
+		//'file' => 'shop_mapping_police_station.form.inc',
+	);
+	
+	$items['shop-mapping-po']=array(
+		'title'=>'Shop Mapping Post Office',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('shop_mapping_form_post_office'),
+		'access arguments' => array('access content'),
+		'access callback'=>TRUE,
+		//'file' => 'shop_mapping_police_station.form.inc',
+	);
+	
+	$items['pinautocomplete'] = array(
+	'page callback' => 'get_pincode_autocomplete',
+	'access arguments' => array('access content'),
+	//'page arguments' => array(2),
+	'type' => MENU_CALLBACK,
+	//'file' => 'shop_mapping.module',
+  ); 
+  
+   $items['type-search/%'] = array(
+	'page callback' => 'type_search',
+	'access arguments' => array('access content'),
+	'page arguments' => array(1),
+	'type' => MENU_CALLBACK,
+	//'file' => 'corr_master_entry.form.inc',
+  ); 
+	
+   return $items;
+ }
+ 
+ function shop_mapping_form($form, &$form_state) { 
+ 
+  global $base_root, $base_path;
+  drupal_add_css(drupal_get_path('module', 'shop_mapping') . '/css/sky-forms.css');
+  drupal_add_css(drupal_get_path('module', 'shop_mapping') . '/css/form-design.css');
+  drupal_add_js(drupal_get_path('module', 'shop_mapping') . '/js/myfunction.js');
+  
+  $form['#attributes']['class'][] = 'sky-form custom-form-main';
+  
+  $form['LDStart'] = array(
+	   '#prefix'=>'<div class="x_panel"><div class="x_title"><h1><span>L</span>D</h1></div><div class="x_content"><fieldset>',
+	   '#suffix' => ''
+	);	
+	$form['districtDivStart'] = array(
+		 '#prefix' 	=> '<div class="row">',
+		 '#suffix' 	=> ''
+	);
+	$state_v = 1;
+	$value_state = 1;
+	if(!empty($state_v)){	
+		$form['district'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#id'=>'district_name',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'District'),
+		   '#options' => get_district_by_id($state_v),
+		   '#prefix' => '<div id="ld_edit_emp_district_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>District',
+		   '#suffix' => '</label></section></div>',
+		   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							)
+		);
+	}else{
+		$form['district'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#id'=>'district_name',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'District'),
+		   '#options' => get_district_by_id($state_v),
+		   '#prefix' => '<div id="ld_edit_emp_district_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>District',
+		   '#suffix' => '</label></section></div>',
+		);
+	}
+	
+	$value_district	=	isset($form_state['values']['district']) ? $form_state['values']['district'] : '';
+   	
+	if(!empty($value_district) && !empty($state_v) && $state_v == 1){
+		
+		$form['subdivision'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Sub Division' ),
+		   '#options' => common_custom_user_subdivisionlist_list_new($value_district),
+		   '#prefix' => '<div id="ld_empsubdv_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>Sub-Division<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							)
+		);
+	}else{ 
+		
+		$form['subdivision'] = array(
+		   '#prefix' => '<div id="ld_empsubdv_replace">',
+		   '#suffix' => '</div>',
+		);
+		
+	}
+	$value_subdivision	=	isset($form_state['values']['subdivision']) ? $form_state['values']['subdivision'] : '';
+	
+	if(!empty($value_district) && !empty($value_subdivision) && $state_v == 1){
+		$form['areatype'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Area Type'),
+		   '#options' => common_custom_user_areatype_list_new($value_district, $value_subdivision),
+		   '#prefix' => '<div id="ld_emp_areatype_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-location-arrow"></i><i class="select-icon"></i>Area Type<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							)
+		);
+	}else{
+		$form['areatype'] = array(
+		   '#prefix' => '<div id="ld_emp_areatype_replace">',
+		   '#suffix' => '</div>',
+		);
+	}
+	$form['districtDivEnd'] = array(
+		 '#prefix' 	=> '',
+		 '#suffix' 	=> '</div>'
+	);
+	$value_areatype	=	isset($form_state['values']['areatype']) ? $form_state['values']['areatype'] : '';
+	
+	if(!empty($value_district) && !empty($value_state) && $value_subdivision != "" && !empty($value_areatype) && $state_v == 1){
+		
+		if ( $value_areatype == 'B' ){
+			$areatype_name	= 'Block';
+		}elseif( $value_areatype == 'M'){
+			$areatype_name	= 'Municipality';
+		}elseif( $value_areatype == 'C'){
+			$areatype_name	= 'Corporation';
+		}elseif( $value_areatype == 'S'){
+			$areatype_name	= 'SEZ';
+		}elseif($value_areatype == 'N'){
+			$areatype_name	= 'Notified Area';
+		}
+		
+		$form['areatypeDivStart'] = array(
+					 '#prefix' 				=> '<div class="row">',
+					 '#suffix' 				=> ''
+					);
+		
+		$form['block'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'subdivision'),
+		   '#options' => common_custom_user_block_list_new($value_subdivision,$value_areatype),
+		   '#prefix' => '<div id="ld_empareatype_name_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-location-arrow"></i><i class="select-icon"></i>'.$areatype_name.'<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							)
+		);
+		
+		
+	}else{
+		$form['block'] = array(
+		   '#prefix' => '<div id="ld_empareatype_name_replace">',
+		   '#suffix' => '</div>',
+		);
+	}
+	
+					
+	$value_block 	= 	isset($form_state['values']['block']) ? $form_state['values']['block'] : '';
+				
+	if(!empty($value_district) && !empty($value_subdivision) && !empty($value_areatype)  && !empty($value_block) && !empty($value_state) && $state_v == 1){
+		
+		if ( $value_areatype == 'B' ){
+			$area_name		= 'Gram Panchayat';
+			$area_code 		= 'V';
+		}elseif( $value_areatype == 'M'){
+			$area_name		= 'Ward';
+			$area_code 		= 'W';
+		}elseif( $value_areatype == 'C'){
+			$area_name		= 'Ward';
+			$area_code 		= 'C';
+		}elseif( $value_areatype == 'S'){
+			$area_name		= 'Sector';
+			$area_code 		= 'S';
+		}elseif($value_areatype == 'N'){
+			$area_name		= 'Notified Area';
+			$area_code 		= 'N';
+		}
+		
+			
+	$form['panchayat'] = array(
+	   '#title'=>'',
+	   '#type' => 'select',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'panchayat'),
+	   '#options' => common_custom_user_villward_list_new($value_block,$area_code),
+	   '#prefix' => '<div id="ld_emp_vill_ward_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-location-arrow"></i><i class="select-icon"></i>'.$area_name.'<span id=\'star\'>*</span>',
+	   '#suffix' => '</label></section></div>',
+	   /*'#ajax'=> array(
+			'event' 		=> 'change',
+			'effect' 		=> 'fade',			
+			'callback'		=> 'get_ajax_load',
+			'progress'		=>	array(
+				'type'		=>'throbber',
+				'message'	=>t('loading'),
+			),
+			)*/
+		);
+	}else{
+		$form['panchayat'] = array(
+		   '#prefix' => '<div id="ld_emp_vill_ward_replace">',
+		   '#suffix' => '</div>',
+		);
+	}
+	/*$value_panchayat 	= 	isset($form_state['values']['panchayat']) ? $form_state['values']['panchayat'] : '';
+	
+	if(!empty($value_district) && !empty($value_subdivision) && !empty($value_areatype)  && !empty($value_block) && !empty($value_state) && !empty($value_panchayat)){
+		$form['policestation'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Police Station'),
+		   '#options' => common_custom_user_ps_list_new($value_district),
+		   '#prefix' => '<div id="ld_empps_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-marker"></i><i class="select-icon"></i>Police Station<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		);
+	}else{
+		$form['policestation'] = array(
+		   '#prefix' => '<div id="ld_empps_replace">',
+		   '#suffix' => '</div>',
+		);
+	}*/
+	
+	$form['areatypeDivEnd'] = array(
+					 '#prefix' 				=> '',
+					 '#suffix' 				=> '</div>'
+					);
+	
+  $form['LDEnd'] = array(
+		 '#prefix' 				=> '',
+		 '#suffix' 				=> '</fieldset></div></div>'
+	);	
+	
+		
+		
+	$form['shopStart'] = array(
+	   '#prefix'=>'<div class="x_panel"><div class="x_title"><h1><span>S</span>hop</h1></div><div class="x_content"><fieldset>',
+	   '#suffix' => ''
+	);
+	$form['shopdistrictdivstart'] = array(
+	   '#prefix'=>'<div class="row">',
+	   '#suffix' => ''
+	);
+	
+	$form['district_shop'] = array(
+	   '#title'=>'',
+	   '#type' => 'select',
+	   '#id'=>'district_name_shop',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'District'),
+	   '#options' => get_district_by_id($state_v), ////get_shop_district_by_id
+	   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load_shop',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							),
+	   '#prefix' => '<section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>District',
+  	   '#suffix' => '</label></section>',
+	);
+	
+	$value_district_shop	=	isset($form_state['values']['district_shop']) ? $form_state['values']['district_shop'] : '';
+	
+   	
+	if(!empty($value_district_shop) && !empty($state_v) && $state_v == 1){
+		
+		$form['subdivision_shop'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Sub Division' ),
+		   '#options' => common_custom_user_subdivisionlist_list_new_shop($value_district_shop),
+		   '#prefix' => '<div id="ld_empsubdv_replace_shop"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>Sub-Division<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load_shop',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							)
+		);
+	}else{ 
+		
+		$form['subdivision_shop'] = array(
+		   '#prefix' => '<div id="ld_empsubdv_replace_shop">',
+		   '#suffix' => '</div>',
+		);
+		
+	}
+	$value_subdivision_shop	=	isset($form_state['values']['subdivision_shop']) ? $form_state['values']['subdivision_shop'] : '';
+	
+	if(!empty($value_district_shop) && !empty($value_subdivision_shop) && $state_v == 1){
+		$form['areatype_shop'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Area Type'),
+		   '#options' => common_custom_user_areatype_list_new_shop($value_district_shop, $value_subdivision_shop),
+		   '#prefix' => '<div id="ld_emp_areatype_replace_shop"><section class="col col-4"><label class="select"><i class="icon-prepend fa-location-arrow"></i><i class="select-icon"></i>Area Type<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load_shop',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							)
+		);
+	}else{
+		$form['areatype_shop'] = array(
+		   '#prefix' => '<div id="ld_emp_areatype_replace_shop">',
+		   '#suffix' => '</div>',
+		);
+	}
+	$form['shopdistrictdivend'] = array(
+		   '#prefix'=>'',
+		   '#suffix' => '</div>'
+		);
+	$value_areatype_shop	=	isset($form_state['values']['areatype_shop']) ? $form_state['values']['areatype_shop'] : '';
+	
+	if(!empty($value_district_shop) && !empty($value_subdivision_shop) && $value_subdivision_shop != "" && !empty($value_areatype_shop) && $state_v == 1){
+		
+		if ( $value_areatype_shop == 'B' ){
+			$areatype_name_shop	= 'Block';
+		}elseif( $value_areatype_shop == 'M'){
+			$areatype_name_shop	= 'Municipality';
+		}elseif( $value_areatype_shop == 'C'){
+			$areatype_name_shop	= 'Corporation';
+		}elseif( $value_areatype_shop == 'S'){
+			$areatype_name_shop	= 'SEZ';
+		}elseif($value_areatype_shop == 'N'){
+			$areatype_name_shop	= 'Notified Area';
+		}
+		$form['shopareatypedivstart'] = array(
+		   '#prefix'=>'<div class="row">',
+		   '#suffix' => ''
+		);
+		$form['block_shop'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'subdivision'),
+		   '#options' => common_custom_user_block_list_new_shop($value_subdivision_shop,$value_areatype_shop),
+		   '#prefix' => '<div id="ld_empareatype_name_replace_shop"><section class="col col-4"><label class="select"><i class="icon-prepend fa-location-arrow"></i><i class="select-icon"></i>'.$areatype_name_shop.'<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load_shop',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							)
+		);
+		
+		
+	}else{
+		$form['block_shop'] = array(
+		   '#prefix' => '<div id="ld_empareatype_name_replace_shop">',
+		   '#suffix' => '</div>',
+		);
+	}
+	
+					
+	$value_block_shop 	= 	isset($form_state['values']['block_shop']) ? $form_state['values']['block_shop'] : '';
+	
+	if(!empty($value_district_shop) && !empty($value_subdivision_shop) && !empty($value_areatype_shop)  && !empty($value_block_shop) && $state_v == 1){
+		
+		if ( $value_areatype_shop == 'B' ){
+			$area_name_shop		= 'Gram Panchayat';
+			$area_code_shop 	= 'V';
+		}elseif( $value_areatype_shop == 'M'){
+			$area_name_shop		= 'Ward';
+			$area_code_shop 	= 'W';
+		}elseif( $value_areatype_shop == 'C'){
+			$area_name_shop		= 'Ward';
+			$area_code_shop 	= 'C';
+		}elseif( $value_areatype_shop == 'S'){
+			$area_name_shop		= 'Sector';
+			$area_code_shop 	= 'S';
+		}elseif($value_areatype_shop == 'N'){
+			$area_name_shop		= 'Notified Area';
+			$area_code_shop 	= 'N';
+		}
+		
+			
+	$form['panchayat_shop'] = array(
+	   '#title'=>'',
+	   '#type' => 'select',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'panchayat'),
+	   //'#options' => array('0'=>t('Select Gram Panchayat')),
+	   '#options' => common_custom_user_villward_list_new_shop($value_block_shop,$area_code_shop),
+	   '#prefix' => '<div id="ld_emp_vill_ward_replace_shop"><section class="col col-4"><label class="select"><i class="icon-prepend fa-location-arrow"></i><i class="select-icon"></i>'.$area_name_shop.'<span id=\'star\'>*</span>',
+	   '#suffix' => '</label></section></div>',
+	   /*'#ajax'=> array(
+			'event' 		=> 'change',
+			'effect' 		=> 'fade',			
+			'callback'		=> 'get_ajax_load_shop',
+			'progress'		=>	array(
+				'type'		=>'throbber',
+				'message'	=>t('loading'),
+			),
+			)*/
+		);
+	}else{
+		$form['panchayat_shop'] = array(
+		   '#prefix' => '<div id="ld_emp_vill_ward_replace_shop">',
+		   '#suffix' => '</div>',
+		);
+	}
+	/*$value_panchayat_shop 	= 	isset($form_state['values']['panchayat_shop']) ? $form_state['values']['panchayat_shop'] : '';
+	
+	
+	if(!empty($value_district_shop) && !empty($value_subdivision_shop) && !empty($value_areatype_shop)  && !empty($value_block_shop) && !empty($value_panchayat_shop)){
+		$form['policestation_shop'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Police Station'),
+		   //'#options' => array('0'=>t('Select Police Station')),
+		   '#options' => common_custom_user_ps_list_new_shop($value_district_shop),
+		   '#prefix' => '<div id="ld_empps_replace_shop"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-marker"></i><i class="select-icon"></i>Police Station<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		);
+	}else{
+		$form['policestation_shop'] = array(
+		   '#prefix' => '<div id="ld_empps_replace_shop">',
+		   '#suffix' => '</div>',
+		);
+	}*/
+	$form['shopareatypedivend'] = array(
+		   '#prefix'=>'',
+		   '#suffix' => '</div>'
+		);
+	
+	$form['shop_end'] = array(
+			 '#prefix' 	=> '',
+			 '#suffix' 	=> '</fieldset>'
+		);
+		 
+	
+	 
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Update',
+		'#attributes' => array('class'=>array('btn btn-success pull-right')),
+		'#prefix' => '<footer><div class="col-md-4 remarks"><div class="row">Fields marked with * are mandatory</div></div>',
+  		'#suffix' => '</footer></div></div>',
+     ); 
+	
+	$form['entry_list_data'] = array(
+		'#prefix' => '<div class="col-md-12">'.entry_list(),
+		'#suffix' => '</div>'
+	);
+	 
+	  
+	return  $form;
+ }
+ 
+ function shop_mapping_form_submit($form, &$form_state) { 
+    global $base_root, $base_path, $user;
+	$txn = db_transaction();
+	try{
+		$query = db_update('village_ward_master');
+		$query->fields(array(
+							 'shop_gp_ward_id'	=>	!empty($form_state['values']['panchayat_shop'])?trim($form_state['values']['panchayat_shop']):0,
+							));
+		$query->condition('village_code', $form_state['values']['panchayat']);
+		$rs = $query->execute();
+		drupal_set_message('Successfully Updated!');
+	}catch (Exception $e){
+		$txn->rollback();
+		watchdog_exception('type', $e);
+		drupal_set_message('Unable to Updated!');
+	}
+ }
+ 
+ function get_ajax_load_shop($form, $form_state){
+	$commands = array();
+	//$commands[] = ajax_command_replace('#ld_edit_emp_district_replace', drupal_render($form['district']));
+	$commands[] = ajax_command_replace('#ld_empsubdv_replace_shop', drupal_render($form['subdivision_shop']));
+	$commands[] = ajax_command_replace('#ld_emp_areatype_replace_shop', drupal_render($form['areatype_shop']));
+	$commands[] = ajax_command_replace('#ld_empareatype_name_replace_shop', drupal_render($form['block_shop']));
+	$commands[] = ajax_command_replace('#ld_emp_vill_ward_replace_shop', drupal_render($form['panchayat_shop']));
+	//$commands[] = ajax_command_replace('#ld_empps_replace_shop', drupal_render($form['policestation_shop']));
+	/*$commands[] = ajax_command_replace('#ld_post_office_div', drupal_render($form['postoffice']));*/
+	return array('#type' => 'ajax', '#commands' => $commands);
+ }
+ 
+ 
+ 
+ function entry_list(){
+	global $user;
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$query = db_select('village_ward_master', 'vwm');
+	$query->leftJoin('block_mun_master', 'b', 'b.block_code = vwm.block_code'); 
+	$query->leftJoin('sub_division', 's', 'b.sub_division_code = s.sub_div_code::integer');   
+  	$query->leftJoin('district_master', 'd', 'd.district_code = b.distict_code'); 
+  	$query->fields('vwm', array('village_code','village_name','category','shop_gp_ward_id'));
+  	$query->fields('b', array('block_mun_name','type'));
+  	$query->fields('s', array('sub_div_name'));
+  	$query->fields('d', array('district_name')); 
+	$query->condition('vwm.is_active','Y');
+	$query->orderBy('vwm.ord', 'ASC'); 
+	$query->orderBy('vwm.village_name', 'ASC'); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	//print_r($resultData); exit;
+	
+	$output = '';
+	$header = array(
+				array('data'=> 'Sl No'),
+				array('data'=> 'District Name'),
+				array('data'=> 'Sub Division Name'),
+				array('data'=> 'Block Name'),
+				array('data'=> 'Type'),
+				array('data'=> 'GP Name'),
+				array('data'=> 'Shop GP Ward ID'),
+				array('data'=> 'Shop GP Ward Name'),
+			);
+			
+	$rows = array();
+	$i = 0;
+	foreach($resultData as $val){
+		$i++;
+		if(trim($val->type)=='B'){
+			$type = 'Block';
+		}if(trim($val->type)=='M'){
+			$type = 'Municipality';
+		}if(trim($val->type)=='C'){
+			$type = 'Corporation';
+		}if(trim($val->type)=='S'){
+			$type = 'SEZ';
+		}if(trim($val->type)=='N'){
+			$type = 'Notified Area';
+		}
+		
+		if(trim($val->shop_gp_ward_id) > 0 && trim($val->category)=='V'){
+			$query = db_select('tel_gp', 'gp');
+			$query->fields('gp', array('gp')); 
+			$query->condition('gp.gp_id',$val->shop_gp_ward_id,'=');
+			$rs = $query->execute();
+			$rsData = $rs->fetchAssoc();
+			//print_r($rsData);
+			$shop_gp_ward_name = $rsData['gp'];
+		}elseif(trim($val->shop_gp_ward_id) > 0 && trim($val->category)!='V'){
+			$query = db_select('tel_ward', 'wd');
+			$query->fields('wd', array('ward')); 
+			$query->condition('wd.ward_id',$val->shop_gp_ward_id,'=');
+			$rs = $query->execute();
+			$rsData = $rs->fetchAssoc();
+			//print_r($rsData);
+			$shop_gp_ward_name = $rsData['ward'];
+		}else{
+			$shop_gp_ward_name = 'N/A';
+		}
+	  $rows [] = array(  
+	  		  $i,
+			  array('data' => t($val->district_name)),
+			  array('data' => t($val->sub_div_name)),	
+			  array('data' => t($val->block_mun_name)),
+			  array('data' => $type),
+			  array('data' => t($val->village_name)),
+			  array('data' => t($val->shop_gp_ward_id)),
+			  array('data' => $shop_gp_ward_name),
+		); 
+	}
+	
+	  
+	  $output .= theme('datatable', array(
+        'header' => $header,
+        'rows' => $rows,
+        'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+        'sticky' => true,
+        'caption' => '',
+        'colgroups' => array(),
+        'empty' => t("No data found!") // The message to be displayed if table is empty
+      )
+    ).theme('pager'); 	
+	  
+	return $output;
+}
+ 
+
+
+
+/**************************************************Police station Mapping*****************************************************************/
+
+function shop_mapping_form_police_station($form, &$form_state) { 
+ 
+  global $base_root, $base_path;
+  drupal_add_css(drupal_get_path('module', 'shop_mapping') . '/css/sky-forms.css');
+  drupal_add_css(drupal_get_path('module', 'shop_mapping') . '/css/form-design.css');
+  drupal_add_js(drupal_get_path('module', 'shop_mapping') . '/js/myfunction.js');
+  
+  $form['#attributes']['class'][] = 'sky-form custom-form-main';
+  
+  $form['LDStart'] = array(
+	   '#prefix'=>'<div class="x_panel"><div class="x_title"><h1><span>L</span>D</h1></div><div class="x_content"><fieldset>',
+	   '#suffix' => ''
+	);	
+	$form['districtDivStart'] = array(
+		 '#prefix' 	=> '<div class="row">',
+		 '#suffix' 	=> ''
+	);
+	$state_v = 1;
+	$value_state = 1;
+	if(!empty($state_v)){	
+		$form['district'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#id'=>'district_name',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'District'),
+		   '#options' => get_district_by_id($state_v),
+		   '#prefix' => '<div id="ld_edit_emp_district_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>District',
+		   '#suffix' => '</label></section></div>',
+		   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load_shop_ld',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							)
+		);
+	}else{
+		$form['district'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#id'=>'district_name',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'District'),
+		   '#options' => get_district_by_id($state_v),
+		   '#prefix' => '<div id="ld_edit_emp_district_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>District',
+		   '#suffix' => '</label></section></div>',
+		);
+	}
+	
+	$value_district	=	isset($form_state['values']['district']) ? $form_state['values']['district'] : '';
+	
+	if(!empty($value_district)){
+		$form['policestation'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Police Station'),
+		   '#options' => common_custom_user_ps_list_new($value_district),
+		   '#prefix' => '<div id="ld_empps_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-marker"></i><i class="select-icon"></i>Police Station<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		);
+	}else{
+		$form['policestation'] = array(
+		   '#prefix' => '<div id="ld_empps_replace">',
+		   '#suffix' => '</div>',
+		);
+	}
+	
+	$form['areatypeDivEnd'] = array(
+					 '#prefix' 				=> '',
+					 '#suffix' 				=> '</div>'
+					);
+	
+  $form['LDEnd'] = array(
+		 '#prefix' 				=> '',
+		 '#suffix' 				=> '</fieldset></div></div>'
+	);	
+	
+		
+		
+	$form['shopStart'] = array(
+	   '#prefix'=>'<div class="x_panel"><div class="x_title"><h1><span>S</span>hop</h1></div><div class="x_content"><fieldset>',
+	   '#suffix' => ''
+	);
+	$form['shopdistrictdivstart'] = array(
+	   '#prefix'=>'<div class="row">',
+	   '#suffix' => ''
+	);
+	
+	$form['district_shop'] = array(
+	   '#title'=>'',
+	   '#type' => 'select',
+	   '#id'=>'district_name_shop',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'District'),
+	   '#options' => get_district_by_id($state_v), ////get_shop_district_by_id
+	   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load_shop_police_station',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							),
+	   '#prefix' => '<section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>District',
+  	   '#suffix' => '</label></section>',
+	);
+	
+	$value_district_shop	=	isset($form_state['values']['district_shop']) ? $form_state['values']['district_shop'] : '';
+
+	if(!empty($value_district_shop)){
+		$form['policestation_shop'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Police Station'),
+		   //'#options' => array('0'=>t('Select Police Station')),
+		   '#options' => common_custom_user_ps_list_new_shop($value_district_shop),
+		   '#prefix' => '<div id="ld_empps_replace_shop"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-marker"></i><i class="select-icon"></i>Police Station<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		);
+	}else{
+		$form['policestation_shop'] = array(
+		   '#prefix' => '<div id="ld_empps_replace_shop">',
+		   '#suffix' => '</div>',
+		);
+	}
+	$form['shopareatypedivend'] = array(
+		   '#prefix'=>'',
+		   '#suffix' => '</div>'
+		);
+	
+	$form['shop_end'] = array(
+			 '#prefix' 	=> '',
+			 '#suffix' 	=> '</fieldset>'
+		);
+		 
+	
+	 
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Update',
+		'#attributes' => array('class'=>array('btn btn-success pull-right')),
+		'#prefix' => '<footer><div class="col-md-4 remarks"><div class="row">Fields marked with * are mandatory</div></div>',
+  		'#suffix' => '</footer></div></div>',
+     ); 
+	
+	$form['entry_list_data'] = array(
+		'#prefix' => '<div class="col-md-12">'.entry_list_police_station(),
+		'#suffix' => '</div>'
+	);
+	 
+	  
+	return  $form;
+ }
+ 
+ function shop_mapping_form_police_station_submit($form, &$form_state) { 
+    global $base_root, $base_path, $user;
+	$txn = db_transaction();
+	try{
+		$query = db_update('police_station');
+		$query->fields(array(
+							 'shop_ps_id'	=>	!empty($form_state['values']['policestation_shop'])?trim($form_state['values']['policestation_shop']):0,
+							));
+		$query->condition('police_station_code', $form_state['values']['policestation']);
+		$rs = $query->execute();
+		drupal_set_message('Successfully Updated!');
+	}catch (Exception $e){
+		$txn->rollback();
+		watchdog_exception('type', $e);
+		drupal_set_message('Unable to Updated!');
+	}
+ }
+ 
+ function get_ajax_load_shop_ld($form, $form_state){
+	$commands = array();
+	//$commands[] = ajax_command_replace('#ld_edit_emp_district_replace', drupal_render($form['district']));
+	/*$commands[] = ajax_command_replace('#ld_empsubdv_replace_shop', drupal_render($form['subdivision_shop']));
+	$commands[] = ajax_command_replace('#ld_emp_areatype_replace_shop', drupal_render($form['areatype_shop']));
+	$commands[] = ajax_command_replace('#ld_empareatype_name_replace_shop', drupal_render($form['block_shop']));
+	$commands[] = ajax_command_replace('#ld_emp_vill_ward_replace_shop', drupal_render($form['panchayat_shop']));*/
+	$commands[] = ajax_command_replace('#ld_empps_replace', drupal_render($form['policestation']));
+	/*$commands[] = ajax_command_replace('#ld_post_office_div', drupal_render($form['postoffice']));*/
+	return array('#type' => 'ajax', '#commands' => $commands);
+ }
+ 
+ function get_ajax_load_shop_police_station($form, $form_state){
+	$commands = array();
+	//$commands[] = ajax_command_replace('#ld_edit_emp_district_replace', drupal_render($form['district']));
+	/*$commands[] = ajax_command_replace('#ld_empsubdv_replace_shop', drupal_render($form['subdivision_shop']));
+	$commands[] = ajax_command_replace('#ld_emp_areatype_replace_shop', drupal_render($form['areatype_shop']));
+	$commands[] = ajax_command_replace('#ld_empareatype_name_replace_shop', drupal_render($form['block_shop']));
+	$commands[] = ajax_command_replace('#ld_emp_vill_ward_replace_shop', drupal_render($form['panchayat_shop']));*/
+	$commands[] = ajax_command_replace('#ld_empps_replace_shop', drupal_render($form['policestation_shop']));
+	/*$commands[] = ajax_command_replace('#ld_post_office_div', drupal_render($form['postoffice']));*/
+	return array('#type' => 'ajax', '#commands' => $commands);
+ }
+ 
+ 
+ 
+ function entry_list_police_station(){
+	global $user;
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$query = db_select('police_station', 'ps');
+	/*$query->leftJoin('block_mun_master', 'b', 'b.block_code = vwm.block_code'); 
+	$query->leftJoin('sub_division', 's', 'b.sub_division_code = s.sub_div_code::integer');   */
+  	$query->leftJoin('district_master', 'd', 'd.district_code = ps.dristrict_code'); 
+  	$query->fields('ps', array('name_of_district','name_of_police_station','police_station_code','id','shop_ps_id'));
+  	/*$query->fields('b', array('block_mun_name','type'));
+  	$query->fields('s', array('sub_div_name'));*/
+  	$query->fields('d', array('district_name')); 
+	/*$query->condition('vwm.is_active','Y');
+	$query->orderBy('vwm.ord', 'ASC'); */
+	$query->orderBy('ps.name_of_police_station', 'ASC'); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	//print_r($resultData); exit;
+	
+	$output = '';
+	$header = array(
+				array('data'=> 'Sl No'),
+				array('data'=> 'District Name'),
+				array('data'=> 'Police Station Code'),
+				array('data'=> 'Police Station'),
+				array('data'=> 'Shop Police Station ID'),
+				array('data'=> 'Shop Police Station Name'),
+			);
+			
+	$rows = array();
+	$i = 0;
+	foreach($resultData as $val){
+		$i++;
+		
+		if(trim($val->shop_ps_id) > 0){
+			$query = db_select('tel_police_station', 'ps');
+			$query->fields('ps', array('police_station')); 
+			$query->condition('ps.police_station_id',$val->shop_ps_id,'=');
+			$rs = $query->execute();
+			$rsData = $rs->fetchAssoc();
+			//print_r($rsData);
+			$shop_police_station_name = $rsData['police_station'];
+		}else{
+			$shop_police_station_name = 'N/A';
+		}
+	  $rows [] = array(  
+	  		  $i,
+			  array('data' => t($val->district_name)),
+			  array('data' => t($val->police_station_code)),
+			  array('data' => t($val->name_of_police_station)),
+			  array('data' => t($val->shop_ps_id)),
+			  array('data' => $shop_police_station_name),
+		); 
+	}
+	
+	  
+	  $output .= theme('datatable', array(
+        'header' => $header,
+        'rows' => $rows,
+        'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+        'sticky' => true,
+        'caption' => '',
+        'colgroups' => array(),
+        'empty' => t("No data found!") // The message to be displayed if table is empty
+      )
+    ).theme('pager'); 	
+	  
+	return $output;
+}
+
+
+
+/**************************************************Post Office Mapping*****************************************************************/
+
+function shop_mapping_form_post_office($form, &$form_state) { 
+ 
+  global $base_root, $base_path;
+  drupal_add_css(drupal_get_path('module', 'shop_mapping') . '/css/sky-forms.css');
+  drupal_add_css(drupal_get_path('module', 'shop_mapping') . '/css/form-design.css');
+  drupal_add_js(drupal_get_path('module', 'shop_mapping') . '/js/myfunction.js');
+  
+  $form['#attributes']['class'][] = 'sky-form custom-form-main';
+  
+  $form['LDStart'] = array(
+	   '#prefix'=>'<div class="x_panel"><div class="x_title"><h1><span>L</span>D</h1></div><div class="x_content"><fieldset>',
+	   '#suffix' => ''
+	);	
+	$form['districtDivStart'] = array(
+		 '#prefix' 	=> '<div class="row">',
+		 '#suffix' 	=> ''
+	);
+	$state_v = 1;
+	$value_state = 1;
+	if(!empty($state_v)){	
+		$form['district'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#id'=>'district_name',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'District'),
+		   '#options' => get_district_by_id($state_v),
+		   '#prefix' => '<div id="ld_edit_emp_district_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>District',
+		   '#suffix' => '</label></section></div>',
+		   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load_shop_ld_po',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							)
+		);
+	}else{
+		$form['district'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#id'=>'district_name',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'District'),
+		   '#options' => get_district_by_id($state_v),
+		   '#prefix' => '<div id="ld_edit_emp_district_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>District',
+		   '#suffix' => '</label></section></div>',
+		);
+	}
+	
+	$value_district	=	isset($form_state['values']['district']) ? $form_state['values']['district'] : '';
+	
+	if(!empty($value_district)){
+		$form['postoffice'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Police Station'),
+		   '#options' => common_custom_user_po_list_new($value_district),
+		   '#prefix' => '<div id="ld_post_office_div"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-marker"></i><i class="select-icon"></i>Police Station<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		);
+	}else{
+		$form['postoffice'] = array(
+		   '#prefix' => '<div id="ld_post_office_div">',
+		   '#suffix' => '</div>',
+		);
+	}
+	
+	$form['areatypeDivEnd'] = array(
+					 '#prefix' 				=> '',
+					 '#suffix' 				=> '</div>'
+					);
+	
+  $form['LDEnd'] = array(
+		 '#prefix' 				=> '',
+		 '#suffix' 				=> '</fieldset></div></div>'
+	);	
+	
+		
+		
+	$form['shopStart'] = array(
+	   '#prefix'=>'<div class="x_panel"><div class="x_title"><h1><span>S</span>hop</h1></div><div class="x_content"><fieldset>',
+	   '#suffix' => ''
+	);
+	$form['shopdistrictdivstart'] = array(
+	   '#prefix'=>'<div class="row">',
+	   '#suffix' => ''
+	);
+	
+	$form['district_shop'] = array(
+	   '#title'=>'',
+	   '#type' => 'select',
+	   '#id'=>'district_name_shop',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'District'),
+	   '#options' => get_district_by_id($state_v), ////get_shop_district_by_id
+	   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load_shop_post_office',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							),
+	   '#prefix' => '<section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>District',
+  	   '#suffix' => '</label></section>',
+	);
+	
+	$value_district_shop	=	isset($form_state['values']['district_shop']) ? $form_state['values']['district_shop'] : '';
+
+	if(!empty($value_district_shop)){
+		$form['postoffice_shop'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Police Station'),
+		   //'#options' => array('0'=>t('Select Police Station')),
+		   '#options' => common_custom_user_po_list_new_shop($value_district_shop),
+		   '#prefix' => '<div id="ld_post_office_shop_div"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-marker"></i><i class="select-icon"></i>Police Station<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		);
+	}else{
+		$form['postoffice_shop'] = array(
+		   '#prefix' => '<div id="ld_post_office_shop_div">',
+		   '#suffix' => '</div>',
+		);
+	}
+	
+	$form['shopareatypedivend'] = array(
+		   '#prefix'=>'',
+		   '#suffix' => '</div>'
+		);
+	
+	$form['shop_end'] = array(
+			 '#prefix' 	=> '',
+			 '#suffix' 	=> '</fieldset>'
+		);
+	
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Update',
+		'#attributes' => array('class'=>array('btn btn-success pull-right')),
+		'#prefix' => '<footer><div class="col-md-4 remarks"><div class="row">Fields marked with * are mandatory</div></div>',
+  		'#suffix' => '</footer></div></div>',
+     ); 
+	
+	$form['entry_list_data'] = array(
+		'#prefix' => '<div class="col-md-12">'.entry_list_post_office(),
+		'#suffix' => '</div>'
+	);
+	 
+	  
+	return  $form;
+ }
+ 
+ function shop_mapping_form_post_office_submit($form, &$form_state) { 
+    global $base_root, $base_path, $user;
+	$txn = db_transaction();
+	try{
+		$query = db_update('all_india_pin_code');
+		$query->fields(array(
+							 'shop_po_id'	=>	!empty($form_state['values']['postoffice_shop'])?trim($form_state['values']['postoffice_shop']):0,
+							));
+		$query->condition('id', $form_state['values']['postoffice']);
+		$rs = $query->execute();
+		drupal_set_message('Successfully Updated!');
+	}catch (Exception $e){
+		$txn->rollback();
+		watchdog_exception('type', $e);
+		drupal_set_message('Unable to Updated!');
+	}
+ }
+ 
+ function get_ajax_load_shop_ld_po($form, $form_state){
+	$commands = array();
+	$commands[] = ajax_command_replace('#ld_post_office_div', drupal_render($form['postoffice']));
+	return array('#type' => 'ajax', '#commands' => $commands);
+ }
+ 
+ function get_ajax_load_shop_post_office($form, $form_state){
+	$commands = array();
+	$commands[] = ajax_command_replace('#ld_post_office_shop_div', drupal_render($form['postoffice_shop']));
+	return array('#type' => 'ajax', '#commands' => $commands);
+ }
+ 
+ 
+ 
+ function entry_list_post_office(){
+	global $user;
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$query = db_select('all_india_pin_code', 'ps');
+	/*$query->leftJoin('block_mun_master', 'b', 'b.block_code = vwm.block_code'); 
+	$query->leftJoin('sub_division', 's', 'b.sub_division_code = s.sub_div_code::integer');   */
+  	$query->leftJoin('district_master', 'd', 'd.district_code = ps.district_code'); 
+  	$query->fields('ps', array('po_name','pincode','po_type','id','shop_po_id'));
+  	/*$query->fields('b', array('block_mun_name','type'));
+  	$query->fields('s', array('sub_div_name'));*/
+  	$query->fields('d', array('district_name')); 
+	$query->condition('ps.state_code','1');
+	/*$query->orderBy('vwm.ord', 'ASC'); */
+	$query->orderBy('ps.po_name', 'ASC'); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	//print_r($resultData); exit;
+	
+	$output = '';
+	$header = array(
+				array('data'=> 'Sl No'),
+				array('data'=> 'District Name'),
+				array('data'=> 'Pincode'),
+				array('data'=> 'Post Office Name'),
+				array('data'=> 'Shop Post Office ID'),
+				array('data'=> 'Shop Post Office Name'),
+				array('data'=> 'Shop Pincode'),
+			);
+			
+	$rows = array();
+	$i = 0;
+	foreach($resultData as $val){
+		$i++;
+		
+		if(trim($val->shop_po_id) > 0){
+			$query = db_select('tel_post_office', 'ps');
+			$query->fields('ps', array('post_office','pin_code')); 
+			$query->condition('ps.post_office_id',$val->shop_po_id,'=');
+			$rs = $query->execute();
+			$rsData = $rs->fetchAssoc();
+			//print_r($rsData);
+			$shop_post_office_name = $rsData['post_office'];
+			$shop_pin_code = $rsData['pin_code'];
+		}else{
+			$shop_post_office_name = 'N/A';
+			$shop_pin_code = 'N/A';
+		}
+	  $rows [] = array(  
+	  		  $i,
+			  array('data' => t($val->district_name)),
+			  array('data' => t($val->pincode)),
+			  array('data' => t($val->po_name)),
+			  array('data' => t($val->shop_po_id)),
+			  array('data' => $shop_post_office_name),
+			  array('data' => $shop_pin_code),
+		); 
+	}
+	
+	  
+	  $output .= theme('datatable', array(
+        'header' => $header,
+        'rows' => $rows,
+        'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+        'sticky' => true,
+        'caption' => '',
+        'colgroups' => array(),
+        'empty' => t("No data found!") // The message to be displayed if table is empty
+      )
+    ).theme('pager'); 	
+	  
+	return $output;
+}

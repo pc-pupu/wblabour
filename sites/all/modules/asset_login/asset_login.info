@@ -1,0 +1,10 @@
+;$Id$
+name = Asset LOGIN
+description = Asset Based Login using HRMS ID tagged with mobile number 
+package = Assets Management Modules
+version = "7.x"
+core = 7.x
+files[] = asset_login.module
+;dependencies[] = autoload
+
+				

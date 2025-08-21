@@ -1,0 +1,68 @@
+<?php
+
+
+function site_counter_permission(){
+
+	return array(
+		'site_counter_per' => array(
+
+			'title'=> t('Site Counter Permission'),
+
+		)
+
+	);
+}
+
+
+function site_counter_menu(){
+	$items = array();
+
+	$items['site-counter'] = array(
+
+ 		 'title'=> 'Site Counter',
+ 		 'page callback'=>'site_counter_value',
+		 'access arguments' => array('site_counter_per'),
+
+
+ 	);
+
+ 	return $items;
+}
+
+
+
+function site_counter_value(){
+
+	$results = db_query('select * from site_counter order by site_counter_id desc');
+	 
+	 $records = $results->fetchAssoc();
+
+	 $lastValue = $records['last_value'];
+
+	 $newValue = $lastValue+1;
+
+	 $site_counter_id = 1;
+
+	 $timeStamp = time();
+
+
+	 $updateDetails = array(
+	  
+	  'last_value' => $newValue,
+
+	  'update_time' => $timeStamp
+	  
+	 
+	  
+	  );
+
+	 db_update('site_counter')
+		->fields($updateDetails)
+		->condition('site_counter_id', $site_counter_id, '=')
+		->execute();
+
+
+	 return drupal_json_output(array('output'=> $newValue));
+
+
+}

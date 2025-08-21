@@ -1,0 +1,97 @@
+<?php
+require_once('php/common_validation.php');
+
+function otcsecurity_form_alter(&$form, $form_state, $form_id) {
+	$form['#validate'][] = 'forminput_validate';
+	#$form['#attributes'] = array('autocomplete' =>'off');	
+
+	switch($form_id) {
+		case 'user_admin_new_role':
+		case 'user_admin_role':
+		case 'user_admin_access_add_form':
+		case 'user_admin_access_edit_form':
+			$form['#validate'][] = 'roleform_validate';
+			break;
+	}
+	// File Upload Extension Validation
+	// $form['field_file'][$i]['#upload_validators']['fileextcheck']=array();
+}
+
+function otcsecurity_init() {
+	header("Cache-Control: no-cache, must-revalidate"); //HTTP 1.1
+	header("Pragma: no-cache"); //HTTP 1.0
+	header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // Date in the past
+	header('Expires: 0');
+}
+
+function fileextcheck($field) {
+	$file = "";
+	$errors = array();
+	$finfo = finfo_open(FILEINFO_MIME, "/usr/share/misc/magic.mgc");
+	if (!$finfo) {
+		$errors[] = t('File Info Library Missing');
+        	exit();
+    	}
+
+	$filepath = $field->filepath;
+	$filename = $field->filename;
+	$mimetyy = finfo_file($finfo, $filepath, FILEINFO_MIME_TYPE);
+
+	$tyy = explode("/", $mimetyy);
+	$ext_match = $tyy[1];
+	$path_info = pathinfo($filename);
+	$extt = $path_info['extension'];
+
+	switch($tyy[1]) {
+		case 'plain':
+			if ($tyy[0]=='text') { 
+				$ext_match = 'txt';
+				$x =array();
+                exec("grep -ci -E '<\?\w*|<%' $filepath",$x);
+                if ($x[0]>0) {
+	               $errors[] = t('Text File Contains PHP Code. So Cannot Upload');
+                }
+			}
+			break;
+		case 'vnd.oasis.opendocument.text':
+			$ext_match = 'odt';
+			break;
+	}
+
+	if($extt === $ext_match) { }
+	else {
+		$errors[] = t('Not a Valid File Type');
+	}
+	return $errors;
+}
+
+
+function roleform_validate($form, &$form_state) {
+	switch (trim($form['form_id']['#value'])) {
+		case 'user_admin_new_role':
+		case 'user_admin_role':
+			$name = $form_state['values']['name'];
+			chkbadchar($name, 'Roll Name', 'name');
+		break;
+		default:		
+		break;
+	}
+}
+
+
+function forminput_validate($form, &$form_state) {
+	foreach($form as $element){
+		if(is_array($element)){
+			if(isset($element['#type']) and ($element['#type'] == 'textfield')){
+				//chkbadchar($element['#post'][$element['#name']], $element['#title'], $element['#name']);
+				chkbadchar($form_state['values'][$element['#name']], $element['#title'], $element['#name']);
+			}
+			if(isset($element['#type']) and ($element['#type'] == 'textarea')){
+				//chkbadchar($element['#post'][$element['#name']], $element['#title'], $element['#name']);
+				chkbadchar($form_state['values'][$element['#name']], $element['#title'], $element['#name']);
+			}
+		}
+	}
+}
+
+

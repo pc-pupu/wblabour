@@ -1,0 +1,7 @@
+#token-suggestions {
+	display: none;
+}
+
+#token-suggestions > div {
+	padding: 3px 0;
+}

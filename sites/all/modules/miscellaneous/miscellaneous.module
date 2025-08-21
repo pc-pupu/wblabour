@@ -1,0 +1,2844 @@
+<?php
+
+function miscellaneous_init(){
+	global $user;
+	if(user_is_logged_in()){
+		$url = $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+		$arr = explode("/",$url);
+		if($arr[1]==""){
+			  if(in_array(variable_get('investor', 5), array_keys($user->roles))){
+				 drupal_goto('dashboard');
+			  }else if(in_array(variable_get('maptrackuser', 6), array_keys($user->roles))){
+				 drupal_goto('dashboard-prcsec');
+			  }else if(in_array(variable_get('asset', 8), array_keys($user->roles))){
+				 drupal_goto('assetuser-dashboard');
+			  }else if(in_array(variable_get('assetadmin', 9), array_keys($user->roles))){
+				 drupal_goto('assetadmin-dashboard');
+			  }else if(in_array(variable_get('assetdiradmin', 10), array_keys($user->roles))){
+				 drupal_goto('assetdiradmin-dashboard');
+			  }else if(in_array(variable_get('field', 11), array_keys($user->roles))){
+				 drupal_goto('acknowledgement');
+			  }else{
+				 drupal_goto('labourdept');
+			  }
+		}
+	}
+}
+
+function miscellaneous_cron() {
+	//send_sms('9836886161','test message');
+  // $mob="7003853722";
+	// send_sms($mob,'Please submit your Asset Declaration for the year '.date('Y').', within 30th April,'.date('Y').'. Please ignore if already submitted. Nodal Officer Labour Department, WB','1107161492322066090');
+	
+	$pendingLDPeople = array();
+	
+    $querypending = db_select('a_user_details','ud');
+	$querypending->leftJoin('a_user_details_service', 'us', 'ud.uid = us.uid');
+	$querypending->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = us.directorate_code'); 
+	$querypending->fields('ud', array('uid','fname','doj','dor','status','mobile'));
+	$querypending->fields('dm', array('id','directorate_name'));
+	$querypending->fields('us', array('designation','directorate_code','district_code','service_status','emp_group','office_id'));
+	$querypending->condition('ud.status',0,'=');
+	$querypending->condition('ud.dor','2023-12-31','>');
+	$querypending->condition('us.service_status',1,'=');
+	$querypending->orderBy('ud.fname','ASC');
+	//echo $querypending; exit;
+	$result1 = $querypending->execute();
+	$pendingData = $result1->fetchAll();
+	//print_r($pendingData); exit;
+	foreach($pendingData as $key=>$data){
+		 //echo "hii11"; exit;
+		$rsData = array();
+		$query = db_select('a_asset_mst','am');
+		$query->fields('am', array('declaration_yr','designation','directorate_code','status','created_date'));
+		$query->condition('am.declaration_yr',date('Y'),'=');
+		$query->condition('am.uid',$data->uid,'=');
+		$query->condition('am.status',1,'=');
+		$result = $query->execute();
+		$rsData = $result->fetchAll();
+		if(empty($rsData)){
+			send_sms($data->mobile,'Please submit your Asset Declaration for the year '.date('Y').', within 30th April,'.date('Y').'. Please ignore if already submitted. Nodal Officer Labour Department, WB','1107161492322066090');
+		}
+  	}
+  
+}
+
+function miscellaneous_custom_theme() {
+  global $user;
+  if(user_is_logged_in()){
+	  if(in_array(variable_get('investor', 5), array_keys($user->roles))){
+		 return 'est';
+	  }else if(in_array(variable_get('maptrackuser', 6), array_keys($user->roles))){
+		 return 'est';
+	  }else if(in_array(variable_get('asset', 8), array_keys($user->roles))){
+		 return 'asset';
+	  }else if(in_array(variable_get('assetadmin', 9), array_keys($user->roles))){
+		 return 'asset';
+	  }else if(in_array(variable_get('assetdiradmin', 10), array_keys($user->roles))){
+		 return 'asset';
+	  }else if(in_array(variable_get('field', 11), array_keys($user->roles))){
+		 return 'asset';
+	  }else{
+		 return 'labourdept';
+	  }
+  }
+}
+
+function miscellaneous_user_login(&$edit, $account) {
+  if (!isset($_POST['form_id']) || $_POST['form_id'] != 'user_pass_reset') {
+    if(in_array('investor', $account->roles)) {
+      $_GET['destination'] = 'dashboard';
+    }
+	if(in_array('maptrackuser', $account->roles)) {
+      $_GET['destination'] = 'dashboard-prcsec';
+    }
+	if(in_array('assetadmin', $account->roles)) {
+      $_GET['destination'] = 'assetadmin-dashboard';
+    }
+	if(in_array('assetdiradmin', $account->roles)) {
+      $_GET['destination'] = 'assetdiradmin-dashboard';
+    }
+	if(in_array('field', $account->roles)) {
+      $_GET['destination'] = 'acknowledgement';
+    }
+	if(in_array('asset', $account->roles)) {
+      $_GET['destination'] = 'assetuser-dashboard';
+    }
+  }
+}
+
+
+/*********************************************************For Web Service***************************************************************************/
+
+function districtNameByDistrictID($dis_id){
+	$query = db_select('district_master', 'd');
+  	$query ->fields('d', array( 'id', 'district_name','district_code','state_id','is_active'));
+	$query->condition('d.id', $dis_id, '=');
+  	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	return $resultData[district_name];
+}
+function subdivisionNameBySubdivisionCode($sub_div_code){
+	$query = db_select('sub_division', 's');
+  	$query ->fields('s', array('sub_div_name'));
+	$query->condition('s.sub_div_code', $sub_div_code, '=');
+  	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	return $resultData[sub_div_name];
+}
+function blockNameByBlockCode($block_code){
+	$query = db_select('block_mun_master', 'b');
+  	$query ->fields('b', array('block_mun_name'));
+	$query->condition('b.block_code', $block_code, '=');
+  	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	return $resultData[block_mun_name];
+}
+function villageNameByVillageCode($village_code){
+	$query = db_select('village_ward_master', 'v');
+  	$query ->fields('v', array('village_name'));
+	$query->condition('v.village_code', $village_code, '=');
+  	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	return $resultData[village_name];
+}
+function policeStationNameByPoliceStationCode($ps_code){
+	$query = db_select('police_station', 'p');
+  	$query ->fields('p', array('name_of_police_station'));
+	$query->condition('p.police_station_code', $ps_code, '=');
+  	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	return $resultData[name_of_police_station];
+}
+function postOfficeNameBypostOfficeID($po_id){
+	$query = db_select('all_india_pin_code', 'alpc');
+  	$query ->fields('alpc', array('po_name'));
+	$query->condition('alpc.id', $po_id, '=');
+  	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	return $resultData[po_name];
+}
+function countryNameBypostCountryID($country_id){
+	$query = db_select('country', 'c');
+  	$query ->fields('c', array('nicename'));
+	$query->condition('c.id', $country_id, '=');
+  	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	return $resultData[nicename];
+}
+function stateNameBypostStateID($state_id){
+	$query = db_select('state_master', 's');
+  	$query ->fields('s', array('statename'));
+	$query->condition('s.id', $state_id, '=');
+  	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	return $resultData[statename];
+}
+/******************************************************Web Service End ************************************************/
+
+/**************************************************** Function for Assets Management **************************************************************/
+function yearWiseIndividualUserDataSubmitted($year=array(),$uid=''){
+	/*echo $uid;
+	print_r($year); exit;*/
+	$query = db_select('a_asset_mst','am');
+	$query->fields('am', array('uid','declaration_yr','designation','directorate_code','status','created_date'));
+	if(!empty($year)){
+		$query->condition('am.declaration_yr',$year,'IN');
+	}
+	$query->condition('am.uid',$uid,'=');
+	$query->condition('am.status',1,'=');
+	$result = $query->execute();
+	$rsData = $result->fetchAll();
+	return $rsData;
+}
+function yearWiseIndividualUserData($year=array(),$uid=''){
+	$query = db_select('a_asset_mst','am');
+	$query->fields('am', array('declaration_yr','designation','directorate_code','status','created_date'));
+	if(!empty($year)){
+		$query->condition('am.declaration_yr',$year,'IN');
+	}
+	$query->condition('am.uid',$uid,'=');
+	$result = $query->execute();
+	$rsData = $result->fetchAll();
+	return $rsData;
+}
+function forwarding_id(){
+	$query 			= 	db_select('a_transaction_history', 'T');
+	$query			->	fields('T',  array('id'));
+	$query			->	orderBy('T.id','DESC');
+	$query_result 	= 	$query->execute()->fetchObject();
+	$lastId			=	$query_result->id;
+	return $lastId;
+}
+
+function getDirectorateAllList(){
+	$directorate_list=array();
+	$query = db_select('a_directorate_mst', 'dm');
+  	$query ->fields('dm', array( 'id','directorate_name','directorate_code'));
+  	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	if(!empty($resultData)){
+		foreach($resultData as $val) {
+			$directorate_list[$val->id]=trim($val->directorate_name);
+		}
+	}
+	return $directorate_list;
+}
+
+function directorateForwardedListFromLD(){
+	 $query = db_query("select count(am.declaration_yr) as total_cnt, am.forward_status, t.declaration_year, t.transaction_date, t.asset_id, t.buld_pdf_link,t.directorate_code  
+from a_asset_mst am
+left join a_transaction_history t on t.id = am.transaction_id
+where am.status = 1 and am.transaction_id is not NULL and am.forward_status = 'F'
+group by am.transaction_id, am.forward_status, t.declaration_year, t.transaction_date,t.asset_id,t.buld_pdf_link,t.directorate_code order by t.transaction_date DESC" );
+
+	/*$query = db_query("select (select count(*) from unnest(string_to_array(t.asset_id,','))) as total_cnt, t.status, t.declaration_year, t.transaction_date, t.asset_id, t.buld_pdf_link,t.directorate_code  
+from a_transaction_history t where t.status = 'F'
+group by t.status, t.declaration_year, t.transaction_date,t.asset_id,t.buld_pdf_link,t.directorate_code order by t.transaction_date DESC" );*/	
+	
+ 	 $rsData = $query->fetchAll();
+	 return $rsData;
+}
+function directorateForwardedList($frwd_status,$direc_code){
+	 $query = db_select('a_transaction_history','t');
+	 $query->fields('t', array('transaction_date','asset_id','declaration_year','buld_pdf_link','directorate_code','forwarding_no'));
+	 $query->condition('t.status',$frwd_status,'=');
+	 $query->condition('t.active_status',1,'=');
+	 if($direc_code != 'LD'){
+	 	$query->condition('t.directorate_code',$direc_code,'=');
+	 }
+	 $result = $query->execute();
+ 	 $rsData = $result->fetchAll();
+	 return $rsData;
+}
+
+
+function directorateListFromTransaction($direc_code){
+	 $query = db_select('a_transaction_history','t');
+	 $query->fields('t', array('transaction_date','asset_id','declaration_year','buld_pdf_link','directorate_code','status','remarks','forwarding_no'));
+	 $query->condition('t.status',array('R','A'),'IN');
+	 if($direc_code != 'LD'){
+	 	$query->condition('t.directorate_code',$direc_code,'=');
+	 }
+	 $query->orderBy('t.declaration_year','DESC');
+	 $result = $query->execute();
+ 	 $rsData = $result->fetchAll();
+	 return $rsData;
+}
+
+function individualAllofficer_list($frwd_status){
+  $querygroupA = db_select('a_asset_mst','am');
+  $querygroupA->leftJoin('users', 'u', 'u.uid = am.uid');  
+  $querygroupA->leftJoin('a_user_details', 'ud', 'ud.uid = am.uid');  
+  $querygroupA->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = am.directorate_code');  
+  $querygroupA->leftJoin('a_user_details_service', 'us', 'am.uid = us.uid'); 
+  //$querygroupA->leftJoin('a_transaction_history', 'at', 'am.id = at.asset_id'); 
+  $querygroupA->fields('am', array('id','uid','declaration_yr','designation','directorate_code','status','created_date','forward_status'));
+  $querygroupA->fields('u', array('name','access','created'));
+  $querygroupA->fields('ud', array('fname','status'));
+  $querygroupA->fields('dm', array('directorate_name'));
+  $querygroupA->fields('us', array('designation','district_code','directorate_code','emp_group')); 
+  $querygroupA->condition('am.status',1,'=');
+  /*if($direc_code!=""){
+  	$querygroupA->condition('us.directorate_code',$direc_code,'=');
+  }*/
+  $querygroupA->condition('am.directorate_code','LD','!=');
+  $querygroupA->condition('ud.status',0,'=');
+  //$querygroupA->condition('us.emp_group','A','=');
+  $querygroupA->condition('am.forward_status',$frwd_status,'=');
+   $querygroupA->condition('am.operator_uid','1486','=');
+  //$querygroupA1 = $querygroupA->extend('TableSort')->extend('PagerDefault')->limit(20);
+  $result = $querygroupA->execute();
+  $rsData = $result->fetchAll();
+  
+  return $rsData;
+}
+
+function individualGroupAofficer_list($frwd_status,$direc_code){
+  $querygroupA = db_select('a_asset_mst','am');
+  $querygroupA->leftJoin('users', 'u', 'u.uid = am.uid');  
+  $querygroupA->leftJoin('a_user_details', 'ud', 'ud.uid = am.uid');  
+  $querygroupA->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = am.directorate_code');  
+  $querygroupA->leftJoin('a_user_details_service', 'us', 'am.uid = us.uid'); 
+  //$querygroupA->leftJoin('a_transaction_history', 'at', 'am.id = at.asset_id'); 
+  $querygroupA->fields('am', array('id','uid','declaration_yr','designation','directorate_code','status','created_date','forward_status'));
+  $querygroupA->fields('u', array('name','access','created'));
+  $querygroupA->fields('ud', array('fname','status'));
+  $querygroupA->fields('dm', array('directorate_name'));
+  $querygroupA->fields('us', array('designation','district_code','directorate_code','emp_group')); 
+  $querygroupA->condition('am.status',1,'=');
+  if($direc_code!=""){
+  	$querygroupA->condition('us.directorate_code',$direc_code,'=');
+  }
+  $querygroupA->condition('ud.status',0,'=');
+  $querygroupA->condition('us.emp_group','A','=');
+  $querygroupA->condition('am.forward_status',$frwd_status,'=');
+  if($direc_code!="LD"){
+  	$querygroupA->condition('am.operator_uid','1486','!=');
+  }
+  $querygroupA->condition('am.declaration_yr',date('Y'),'=');
+  $querygroupA->orderBy('ud.fname','ASC');
+  //$querygroupA1 = $querygroupA->extend('TableSort')->extend('PagerDefault')->limit(20);
+  $result = $querygroupA->execute();
+  $rsData = $result->fetchAll();
+  
+  return $rsData;
+}
+
+/************************************* need to upload **************************************************/
+
+function directorateFieldForwardedList($frwd_status,$direc_code,$office_id){
+	 $query = db_select('a_transaction_history','t');
+	 $query->fields('t', array('transaction_date','asset_id','declaration_year','buld_pdf_link','directorate_code','forwarding_no'));
+	 $query->condition('t.status',$frwd_status,'=');
+	 $query->condition('t.directorate_code',$direc_code,'=');
+	 $query->condition('t.office_id',$office_id,'=');
+	 $result = $query->execute();
+ 	 $rsData = $result->fetchAll();
+	 return $rsData;
+}
+
+function individualDoAListByFieldOfficer($frwd_status,$direc_code,$office_id){
+	$query = db_select('a_asset_mst','am');
+	$query->leftJoin('users', 'u', 'u.uid = am.uid');  
+	$query->leftJoin('a_user_details', 'ud', 'ud.uid = am.uid');  
+	$query->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = am.directorate_code');  
+	$query->leftJoin('a_user_details_service', 'us', 'am.uid = us.uid'); 
+	$query->fields('am', array('id','uid','declaration_yr','designation','directorate_code','status','created_date'));
+	$query->fields('u', array('name','access','created'));
+	$query->fields('ud', array('fname','status'));
+	$query->fields('dm', array('directorate_name'));
+	$query->fields('us', array('designation','district_code','directorate_code','office_id')); 
+	
+	$query->condition('us.emp_group','A','!=');
+	$query->condition('us.office_id',$office_id,'=');
+	
+	$query->condition('am.status',1,'=');
+	$query->condition('us.directorate_code',$direc_code,'=');
+	$query->condition('ud.status',0,'=');
+	$query->condition('am.forward_status',$frwd_status,'=');
+	$result = $query->execute();
+	$rsFieldData = $result->fetchAll();
+	return $rsFieldData;
+}
+
+
+function directorateApproveRejectListFromField($direc_code){
+	$query = db_query("select count(am.declaration_yr) as total_cnt, am.forward_status, t.declaration_year, t.transaction_date, t.asset_id, t.buld_pdf_link,t.directorate_code,t.office_id,om.office_name  
+from a_asset_mst am
+left join a_transaction_history t on t.id = am.transaction_id
+left join a_office_master om on t.office_id = om.office_id
+where am.transaction_id is not NULL and am.forward_status IN ('R','A') and t.directorate_code = '".$direc_code."'  and t.office_id != 0
+group by am.transaction_id, am.forward_status, t.declaration_year, t.transaction_date,t.asset_id,t.buld_pdf_link,t.directorate_code,t.office_id,om.office_name");
+ 	 $rsData = $query->fetchAll();
+	 return $rsData;
+}
+
+function directorateForwardedListFromField($frwd_status,$direc_code){
+	$query = db_query("select count(am.declaration_yr) as total_cnt, am.forward_status, t.declaration_year, t.transaction_date, t.asset_id, t.buld_pdf_link,t.directorate_code,t.office_id,om.office_name 
+from a_asset_mst am
+left join a_transaction_history t on t.id = am.transaction_id
+left join a_office_master om on t.office_id = om.office_id
+where am.transaction_id is not NULL and am.forward_status = '".$frwd_status."' and t.directorate_code = '".$direc_code."'  and t.office_id != 0
+group by am.transaction_id, am.forward_status, t.declaration_year, t.transaction_date,t.asset_id,t.buld_pdf_link,t.directorate_code,t.office_id,om.office_name");
+ 	 $rsData = $query->fetchAll();
+	 return $rsData;
+}
+
+function getOfficeAddress($office_id){
+	
+	 $OfficeAddress = db_select('a_office_master','aom');
+	 $OfficeAddress->fields('aom', array('office_id','office_name','directorate_code','is_active','office_address')); 
+	 $result = $OfficeAddress->execute();
+ 	 $OfficeData = $result->fetchAll();
+	  
+ 	 return $OfficeData;
+	}
+
+/************************************* need to upload end **************************************************/
+
+
+function bulkGroupAofficer_list($frwd_status="",$direc_code,$asset_id){
+  
+  $asset_arr = explode(",",$asset_id);
+  //echo $frwd_status;
+  //print_r($asset_arr); exit;
+  
+  $querygroupA = db_select('a_asset_mst','am');
+  $querygroupA->leftJoin('users', 'u', 'u.uid = am.uid');  
+  $querygroupA->leftJoin('a_user_details', 'ud', 'ud.uid = am.uid');  
+  $querygroupA->leftJoin('a_directorate_mst', 'dm', 'dm.directorate_code = am.directorate_code');  
+  $querygroupA->leftJoin('a_user_details_service', 'us', 'am.uid = us.uid'); 
+  //$querygroupA->leftJoin('a_transaction_history', 'at', 'am.id = at.asset_id'); 
+  $querygroupA->fields('am', array('id','uid','declaration_yr','designation','directorate_code','status','created_date','forward_status'));
+  $querygroupA->fields('u', array('name','access','created'));
+  $querygroupA->fields('ud', array('fname','status'));
+  $querygroupA->fields('dm', array('directorate_name'));
+  $querygroupA->fields('us', array('designation','district_code','directorate_code','emp_group')); 
+  $querygroupA->condition('am.status',1,'=');
+  /*if($direc_code!=""){
+  	$querygroupA->condition('us.directorate_code',$direc_code,'=');
+  }
+  $querygroupA->condition('ud.status',0,'=');
+  $querygroupA->condition('us.emp_group','A','=');*/
+  if($frwd_status!=""){
+  $querygroupA->condition('am.forward_status',$frwd_status,'=');
+  }
+  $querygroupA->condition('am.id',$asset_arr,'IN');
+ // $query->orderBy('dm.id','ASC');
+  //$querygroupA1 = $querygroupA->extend('TableSort')->extend('PagerDefault')->limit(20);
+  //echo $querygroupA; exit;
+  $result = $querygroupA->execute();
+  $rsData = $result->fetchAll();
+  
+  return $rsData;
+	
+}
+
+
+function getOfficeListByDistrict($district_code,$directorate_code){
+	$default_ofcselect 	= array(""=>"Select Office");
+	$all_office 			= array();
+	$query = db_select('a_office_master', 'o');
+	$query->fields('o', array('office_id','office_name'));
+	$query->condition('o.directorate_code', $directorate_code, '=');
+	$query->condition('o.district_code', $district_code, '=');
+	$result = $query->execute();
+	if(!empty($result)) { 
+		if($district_code == '17'){  
+			$all_office['117'] = t('@officename', array('@officename' => 'HQ NODAL OFFICE'));  
+		}
+	  	foreach($result as $rows) {
+			$all_office[$rows->office_id] = t('@officename', array('@officename' => $rows->office_name));
+	  	}    
+	}
+ 	if (isset($all_office)) {			
+		return ($default_ofcselect + $all_office);	
+	} else {				
+		return $default_ofcselect;
+	}
+}
+
+function getDistrictAllList(){
+	$district_list=array();
+	$query = db_select('district_master', 'd');
+  	$query ->fields('d', array( 'id', 'district_name','district_code','state_id','is_active'));
+	$query->condition('d.state_id', '1', '=');
+	$query->orderBy('d.district_name','ASC');
+  	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	if(!empty($resultData)){
+		foreach($resultData as $val) {
+			$district_list[$val->id]=trim($val->district_name);
+		}
+	}
+	return $district_list;	
+}
+//get login user user details for asset
+function getLoginUserDetailForAsset($uid){
+	$query = db_select('a_user_details', 'ud');
+	$query->leftJoin('a_user_details_service', 'uds', 'ud.uid = uds.uid'); 
+	$query->fields('ud', array('fname','mobile','email','dob','doj','dor','hrms_id'));
+	$query->fields('uds', array('directorate_code','district_code','designation','office_id'));
+	$query->condition('ud.uid', $uid, '=');
+	$result = $query->execute();
+	$userData = $result->fetchAssoc();
+	return $userData;
+}
+//get all uid, rid from pid
+function getAllUidInfoFromPid($uid){
+	$query = db_select('a_user_details', 'ud');
+	$query->leftJoin('users', 'u', 'ud.uid = u.uid');
+	
+	$query->leftJoin('a_user_details_service', 'us', 'ud.uid = us.uid');  
+	
+	//$query->leftJoin('user_details', 'ud', 'u.uid = ud.uid');
+	$query->leftJoin('users_roles', 'ur', 'ud.uid = ur.uid');
+	$query->leftJoin('role', 'r', 'ur.rid = r.rid');
+	//$query->fields('pum', array('uid'));
+	
+	$query->fields('us', array('directorate_code','district_code','designation'));
+	
+	$query->fields('u', array('mail','name'));
+	$query->addField('u', 'name', 'user_name');
+	$query->fields('ud', array('fname','mobile','email','dob','doj','dor','hrms_id'));
+	//$query->fields('r', array('name'));
+	$query->addField('r', 'name', 'role_name');
+	$query->condition('ud.uid', $uid, '=');
+	$result = $query->execute();
+	$userData = $result->fetchAssoc();
+	return $userData;
+}
+/*function getAllUidInfoFromPid($uid){
+	$query = db_select('a_user_details', 'ud');
+	$query->leftJoin('users', 'u', 'ud.uid = u.uid'); 
+	//$query->leftJoin('user_details', 'ud', 'u.uid = ud.uid');
+	$query->leftJoin('users_roles', 'ur', 'ud.uid = ur.uid');
+	$query->leftJoin('role', 'r', 'ur.rid = r.rid');
+	//$query->fields('pum', array('uid'));
+	$query->fields('u', array('mail','name'));
+	$query->addField('u', 'name', 'user_name');
+	$query->fields('ud', array('fname','mobile','email','dob','doj','dor'));
+	//$query->fields('r', array('name'));
+	$query->addField('r', 'name', 'role_name');
+	$query->condition('ud.uid', $uid, '=');
+	$result = $query->execute();
+	$userData = $result->fetchAssoc();
+	return $userData;
+}*/
+/*function getAllUidInfoFromPid($uid){
+	$query = db_select('a_user_details', 'ud');
+	$query->leftJoin('users', 'u', 'ud.uid = u.uid'); 
+	//$query->leftJoin('user_details', 'ud', 'u.uid = ud.uid');
+	$query->leftJoin('users_roles', 'ur', 'ud.uid = ur.uid');
+	$query->leftJoin('role', 'r', 'ur.rid = r.rid');
+	//$query->fields('pum', array('uid'));
+	$query->fields('u', array('mail','name'));
+	$query->addField('u', 'name', 'user_name');
+	$query->fields('ud', array('fname','mobile','gender','address','district_code','directorate_code'));
+	//$query->fields('r', array('name'));
+	$query->addField('r', 'name', 'role_name');
+	$query->condition('ud.uid', $uid, '=');
+	$result = $query->execute();
+	$userData = $result->fetchAssoc();
+	return $userData;
+}*/
+/*function getDirectorateListByRoleId($uid=''){
+	$userInfo = array();
+	$userInfo = getAllUidInfoFromPid($uid);
+	if(!empty($userInfo)){
+		$directorate_code = $userInfo['directorate_code'];
+	}
+	$resultData=array();
+	$query = db_select('a_directorate_mst', 'dm');
+  	$query ->fields('dm', array( 'id','directorate_name','directorate_code'));
+	$query->condition('dm.id', array($directorate_code), '=');
+  	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	return $resultData;
+}*/
+
+function getDirectorateListByRoleId($uid=''){
+	$project_list=array();
+	$userInfo = array();
+	$userInfo = getAllUidInfoFromPid($uid);
+	//print_r($userInfo);
+	if(!empty($userInfo)){
+		//$district_code = unserialize($userInfo['district_code']);
+		$directorate_code = $userInfo['directorate_code'];
+	}
+	$resultData=array();
+	$query = db_select('a_directorate_mst', 'dm');
+  	$query ->fields('dm', array( 'id','directorate_name','directorate_code'));
+	if($directorate_code!='LD'){
+		$query->condition('dm.directorate_code', array($directorate_code), '=');
+	}
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	if(!empty($resultData)){
+		foreach($resultData as $val) {
+			$project_list[trim($val->directorate_code)]=trim($val->directorate_name);
+		}
+	}
+	if($directorate_code=='LD'){
+		unset($project_list['LD']);	
+	}
+	return $project_list;
+}
+
+/*function getDistrictListByRoleId($uid=''){
+	$userInfo = array();
+	$userInfo = getAllUidInfoFromPid($uid);
+	if(!empty($userInfo)){
+		$district_code = $userInfo['district_code'];
+		//$directorate_code = unserialize($userInfo['directorate_code']);
+	}
+	$resultData=array();
+	$query = db_select('district_master', 'd');
+  	$query ->fields('d', array( 'id', 'district_name','district_code','state_id','is_active'));
+	$query->condition('d.id', array($district_code), '=');
+	
+  	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	
+	return $resultData;
+}*/
+function getDistrictListByRoleId($uid=''){
+	$district_list = array();
+	$userInfo = array();
+	$userInfo = getAllUidInfoFromPid($uid);
+	if(!empty($userInfo)){
+		$district_code = $userInfo['district_code'];
+		//$directorate_code = unserialize($userInfo['directorate_code']);
+	}
+	$resultData=array();
+	$query = db_select('district_master', 'd');
+  	$query ->fields('d', array( 'id', 'district_name','district_code','state_id','is_active'));
+	if($userInfo['directorate_code']!='LD'){
+		$query->condition('d.district_code', array($district_code), '=');
+	}
+	$query->condition('d.state_id', 1, '=');
+  	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	if(!empty($resultData)){
+		foreach($resultData as $val) {
+			$district_list[$val->id]=trim($val->district_name);
+		}
+	}
+	
+	return $district_list;
+}
+function getUserProfileStatus($uid=''){
+	if(($uid!=0) || ($uid!=1)) {
+		$query = db_select('users', 'u');
+		$query->leftJoin('a_user_details', 'ud', 'u.uid = ud.uid');  
+		$query->fields('ud', array('one_time_pass_flag','fname'));
+		$query->condition('u.uid', $uid, '=');
+		$result = $query->execute();
+		$userData = $result->fetchAssoc();
+		return $userData;
+	}
+}
+
+function getServiceInfoId($uid='') {
+	
+	$resultData = array();
+	$query = db_select('a_service_info', 'asi');
+	$query-> fields('asi',array('service_id'));
+	$query->condition('asi.s_uid', $uid, '='); 
+	$query->condition('asi.s_status',1,'=');
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+    return $resultData;
+	
+	}
+	
+function getAssetDataWithYearStatusUID($year, $uid, $status){
+	//echo "-->".$year."-->".$uid."-->".$status; exit;
+	$resultData = array();
+	$query = db_select('a_asset_mst', 'assetmst');
+	$query ->fields('assetmst', array('id','uid','declaration_yr','designation','directorate_code','created_date','status'));
+	$query->condition('assetmst.declaration_yr',$year,'=');
+	$query->condition('assetmst.status',$status,'=');
+	$query->condition('assetmst.uid', $uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+    return $resultData;
+}
+
+function getAssetDataWithStatus($uid, $status){
+	$query = db_select('a_asset_mst', 'assetmst');
+	$query ->fields('assetmst', array('id','uid','declaration_yr','service_type','designation','appointed_as','substantive_pay','special_pay','document_no','file_name','file_pass','pdf_generated_flag','created_date','status'));
+	$query->condition('assetmst.status',$status,'=');
+	$query->condition('assetmst.uid', $uid, '='); 
+	$query->orderBy('assetmst.id', 'DESC');
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+    return $resultData;
+}
+function getImmovableLandDataWithStatus($uid, $status){
+	$query = db_select('a_im_land', 'ail');
+	$query ->fields('ail', array( 'id', 'asset_id', 'uid', 'precise_landlocation', 'land_area', 'land_nature', 'landextent_interest','land_value','land_innameof','landacquistion_date','landacquistion_manner','land_remarks','created_date','update_date','status'));
+	$query->condition('ail.status',$status,'=');
+	$query->condition('ail.uid', $uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+    return $resultData;
+}
+function getImmovableHouseDataWithStatus($uid, $status){
+	$query = db_select('a_im_house', 'aih');
+	$query ->fields('aih', array('im_house_id', 'asset_id', 'uid', 'precise_houselocation', 'houseextent_interest', 'house_value', 'house_innameof','houseacquistion_date','houseacquistion_manner','house_remarks','created_date','update_date','status'));
+	$query->condition('aih.status',$status,'=');
+	$query->condition('aih.uid', $uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+    return $resultData;
+}
+function getImmovableOthersDataWithStatus($uid, $status){
+	$query = db_select('a_im_other', 'aio');
+	$query ->fields('aio', array('im_other_id', 'asset_id', 'uid', 'applicability', 'precise_otherlocation', 'otherextent_interest', 'other_value', 'other_innameof','otheracquistion_date','otheracquistion_manner','other_remarks','created_date','update_date','status'));
+	$query->condition('aio.status',$status,'=');
+	$query->condition('aio.uid', $uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+    return $resultData;
+}
+function getMovablePropertyDataWithStatus($uid, $status){
+	$query = db_select('a_m_property', 'amp');
+	$query ->fields('amp', array('m_property_id', 'asset_id', 'uid', 'applicability', 'item_description', 'movable_value', 'movable_innameof', 'loan_innameof','loanee_relationship','movableacquistion_date','movableacquistion_manner','movable_remarks','created_date','update_date','status'));
+	$query->condition('amp.status',$status,'=');
+	$query->condition('amp.uid', $uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+    return $resultData;
+}
+function getMovableOthersDataWithStatus($uid, $status){
+	$query = db_select('a_m_other', 'amo');
+	$query ->fields('amo', array('m_other_id', 'asset_id', 'uid', 'applicability', 'moitem_description', 'movableother_value', 'movableother_innameof', 'moacquistion_date','moacquistion_manner','mo_remarks','created_date','update_date','status'));
+	$query->condition('amo.status',$status,'=');
+	$query->condition('amo.uid', $uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+    return $resultData;
+}
+
+
+
+
+
+function getImmovableLandByUidAndYear($uid, $year){
+	$query = db_select('a_im_land', 'ail');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'ail.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('ail', array( 'id', 'asset_id', 'uid', 'applicability', 'precise_landlocation', 'land_area', 'land_nature', 'landextent_interest','land_value','land_innameof','landacquistion_date','landacquistion_manner','land_remarks','created_date','update_date','status'));
+	//$query->condition('gindoc.status',0,'=');
+	$query->condition('ail.uid', $uid, '='); 
+	$query->condition('assetmst.declaration_yr', $year, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	return $resultData;
+}
+function getImmovableHouseByUidAndYear($uid, $year){
+	$query = db_select('a_im_house', 'aih');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'aih.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('aih', array( 'im_house_id', 'asset_id', 'uid', 'applicability', 'precise_houselocation', 'houseextent_interest', 'house_value', 'house_innameof','houseacquistion_date','houseacquistion_manner','house_remarks','created_date','update_date','status'));
+	$query->condition('aih.uid', $uid, '='); 
+	$query->condition('assetmst.declaration_yr', $year, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	return $resultData;
+}
+function getImmovableOtherByUidAndYear($uid, $year){
+	$query = db_select('a_im_other', 'aio');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'aio.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('aio', array('im_other_id', 'asset_id', 'uid', 'applicability', 'precise_otherlocation', 'otherextent_interest', 'other_value', 'other_innameof','otheracquistion_date','otheracquistion_manner','other_remarks','created_date','update_date','status'));
+	$query->condition('aio.uid', $uid, '='); 
+	$query->condition('assetmst.declaration_yr', $year, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	return $resultData;
+}
+function getMovablePropertyByUidAndYear($uid, $year){
+	$query = db_select('a_m_property', 'amp');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'amp.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('amp', array('m_property_id', 'asset_id', 'uid', 'applicability', 'item_description', 'movable_value', 'movable_innameof', 'loan_innameof','loanee_relationship','movableacquistion_date','movableacquistion_manner','movable_remarks','created_date','update_date','status'));
+	$query->condition('amp.uid', $uid, '='); 
+	$query->condition('assetmst.declaration_yr', $year, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	return $resultData;
+}
+function getMovableOtherByUidAndYear($uid, $year){
+	$query = db_select('a_m_other', 'amo');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'amo.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('amo', array('m_other_id', 'asset_id', 'uid', 'applicability', 'moitem_description', 'movableother_value', 'movableother_innameof', 'moacquistion_date','moacquistion_manner','mo_remarks','created_date','update_date','status'));
+	$query->condition('amo.uid', $uid, '='); 
+	$query->condition('assetmst.declaration_yr', $year, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAssoc();
+	return $resultData;
+}
+ /* --------------------------------- function of IMMOVABLE PROPERTY For PDF BEGIN ----------------------- */
+ function get_immovable_land_list_for_pdf($asset_id){
+	//die('hello');
+	global $user;
+	
+	$output = '';
+  	$header = array(
+				array('data'=> 'Serial No.'),
+				array('data'=> 'Precise Location'),
+				array('data'=> 'Area'),
+				array('data'=> 'Nature of Land'),
+				array('data'=> 'Extent of Interest'),
+				array('data'=> 'Value'),
+				array('data'=> 'In whose name <br> (wife, child,dependant,other relation or benamdar)<br> the asset is'),
+				array('data'=> 'Date and <br> Manner of Acquisition'),
+				array('data'=> 'Remarks')
+			);
+			
+	$rows = array();
+	
+	$query = db_select('a_im_land', 'ail');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'ail.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('ail', array( 'id', 'asset_id', 'uid', 'precise_landlocation', 'land_area', 'land_nature', 'landextent_interest','land_value','land_innameof','landacquistion_date','landacquistion_manner','land_remarks','created_date','update_date','status'));
+	$query->condition('ail.asset_id', $asset_id, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+	  
+	  $rows [] = array( 
+	  		  $i,	 
+			  array('data' => t($val->precise_landlocation)), 
+			  array('data' => t($val->land_area)),
+			  array('data' => t($val->land_nature)),
+			  array('data' => t($val->landextent_interest)), 
+			  array('data' => t($val->land_value)),
+			  array('data' => t($val->land_innameof)),
+			  array('data' => ($val->landacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->landacquistion_date))).' <br> '. $val->landacquistion_manner : 'N/A'),
+			  array('data' => t($val->land_remarks)),
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('mytable')),
+		  'sticky' => true,
+		  'caption' => '<div class="heading_Table header lighter blue" style="margin-bottom: 0px; margin-top: -5px;font-size: 18px;"><i class="ace-icon fa fa-hand-o-right icon-animated-hand-pointer green"></i> A—Immovable Property <br> <br>(1) LANDS</div>',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	  
+	return $output;		
+}
+/* --------------------------------- Function of IMMOVABLE PROPERTY LAND For PDF END ---------------------------------------------------------------- */
+
+
+// function for report
+function get_immovable_land_list_for_report($asset_id){
+	//die('hello');
+	global $user;
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$output = '';
+  	$header = array(
+				array('data'=> 'AY Year'),
+				array('data'=> 'Precise Location of Land'),
+				array('data'=> 'Area of Land'),
+				array('data'=> 'Nature of Land'),
+				array('data'=> 'Extent of Intrest of Land'),
+				array('data'=> 'Value of Land'),
+				array('data'=> 'Date of Acquisition'),
+			);
+			
+	$rows = array();
+	
+	$query = db_select('a_im_land', 'ail');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'ail.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('ail', array( 'id', 'asset_id', 'uid', 'precise_landlocation', 'land_area', 'land_nature', 'landextent_interest','land_value','land_innameof','landacquistion_date','landacquistion_manner','land_remarks','created_date','update_date','status'));
+	$query->condition('ail.asset_id', $asset_id, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+	  
+	  $rows [] = array(  
+	  		  array('data' => t($val->declaration_yr)), 	
+			  array('data' => t($val->precise_landlocation)), 
+			  array('data' => t($val->land_area)),
+			  array('data' => t($val->land_nature)),
+			  array('data' => t($val->landextent_interest)), 
+			  array('data' => t($val->land_value)),
+			  array('data' => ($val->landacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->landacquistion_date))) : 'N/A'),
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '<div class="heading_Table header lighter blue" style="margin-bottom: 0px; margin-top: -5px;font-size: 18px;"><i class="ace-icon fa fa-hand-o-right icon-animated-hand-pointer green"></i> Immovable-Land</div>',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	  
+	return $output;		
+}
+
+/* --------------------------------- Function of IMMOVABLE PROPERTY HOUSE For PDF Begin---------------------------------------------------------------- */
+function get_immovable_house_list_for_pdf($asset_id){
+	//die('hello');
+	global $user;
+	
+	$output = '';
+  	$header = array(
+				array('data'=> 'Serial No.'),
+				array('data'=> 'Precise Location'),
+				array('data'=> 'Extent of Interest'),
+				array('data'=> 'Value'),
+				array('data'=> 'In whose name <br>(wife, child,dependant, other relation or benamdar)<br> the asset is'),
+				array('data'=> 'Date and <br>Manner of Acquisition'),
+				array('data'=> 'Remarks'),
+			);
+			
+	$rows = array();
+	
+	$query = db_select('a_im_house', 'aih');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'aih.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('aih', array( 'im_house_id', 'asset_id', 'uid', 'precise_houselocation', 'houseextent_interest', 'house_value', 'house_innameof','houseacquistion_date','houseacquistion_manner','house_remarks','created_date','update_date','status'));
+	$query->condition('aih.asset_id', $asset_id, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+	  
+	  $rows [] = array(  
+	  		  $i,
+			  array('data' => t($val->precise_houselocation)), 
+			  array('data' => t($val->houseextent_interest)),
+			  array('data' => t($val->house_value)),
+			  array('data' => t($val->house_innameof)),
+			  array('data' => ($val->houseacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->houseacquistion_date))) .' <br> '. $val->houseacquistion_manner  : 'N/A'), 
+			  array('data' => t($val->house_remarks)),
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('mytable')),
+		  'sticky' => true,
+		  'caption' => '<div class="heading_Table header lighter blue" style="margin-bottom: 0px; margin-top: -5px;font-size: 18px;"><i class="ace-icon fa fa-hand-o-right icon-animated-hand-pointer green"></i> (2) Houses</div>',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	  
+	return $output;		
+}
+
+/* --------------------------------- Function of IMMOVABLE PROPERTY HOUSE For PDF END ---------------------------------------------------------------- */
+
+
+function get_immovable_house_list_for_report($asset_id){
+	//die('hello');
+	global $user;
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$output = '';
+  	$header = array(
+				array('data'=> 'AY Year'),
+				array('data'=> 'Precise Location of House'),
+				array('data'=> 'Extent of Intrest of House '),
+				array('data'=> 'Value of House'),
+				array('data'=> 'In whose name the asset is'),
+				array('data'=> 'Date of Acquisition'),
+				array('data'=> 'Manner of Acquisition'),
+			);
+			
+	$rows = array();
+	
+	$query = db_select('a_im_house', 'aih');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'aih.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('aih', array( 'im_house_id', 'asset_id', 'uid', 'precise_houselocation', 'houseextent_interest', 'house_value', 'house_innameof','houseacquistion_date','houseacquistion_manner','house_remarks','created_date','update_date','status'));
+	$query->condition('aih.asset_id', $asset_id, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+	  
+	  
+	  $rows [] = array(  
+	  		  array('data' => t($val->declaration_yr)), 	
+			  array('data' => t($val->precise_houselocation)), 
+			  array('data' => t($val->houseextent_interest)),
+			  array('data' => t($val->house_value)),
+			  array('data' => t($val->house_innameof)),
+			  array('data' => ($val->houseacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->houseacquistion_date))) : 'N/A'), 
+			  array('data' => t($val->houseacquistion_manner)),
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		   'caption' => '<div class="heading_Table header lighter blue" style="margin-bottom: 0px; margin-top: -5px;font-size: 18px;"><i class="ace-icon fa fa-hand-o-right icon-animated-hand-pointer green"></i> Immovable-House</div>',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	  
+	return $output;		
+}
+
+/* --------------------------------- Function of IMMOVABLE PROPERTY Other For PDF Begin ---------------------------------------------------------------- */
+function get_immovable_other_list_for_pdf($asset_id){
+	//die('hello');
+	global $user;
+	
+	$output = '';
+  	$header = array(
+				array('data'=> 'Serial No.'),
+				array('data'=> 'Precise Location'),
+				array('data'=> 'Extent of Interest'),
+				array('data'=> 'Value'),
+				array('data'=> 'In whose name <br>(wife, child,dependant, other relation or benamdar)<br> the asset is'),
+				array('data'=> 'Date and <br>Manner of Acquisition'),
+				array('data'=> 'Remarks'),
+			);
+			
+	$rows = array();
+	
+	$query = db_select('a_im_other', 'aio');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'aio.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('aio', array('im_other_id', 'asset_id', 'uid', 'applicability', 'precise_otherlocation', 'otherextent_interest', 'other_value', 'other_innameof','otheracquistion_date','otheracquistion_manner','other_remarks','created_date','update_date','status'));
+	$query->condition('aio.asset_id', $asset_id, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+	  
+	  
+	  $rows [] = array(  
+	  		  $i,
+			  array('data' => t($val->precise_otherlocation)), 
+			  array('data' => t($val->otherextent_interest)),
+			  array('data' => t($val->other_value)),
+			  array('data' => t($val->other_innameof)),
+			  array('data' => ($val->otheracquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->otheracquistion_date))) .' <br> '. $val->otheracquistion_manner : 'N/A'), 
+			  array('data' => t($val->other_remarks)),
+		); 
+	}
+	
+	$output = theme_table( 
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('mytable')),
+		  'sticky' => true,
+		  'caption' => '<div class="heading_Table header lighter blue" style="margin-bottom: 0px; margin-top: -5px;font-size: 18px;"><i class="ace-icon fa fa-hand-o-right icon-animated-hand-pointer green"></i> (3) IMMOVABLE PROPERTIES OF OTHER DESCRIPTION <br> (Including mortgages and such other rights)</div>',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	  
+	return $output;		
+}
+/* --------------------------------- Function of IMMOVABLE PROPERTY Other For PDF END ---------------------------------------------------------------- */
+
+
+function get_immovable_other_list_for_report($asset_id){
+	//die('hello');
+	global $user;
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$output = '';
+  	$header = array(
+				array('data'=> 'AY Year'),
+				array('data'=> 'Precise Location'),
+				array('data'=> 'Extent of Intrest'),
+				array('data'=> 'Value'),
+				array('data'=> 'In whose name the asset is'),
+				array('data'=> 'Date of Acquisition'),
+				array('data'=> 'Manner of Acquisition'),
+			);
+			
+	$rows = array();
+	
+	$query = db_select('a_im_other', 'aio');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'aio.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('aio', array('im_other_id', 'asset_id', 'uid', 'applicability', 'precise_otherlocation', 'otherextent_interest', 'other_value', 'other_innameof','otheracquistion_date','otheracquistion_manner','other_remarks','created_date','update_date','status'));
+	$query->condition('aio.asset_id', $asset_id, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+	  
+	  
+	  $rows [] = array(  
+	  		  array('data' => t($val->declaration_yr)), 	
+			  array('data' => t($val->precise_otherlocation)), 
+			  array('data' => t($val->otherextent_interest)),
+			  array('data' => t($val->other_value)),
+			  array('data' => t($val->other_innameof)),
+			  array('data' => ($val->otheracquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->otheracquistion_date))) : 'N/A'), 
+			  array('data' => t($val->otheracquistion_manner)),
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '<div class="heading_Table header lighter blue" style="margin-bottom: 0px; margin-top: -5px;font-size: 18px;"><i class="ace-icon fa fa-hand-o-right icon-animated-hand-pointer green"></i> Immovable-Others</div>',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	  
+	return $output;		
+}
+
+/*-------------------------------------- Function For Movable Property PDF BEGIN ---------------------------------------------------------*/
+function get_movable_property_list_for_pdf($asset_id){
+	//die('hello');
+	global $user;
+	
+	$output = '';
+  	$header = array(
+				array('data'=> 'Serial No.'),
+				array('data'=> 'Description of Items'),
+				array('data'=> 'Value'),
+				array('data'=> 'In whose name <br>(wife, child,dependant, other relation or benamdar)<br> the asset is'),
+				array('data'=> 'In the case of, <br>loan the name of the person from whom the loan was taken<br> and the relationship of the loanee with that person'), 
+				array('data'=> 'Date and <br>Manner of Acquisition'),
+				array('data'=> 'Remarks'),
+			);
+			
+	$rows = array();
+	
+	$query = db_select('a_m_property', 'amp');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'amp.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('amp', array('m_property_id', 'asset_id', 'uid', 'applicability', 'item_description', 'movable_value', 'movable_innameof', 'loan_innameof','loanee_relationship','movableacquistion_date','movableacquistion_manner','movable_remarks','created_date','update_date','status'));
+	$query->condition('amp.asset_id', $asset_id, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+	  
+	  
+	  $rows [] = array( 
+	  		  $i, 
+			  array('data' => t($val->item_description)), 
+			  array('data' => t($val->movable_value)),
+			  array('data' => t($val->movable_innameof)),
+			  array('data' => t($val->loan_innameof) .' <br> '. $val->loanee_relationship),
+			  array('data' => ($val->movableacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->movableacquistion_date))) .' <br> '. $val->movableacquistion_manner : 'N/A'), 
+			  array('data' => t($val->movable_remarks)),
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('mytable')),
+		  'sticky' => true,
+		  'caption' => '<div class="heading_Table header lighter blue" style="margin-bottom: 0px; margin-top: -5px;font-size: 18px;"><i class="ace-icon fa fa-hand-o-right icon-animated-hand-pointer green"></i> B — Movable Property <br> (1) CASH, BANK BALANCE, CREDIT, INSURANCE POLICIES, SHARES, DEBENTURES, ETC. </div>',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	  
+	return $output;		
+}
+/*-------------------------------------- Function For Movable Property PDF End ---------------------------------------------------------*/
+
+function get_movable_property_list_for_report($asset_id){
+	//die('hello');
+	global $user;
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$output = '';
+  	$header = array(
+				array('data'=> 'AY Year'),
+				array('data'=> 'Item Description'),
+				array('data'=> 'Value'),
+				array('data'=> 'In whose name the asset is'),
+				array('data'=> 'Loan taken person name'),
+				array('data'=> 'Relationship of the loanee with that person'),
+				array('data'=> 'Date of Acquisition'),
+				array('data'=> 'Manner of Acquisition'),
+			);
+			
+	$rows = array();
+	
+	$query = db_select('a_m_property', 'amp');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'amp.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('amp', array('m_property_id', 'asset_id', 'uid', 'applicability', 'item_description', 'movable_value', 'movable_innameof', 'loan_innameof','loanee_relationship','movableacquistion_date','movableacquistion_manner','movable_remarks','created_date','update_date','status'));
+	$query->condition('amp.asset_id', $asset_id, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+	  
+	  
+	  $rows [] = array(  
+	  		  array('data' => t($val->declaration_yr)), 	
+			  array('data' => t($val->item_description)), 
+			  array('data' => t($val->movable_value)),
+			  array('data' => t($val->movable_innameof)),
+			  array('data' => t($val->loan_innameof)),
+			  array('data' => t($val->loanee_relationship)),
+			  array('data' => ($val->movableacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->movableacquistion_date))) : 'N/A'), 
+			  array('data' => t($val->movableacquistion_manner)),
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '<div class="heading_Table header lighter blue" style="margin-bottom: 0px; margin-top: -5px;font-size: 18px;"><i class="ace-icon fa fa-hand-o-right icon-animated-hand-pointer green"></i> Movable-Property</div>',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	  
+	return $output;		
+}
+
+/*------------------------------------------ Function For Movable Property other PDF Begin ------------------------------------------*/
+
+function get_movable_other_list_for_pdf($asset_id){
+	//die('hello');
+	global $user;
+	
+	$output = '';
+  	$header = array(
+				array('data'=> 'Serial No.'),
+				array('data'=> 'Description of Items'),
+				array('data'=> 'Value'),
+				array('data'=> 'In whose name <br>(wife, child,dependant, other relation or benamdar)<br> the asset is'),
+				array('data'=> 'Date and <br>Manner of Acquisition'),
+				array('data'=> 'Remarks'),
+			);
+			
+	$rows = array();
+	
+	$query = db_select('a_m_other', 'amo');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'amo.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('amo', array('m_other_id', 'asset_id', 'uid', 'applicability', 'moitem_description', 'movableother_value', 'movableother_innameof', 'moacquistion_date','moacquistion_manner','mo_remarks','created_date','update_date','status'));
+	$query->condition('amo.asset_id', $asset_id, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+	  
+	  $rows [] = array(  
+	  		  $i, 	
+			  array('data' => t($val->moitem_description)), 
+			  array('data' => t($val->movableother_value)),
+			  array('data' => t($val->movableother_innameof)),
+			  array('data' => ($val->moacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->moacquistion_date))) .' <br> '. $val->moacquistion_manner : 'N/A'), 
+			  array('data' => t($val->mo_remarks)),
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('mytable')),
+		  'sticky' => true,
+		  'caption' => '<div class="heading_Table header lighter blue" style="margin-bottom: 0px; margin-top: -5px;font-size: 18px;"><i class="ace-icon fa fa-hand-o-right icon-animated-hand-pointer green"></i> (2) OTHER MOVABLES <br> (Including jewellery and other valuables, motor vehicles, refrigerators and other articles or materials of Rs. 500 and over for each item)</div>',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	  
+	return $output;		
+}
+
+/*------------------------------------------------------------- Function For Movable Property other PDF End  --------------------------------------------- */
+
+function get_movable_other_list_for_report($asset_id){
+	//die('hello');
+	global $user;
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$output = '';
+  	$header = array(
+				array('data'=> 'AY Year'),
+				array('data'=> 'Item Description'),
+				array('data'=> 'Value'),
+				array('data'=> 'In whose name the asset is'),
+				array('data'=> 'Date of Acquisition'),
+				array('data'=> 'Manner of Acquisition'),
+			);
+			
+	$rows = array();
+	
+	$query = db_select('a_m_other', 'amo');
+	$query ->leftJoin('a_asset_mst', 'assetmst', 'amo.asset_id = assetmst.id'); 
+	$query ->fields('assetmst', array('declaration_yr','service_type','designation'));
+	$query ->fields('amo', array('m_other_id', 'asset_id', 'uid', 'applicability', 'moitem_description', 'movableother_value', 'movableother_innameof', 'moacquistion_date','moacquistion_manner','mo_remarks','created_date','update_date','status'));
+	$query->condition('amo.asset_id', $asset_id, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	$i = 0;
+	
+	foreach($resultData as $val){
+		$i++;
+	  
+	  $rows [] = array(  
+	  		  array('data' => t($val->declaration_yr)), 	
+			  array('data' => t($val->moitem_description)), 
+			  array('data' => t($val->movableother_value)),
+			  array('data' => t($val->movableother_innameof)),
+			  array('data' => ($val->moacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->moacquistion_date))) : 'N/A'), 
+			  array('data' => t($val->moacquistion_manner)),
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '<div class="heading_Table header lighter blue" style="margin-bottom: 0px; margin-top: -5px;font-size: 18px;"><i class="ace-icon fa fa-hand-o-right icon-animated-hand-pointer green"></i> Movable-Others</div>',
+		  'colgroups' => array(),
+		  'empty' => t("No data found!") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	  
+	return $output;		
+}
+
+/************************************************** Assets Management End**************************************************************************/
+
+/*function miscellaneous_init(){
+	
+}*/
+/*function miscellaneous_custom_theme() {
+  global $user;
+  if(user_is_logged_in()){
+	  if(in_array(variable_get('maptrackuser', 6), array_keys($user->roles))){
+		 return 'est';
+	  }else{
+		 return 'labourdept';
+	  }
+  }
+}
+
+function miscellaneous_user_login(&$edit, $account) {
+  if (!isset($_POST['form_id']) || $_POST['form_id'] != 'user_pass_reset') {
+	if(in_array('maptrackuser', $account->roles)) {
+      $_GET['destination'] = 'dashboard-prcsec';
+    }
+  }
+}*/
+
+function miscellaneous_menu(){
+	$items = array();
+											   
+	$items['miscellaneous_address']				= array(
+													'title' 			=> 	'Applying For License',
+													'page callback'		=>	'drupal_get_form',
+													'page arguments'	=>	array('miscellaneous_establishment_address_form'),
+													'access arguments' 	=> 	array('access content'),
+													'access callback'	=>	TRUE
+											  );
+											  
+											  
+	/*$items['office-address'] 					= array( 
+													'title' 					=> 'OFFICE ADDRESS UPDATE',
+													'page callback'				=> 'drupal_get_form',
+													'page arguments'			=> array('update_office_address'),
+													'file' 						=> 'includes/update_office_address_alc_inspector.inc',
+													'access arguments' 			=> array('Permission for alc and inspector'),
+												);*/
+											  
+	
+								
+	return $items;
+}
+
+
+/*function miscellaneous_permission() {
+	$permission = array();
+	$permission['Permission for alc and inspector'] = array(
+      		'title' => t('Permission for alc and inspector'),
+     		 'description' => t('Permission for alc and inspector'),
+   	);
+	
+	
+   return $permission;
+}*/
+
+/*** Function for Listing All Districts STARTS ****/
+
+function get_country_with_ph($value_country=''){
+	$default_select 	= array(""=>"- Select Country -");
+	$resultCountry 			= db_query("SELECT id,iso,name,phonecode FROM country order by name");
+	$listCountry 				= array();
+	foreach ($resultCountry as $recordCountry) {
+		$listCountry[$recordCountry->id] = t('@country_code_with_name', array(
+			'@country_code_with_name' => $recordCountry->name,
+		));
+	}
+	//print_r($default_select+$list);
+	return ($default_select+$listCountry);
+}
+
+function get_all_state($value_country=''){
+	//echo "country".$value_country;
+	$default_select 	= array(""=>"- Select State -");
+	$result 			= db_query("SELECT id,statename FROM {state_master} where country_id = 1 order by statename");
+	$list 				= array();
+	foreach ($result as $record) {
+		$list[$record->id] = t('@districtname', array(
+			'@districtname' => $record->statename,
+		));
+	}
+	//print_r($default_select+$list);
+	return ($default_select+$list);
+}
+
+
+
+function get_all_state_by_name($value_state=''){
+	$result 			= db_query("SELECT id FROM {state_master} where statename = $value_state");
+	if($result->rowCount()>0){
+		$x	=	$result->fetchAssoc();
+		$state_id	=	$x['id'];
+	}
+	return $state_id;
+}
+
+function get_district_by_name($value_district=''){
+	$result 			= db_query("SELECT district_code FROM {district_master} where district_name = $value_district");
+	if($result->rowCount()>0){
+		$x	=	$result->fetchAssoc();
+		$district_code	=	$x['district_code'];
+	}
+	return $district_code;
+}
+
+function get_district_by_id($value_state=''){
+	$default_select 	= array(""=>"- Select District -");
+	$result 			= db_query("SELECT district_code,district_name FROM {district_master} where is_active = 'Y' and state_id = $value_state order by district_name");
+	$list 				= array();
+	foreach ($result as $record) {
+		$list[$record->district_code] = t('@districtname', array(
+			'@districtname' => $record->district_name,
+		));
+	}
+	return ($default_select+$list);
+}
+
+
+
+
+
+
+//*** Function for dropdown of Concerned Authority to Edit and Update Office Name ***/
+
+/*function office_name(){	
+	global $user;
+	
+	$query_areatype 	= db_select('block_mun_master', 'bmm');
+	$query_areatype		->InnerJoin('l_customuser_relation_address', 'lcra', 'bmm.block_code = lcra.block_code');
+	$query_areatype		->fields('bmm',array('block_mun_name'));
+	$query_areatype		->condition('lcra.user_id', $user->uid);		
+	$result_areatype 	= $query_areatype->execute()->fetchAssoc();
+	
+	$rlo_ofc = $result_areatype['block_mun_name'];
+	
+	$office_name_list 	 = array();
+	
+	$office_name_list['JLC']	= t('OFFICE OF THE JOINT LABOUR COMMISSIONER');
+	$office_name_list['DLC']	 	= t('OFFICE OF THE DEPUTY LABOUR COMMISSIONER');
+	$office_name_list['KLC']		= t('OFFICE OF THE LABOUR COMMISSIONER EL & MW SECTION');
+	$office_name_list['ALC']	 	= t('OFFICE OF THE ASSISTANT LABOUR COMMISSIONER');
+	
+	if(!empty($user->roles[7])){	
+		$office_name_list['INSPECTOR']	= t(strtoupper($rlo_ofc).', LABOUR WELFARE FACILITAION CENTRE');
+    }
+	
+	return $office_name_list;
+	
+}*/
+
+
+/*** FETCH CERTIFICATE OFFICE NAME ****/
+
+/*function get_certificate_office_name($office_name_data=''){
+	
+	if ($office_name_data=='DLC'){
+		$office_name = 'OFFICE OF THE DEPUTY LABOUR COMMISSIONER ';
+	}elseif($office_name_data=='ALC'){
+		$office_name = 'OFFICE OF THE ASSISTANT LABOUR COMMISSIONER ';
+	}elseif($office_name_data=='KLC'){
+		$office_name = 'OFFICE OF THE LABOUR COMMISSIONER EL & MW SECTION';
+	}elseif($office_name_data=='JLC'){
+		$office_name = 'OFFICE OF THE JOINT LABOUR COMMISSIONER';
+	}
+	
+	return $office_name;
+	
+	
+}*/
+
+
+/*** Function for Listing All Districts STARTS ****/
+
+
+function common_custom_user_district_list_new() {
+	$default_select 	= array(""=>"- Select District -");
+	$result 			= db_query("SELECT district_code,district_name FROM {district_master} where is_active = 'Y' order by district_name");
+	$list 				= array();
+	foreach ($result as $record) {
+		$list[$record->district_code] = t('@districtname', array(
+			'@districtname' => $record->district_name,
+		));
+	}
+	return ($default_select+$list);
+}
+
+function common_custom_post_office_list_new($value_post_office=''){
+	//echo $value_post_office; exit;
+	$default_poselect 	= array(""=>"- Select Post Office -");
+	$all_po 			= array();
+	$query_po 			= db_select('all_india_pin_code', 'aipc');
+	$query_po			->fields('aipc',array('id','po_name'));
+	$query_po			->condition('aipc.pincode', $value_post_office, '=');
+	$query_po			->orderBy('aipc.po_name', 'ASC');
+	$result_po 			= $query_po->execute(); 
+	if(!empty($result_po)) {
+		
+	  	foreach($result_po as $rows) {
+			$all_po[$rows->id] = t('@po_name', array('@po_name' => $rows->po_name));
+	  	}    
+	}
+	//print_r($all_po);
+ 	if (isset($all_po)) {
+		//print_r($all_po);			
+		return ($default_poselect + $all_po);	
+	} else {				
+		return $default_poselect;
+	}
+}
+	
+/*** Function for Listing All Districts ENDS ****/
+
+
+/*** Function for Listing of All Subdivisions according to Districts STARTS****/
+
+function common_custom_user_subdivisionlist_list_new($value_dist=''){ 
+	$default_subdvselect 	= array(""=>"Select Sub-Division");
+	$all_subdvs 			= array();
+	$query_subdv 			= db_select('sub_division', 'subdv');
+	$query_subdv			->fields('subdv',array('sub_div_code','sub_div_name'));
+	$query_subdv			->orderBy('subdv.sub_div_name', 'ASC');
+	$query_subdv			->condition('subdv.is_active','Y');
+	$query_subdv			->condition('subdv.district_code',(int)$value_dist);
+	$result_subdv 			= $query_subdv->execute(); 
+	if(!empty($result_subdv)) {      
+	  	foreach($result_subdv as $rows) {
+			$all_subdvs[$rows->sub_div_code] = t('@subdvsname', array('@subdvsname' => $rows->sub_div_name));
+	  	}    
+	}
+ 	if (isset($all_subdvs)) {			
+		return ($default_subdvselect + $all_subdvs);	
+	} else {				
+		return $default_subdvselect;
+	}
+}
+
+
+
+/*** Function for Listing of All Subdivisions according to Districts ENDS ****/
+
+
+/*** Function for Areatype Listing STARTS ****/
+
+function common_custom_user_areatype_list_new($value_loc_e_dist, $value_loc_e_subdivision){
+	
+	$default_areatypeselect 	= array(""=>"- Select AreaType -");
+	$all_areatype 				= array();
+	$query_areatype 			= db_select('block_mun_master', 'bmm');
+	$query_areatype				->fields('bmm',array('type'));
+	$query_areatype				->condition('bmm.is_active', 'Y');
+	$query_areatype				->condition('bmm.distict_code', trim($value_loc_e_dist));
+	$query_areatype				->condition('bmm.sub_division_code', trim($value_loc_e_subdivision));
+	$query_areatype				->groupBy('bmm.type');
+	$result_areatype 			= $query_areatype->execute(); 
+	if(!empty($result_areatype)) {      
+			foreach($result_areatype as $rows) {
+				if($rows->type=='B'){
+					$all_areatype[$rows->type] = t('@areatype', array('@areatype' =>'Block'));
+				}if($rows->type=='M'){
+					$all_areatype[$rows->type] = t('@areatype', array('@areatype' =>'Municipality'));
+				}if($rows->type=='C'){
+					$all_areatype[$rows->type] = t('@areatype', array('@areatype' =>'Corporation'));
+				}if($rows->type=='S'){
+					$all_areatype[$rows->type] = t('@areatype', array('@areatype' =>'SEZ'));
+				}if($rows->type=='N'){
+					$all_areatype[$rows->type] = t('@areatype', array('@areatype' =>'Notified Area'));
+				}
+				
+			}
+	}
+ 	if (isset($all_areatype)) {			
+		return ($default_areatypeselect + $all_areatype);	
+	} else {				
+		return $default_areatypeselect;
+	}
+}
+
+
+
+
+/*** Function for Areatype Listing ENDS ****/
+
+/*** Function for Areatype Listing ENDS ****/
+
+function common_custom_user_get_areatype_list_new($value_loc_e_dist, $value_loc_e_subdivision){
+	
+		if(!empty($value_loc_e_dist)&& !empty($value_loc_e_subdivision) ){
+			$default_areatypeselect 	= array(""=>"- Select AreaType -");
+			$all_areatype 				= array();
+			$query_areatype 			= db_select('block_mun_master', 'bmm');
+			$query_areatype				->fields('bmm',array('type'));
+			$query_areatype				->condition('bmm.is_active', 'Y');
+			$query_areatype				->condition('bmm.distict_code', trim($value_loc_e_dist));
+			$query_areatype				->condition('bmm.sub_division_code', trim($value_loc_e_subdivision));
+			$query_areatype				->groupBy('bmm.type');
+			$result_areatype 			= $query_areatype->execute(); 
+			if(!empty($result_areatype)) {      
+				foreach($result_areatype as $rows) {
+					if($rows->type=='B'){
+						$all_areatype[$rows->type] = t('@areatype', array('@areatype' =>'Block'));
+					}if($rows->type=='M'){
+						$all_areatype[$rows->type] = t('@areatype', array('@areatype' =>'Municipality'));
+					}if($rows->type=='C'){
+						$all_areatype[$rows->type] = t('@areatype', array('@areatype' =>'Corporation'));
+					}if($rows->type=='S'){
+						$all_areatype[$rows->type] = t('@areatype', array('@areatype' =>'SEZ'));
+					}
+					
+				}    
+			}
+			//print_r($all_areatype); //exit;
+			if (isset($all_areatype)) {			
+				return ($default_areatypeselect + $all_areatype);	
+			} else {				
+				return $default_areatypeselect;
+			}
+		}else{
+			$default_areatypeselect 	= array(""=>"- Select AreaType -");
+			return $default_areatypeselect;
+		}
+	}
+
+
+/*** Function of All Block Lists STARTS ***/
+
+/*** Function of All Block Lists STARTS ***/
+
+function common_custom_user_block_list_new($value_subdv, $value_areatype){
+	$default_blockselect 	= array(""=>"- Select -");
+	$all_blocks 			= array();
+	$query_block 			= db_select('block_mun_master', 'blm');
+	$query_block			->fields('blm',array('block_code','block_mun_name'));
+	$query_block			->condition('blm.is_active', 'Y');
+	$query_block			->orderBy('blm.block_mun_name', 'ASC');
+	$query_block			->condition('blm.sub_division_code',$value_subdv,'=');
+	$query_block			->condition('blm.type',$value_areatype,'=');
+	$result_block 			= $query_block->execute(); 
+	if(!empty($result_block)) {      
+	  	foreach($result_block as $rows) {
+			$all_blocks[$rows->block_code] = t('@blockname', array('@blockname' => $rows->block_mun_name));
+		}    
+	}
+
+	if (isset($all_blocks)) {
+		return ($default_blockselect + $all_blocks);
+	} else {
+		return $default_blockselect;
+	}
+}
+
+
+
+
+
+/*** Function of All Block Lists ENDS ***/
+
+
+/*** Function of All Gram Panchayat / Ward Listings STARTS ****/
+
+
+function common_custom_user_villward_list_new($value_villwared,$value_villwardtype){
+	//echo $value_villwared."--->".$value_villwardtype;
+	$default_villwardselect 	= array(""=>"- Select -");
+	$all_villwards 				= array();
+	$query_villwardkname 		= db_select('village_ward_master', 'vwm');
+	$query_villwardkname		->fields('vwm',array('village_code','village_name'));
+	if($value_villwardtype == 'W' || $value_villwardtype == 'C'){
+		$query_villwardkname		->orderBy('vwm.ord', 'ASC');		
+	}else{
+		$query_villwardkname		->orderBy('vwm.village_name', 'ASC');
+	}
+	$query_villwardkname		->condition('vwm.is_active','Y');
+	$query_villwardkname		->condition('vwm.block_code',trim($value_villwared),'=');
+	$query_villwardkname		->condition('vwm.category',trim($value_villwardtype),'=');
+	$result_villwardkname 		= $query_villwardkname->execute(); 
+	if(!empty($result_villwardkname)) {      
+		 foreach($result_villwardkname as $rows) {
+			/*if($value_villwardtype == 'W')
+				$all_villwards[$rows->village_code] = t('@villwardkname', array('@villwardkname' => $rows->village_name));	
+			else*/				
+				$all_villwards[$rows->village_code] = t('@villwardkname', array('@villwardkname' => ucwords($rows->village_name)));
+		 }    
+	}
+
+	if (isset($all_villwards)) {
+		return ($default_villwardselect + $all_villwards);
+	} else {
+		return $default_villwardselect;
+	}
+}
+
+
+
+/*** Function of All Gram Panchayat / Ward Listings ENDS ****/
+
+
+/*** Function for All Listings of Corporation STARTS ****/
+
+function common_custom_user_corporation_list_new($code){
+	$default_corporationselect 		= array(""=>"- Select -");
+	$all_corporation 				= array();
+	$query_corporationname 			= db_select('village_ward_master', 'vwm');
+	$query_corporationname			->fields('vwm',array('village_code', 'village_name'));
+	$query_corporationname			->condition('vwm.block_code', $code, '=');
+	$query_corporationname			->condition('vwm.category', 'C', '=');
+	$query_corporationname			->orderBy('vwm.ord', 'ASC');
+	$result_corporationname 		= $query_corporationname->execute(); 		
+	if(!empty($result_corporationname)) {      
+		foreach($result_corporationname as $rows) {
+			$all_corporation[$rows->village_code] = t('@village_name', array('@village_name' => $rows->village_name));
+		}    
+	}
+ 	if (isset($all_corporation)) {
+		return ($default_corporationselect + $all_corporation);
+	} else {
+		return $default_corporationselect;
+	}
+}
+
+/*** Function for All Listings of Corporation ENDS ****/
+
+
+/*** Function for All Listings of Police Stations STARTS ****/
+
+function common_custom_user_ps_list_new($value_dist){
+	$default_pselect 	= array(""=>"- Select -");
+	$all_ps 			= array();
+	$query_psname 		= db_select('police_station', 'ps');
+	$query_psname		->fields('ps',array('police_station_code','name_of_police_station'));
+	$query_psname		->orderBy('ps.name_of_police_station', 'ASC');
+	$query_psname		->condition('ps.dristrict_code',$value_dist,'=');
+	$result_psname 		= $query_psname->execute(); 
+	if(!empty($result_psname)) {      
+		foreach($result_psname as $rows) {
+			$default_pselect[$rows->police_station_code] = t('@psname', array('@psname' => $rows->name_of_police_station));
+		}    
+	}
+ 	if (isset($all_ps)) {
+		return ($default_pselect + $all_ps);
+	} else {
+		return $default_pselect;
+	}
+}
+
+function common_custom_user_po_list_new($value_dist){
+	$default_pselect 	= array(""=>"- Select -");
+	$all_ps 			= array();
+	$query_psname 		= db_select('all_india_pin_code', 'ps');
+	$query_psname		->fields('ps',array('po_name','pincode','id'));
+	$query_psname		->orderBy('ps.po_name', 'ASC');
+	$query_psname		->condition('ps.district_code',$value_dist,'=');
+	$result_psname 		= $query_psname->execute(); 
+	if(!empty($result_psname)) {      
+		foreach($result_psname as $rows) {
+			$default_pselect[$rows->id] = t('@psname', array('@psname' => $rows->po_name));
+		}    
+	}
+ 	if (isset($all_ps)) {
+		return ($default_pselect + $all_ps);
+	} else {
+		return $default_pselect;
+	}
+}
+/*******************************************************SHOP START***********************************************************/
+
+function get_shop_district_by_id($value_state=''){
+	$default_select 	= array(""=>"- Select District -");
+	$result 			= db_query("SELECT district_id,district_code,district FROM {tel_district} where is_active = 'Y' and state_id = $value_state order by district_name");
+	$list 				= array();
+	foreach ($result as $record) {
+		$list[$record->district_id] = t('@districtname', array(
+			'@districtname' => $record->district,
+		));
+	}
+	return ($default_select+$list);
+}
+
+
+function common_custom_user_subdivisionlist_list_new_shop($value_dist=''){ 
+	$default_subdvselect 	= array(""=>"Select Sub-Division");
+	$all_subdvs 			= array();
+	$query_subdv 			= db_select('tel_subdivision', 'subdv');
+	$query_subdv			->fields('subdv',array('subdivision_id','subdivision'));
+	$query_subdv			->orderBy('subdv.subdivision', 'ASC');
+	//$query_subdv			->condition('subdv.is_active','Y');
+	$query_subdv			->condition('subdv.district_id',(int)$value_dist);
+	$result_subdv 			= $query_subdv->execute(); 
+	if(!empty($result_subdv)) {      
+	  	foreach($result_subdv as $rows) {
+			$all_subdvs[$rows->subdivision_id] = t('@subdvsname', array('@subdvsname' => $rows->subdivision));
+	  	}    
+	}
+ 	if (isset($all_subdvs)) {			
+		return ($default_subdvselect + $all_subdvs);	
+	} else {				
+		return $default_subdvselect;
+	}
+}
+
+function common_custom_user_areatype_list_new_shop($value_loc_e_dist, $value_loc_e_subdivision){
+	
+	$default_areatypeselect 	= array(""=>"- Select AreaType -");
+	$all_areatype 				= array();
+	$query_areatype 			= db_select('tel_block', 'bmm');
+	$query_areatype				->fields('bmm',array('b_m_c_flag'));
+	//$query_areatype				->condition('bmm.distict_code', trim($value_loc_e_dist));
+	$query_areatype				->condition('bmm.subdivision_id', trim($value_loc_e_subdivision));
+	$query_areatype				->groupBy('bmm.b_m_c_flag');
+	$result_areatype 			= $query_areatype->execute(); 
+	if(!empty($result_areatype)) {      
+			foreach($result_areatype as $rows) {
+				if($rows->b_m_c_flag=='B'){
+					$all_areatype[$rows->b_m_c_flag] = t('@areatype', array('@areatype' =>'Block'));
+				}if($rows->b_m_c_flag=='M'){
+					$all_areatype[$rows->b_m_c_flag] = t('@areatype', array('@areatype' =>'Municipality'));
+				}if($rows->b_m_c_flag=='C'){
+					$all_areatype[$rows->b_m_c_flag] = t('@areatype', array('@areatype' =>'Corporation'));
+				}if($rows->b_m_c_flag=='S'){
+					$all_areatype[$rows->b_m_c_flag] = t('@areatype', array('@areatype' =>'SEZ'));
+				}if($rows->b_m_c_flag=='N'){
+					$all_areatype[$rows->b_m_c_flag] = t('@areatype', array('@areatype' =>'Notified Area'));
+				}
+				
+			}
+	}
+ 	if (isset($all_areatype)) {			
+		return ($default_areatypeselect + $all_areatype);	
+	} else {				
+		return $default_areatypeselect;
+	}
+}
+
+
+function common_custom_user_block_list_new_shop($value_subdv, $value_areatype){
+	$default_blockselect 	= array(""=>"- Select -");
+	$all_blocks 			= array();
+	$query_block 			= db_select('tel_block', 'blm');
+	$query_block			->fields('blm',array('block_id','block'));
+	$query_block			->orderBy('blm.block', 'ASC');
+	$query_block			->condition('blm.subdivision_id',$value_subdv,'=');
+	$query_block			->condition('blm.b_m_c_flag',$value_areatype,'=');
+	$result_block 			= $query_block->execute(); 
+	if(!empty($result_block)) {      
+	  	foreach($result_block as $rows) {
+			$all_blocks[$rows->block_id] = t('@blockname', array('@blockname' => $rows->block));
+		}    
+	}
+
+	if (isset($all_blocks)) {
+		return ($default_blockselect + $all_blocks);
+	} else {
+		return $default_blockselect;
+	}
+}
+
+function common_custom_user_villward_list_new_shop($value_villwared,$value_villwardtype){
+	//die("-->".$value_villwared);
+	$default_villwardselect 	= array(""=>"- Select -");
+	$all_villwards 				= array();
+	if($value_villwardtype == 'W' || $value_villwardtype == 'C'){
+		$query_villwardkname 		= db_select('tel_ward', 'vwm');
+		$query_villwardkname		->fields('vwm',array('ward_id','ward'));
+		$query_villwardkname		->orderBy('vwm.ward_id', 'ASC');
+	}else{
+	
+	$query_villwardkname 		= db_select('tel_gp', 'vwm');
+	$query_villwardkname		->fields('vwm',array('gp_id','gp'));
+	$query_villwardkname		->orderBy('vwm.gp', 'ASC');
+	
+	}
+	/*if($value_villwardtype == 'W'){
+		$query_villwardkname		->orderBy('vwm.gp', 'ASC');
+	}else{
+		$query_villwardkname		->orderBy('vwm.gp', 'ASC');
+	}*/
+	
+	$query_villwardkname		->condition('vwm.block_id',trim($value_villwared),'=');
+	//$query_villwardkname		->condition('vwm.category',trim($value_villwardtype),'=');
+	$result_villwardkname 		= $query_villwardkname->execute(); 
+	if(!empty($result_villwardkname)) {      
+		 foreach($result_villwardkname as $rows) {
+			if($value_villwardtype == 'W' || $value_villwardtype == 'C')
+				$all_villwards[$rows->ward_id] = t('@villwardkname', array('@villwardkname' => 'Ward-'.$rows->ward));	
+			else				
+				$all_villwards[$rows->gp_id] = t('@villwardkname', array('@villwardkname' => ucwords($rows->gp)));
+		 }    
+	}
+
+	if (isset($all_villwards)) {
+		return ($default_villwardselect + $all_villwards);
+	} else {
+		return $default_villwardselect;
+	}
+}
+
+function common_custom_user_ps_list_new_shop($value_dist){
+	$default_pselect 	= array(""=>"- Select -");
+	$all_ps 			= array();
+	$query_psname 		= db_select('tel_police_station', 'ps');
+	$query_psname		->fields('ps',array('police_station_id','police_station'));
+	$query_psname		->orderBy('ps.police_station', 'ASC');
+	$query_psname		->condition('ps.district_id',$value_dist,'=');
+	$result_psname 		= $query_psname->execute(); 
+	if(!empty($result_psname)) {      
+		foreach($result_psname as $rows) {
+			$default_pselect[$rows->police_station_id] = t('@psname', array('@psname' => $rows->police_station));
+		}    
+	}
+ 	if (isset($all_ps)) {
+		return ($default_pselect + $all_ps);
+	} else {
+		return $default_pselect;
+	}
+}
+
+function common_custom_user_po_list_new_shop($value_dist){
+	$default_pselect 	= array(""=>"- Select -");
+	$all_ps 			= array();
+	$query_psname 		= db_select('tel_post_office', 'ps');
+	$query_psname		->fields('ps',array('post_office','post_office_id'));
+	$query_psname		->orderBy('ps.post_office', 'ASC');
+	$query_psname		->condition('ps.district_id',$value_dist,'=');
+	$result_psname 		= $query_psname->execute(); 
+	if(!empty($result_psname)) {      
+		foreach($result_psname as $rows) {
+			$default_pselect[$rows->post_office_id] = t('@psname', array('@psname' => $rows->post_office));
+		}    
+	}
+ 	if (isset($all_ps)) {
+		return ($default_pselect + $all_ps);
+	} else {
+		return $default_pselect;
+	}
+}
+/*******************************************************SHOP END*******************************************************/
+
+/********************************************************* SMS Begin**********************************************/
+
+function send_sms($dest='', $msg='', $template_id=''){
+$uid    =    'wblbr.sms';
+$pass    =    'K!dUS4I%252h';
+/*$uid   = 'wblbr.otp';
+$pass  ='K!ydd64%252h';*/
+$send    =    'WBLABR';
+$url    =    "https://smsgw.sms.gov.in/failsafe/HttpLink?";
+$data     =  "username=$uid&pin=$pass&message=$msg&mnumber=$dest&signature=$send&dlt_entity_id=1101757270000028157&dlt_template_id=$template_id";
+//echo "https://smsgw.sms.gov.in/failsafe/HttpLink?username=$uid&pin=$pass&message=$msg&mnumber=$dest&signature=$send";
+$ch     =     curl_init();
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_HEADER, 0);
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER,false);
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,1);
+curl_setopt($ch, CURLOPT_CAINFO,'/etc/pki/tls/certs/ca-bundle.crt');
+$test=curl_exec($ch);
+
+
+/*if(curl_error($ch))
+	echo 'Curl error: ' . curl_error($ch);
+if (curl_errno($ch)) 
+	echo 'Curl error: ' . curl_error($ch);
+else
+	echo 'sms sent';*/
+curl_close($ch);
+return $test;
+}
+
+/********************************************************* SMS End **********************************************/
+
+/**************************************************** udyogaadhaar  *******************************************/
+
+function COMBINATION_VALIDITY_CHECK($uan_no,$corr_adhar_no)
+	{
+		$arr0=array(); $arr01=array();
+		
+		//echo 'JJJ'.$uan_no.'------>'.$corr_adhar_no;
+		$url1='http://udyogaadhaar.gov.in:8080/UAMRestServiceAssist.svc/XML/'.trim($uan_no).','.trim($corr_adhar_no).',wbiskl-VGVzdEBxNW1uNg==,N';
+		
+		//echo $url1;exit;
+		//$response_text=get_data($url1);
+		
+		
+		
+		
+		
+		$response_text = @file_get_contents($url1);
+		
+		//echo 'PPPPPPPPPP'.$response_text; exit;
+		if($response_text!=NULL)
+		{
+		$xml   = simplexml_load_string($response_text);
+        $arr01 = XML2Array($xml);
+		}
+		elseif($response_text=='NO')
+		{
+			$arr01['GetUAMDetailResult']['NewDataSet']['Table']['UdyogAadharNo']='NO';
+		}
+		else
+		{
+			$arr01['GetUAMDetailResult']['NewDataSet']['Table']['UdyogAadharNo']='X';
+		}
+		
+		//echo "NN<pre>";print_r($arr0);exit;
+		
+		return $arr01;
+		
+		
+	}
+	
+	
+function XML2Array(SimpleXMLElement $parent)
+{
+    $array = array();
+
+    foreach ($parent as $name => $element) {
+        ($node = & $array[$name])
+            && (1 === count($node) ? $node = array($node) : 1)
+            && $node = & $node[];
+
+        $node = $element->count() ? XML2Array($element) : trim($element);
+    }
+
+    return $array;
+}
+	
+    
+function GetUdyogAdharData($uamno,$adharno)
+{
+	$m=$web_data_set=array();
+	
+	$m=COMBINATION_VALIDITY_CHECK($uamno,$adharno);
+	//return $m['GetUAMDetailResult']['NewDataSet']['Table'];
+	//echo $uamno.'------>'.$adharno;
+	//echo "<pre>";print_r($m);
+	//exit;
+	 if($m['GetUAMDetailResult']['NewDataSet']['Table']['UdyogAadharNo']=='X' || $m['GetUAMDetailResult']['NewDataSet']['Table']['UdyogAadharNo']=='NO')
+			{
+				$fetched='N';
+				$msg_conn='No Data Found...........';
+				$dic_id=0;
+				/*$our_community    =0;
+				$total_investment   = 0;
+				$m_s_m_type='';
+				$udyog_community_name='';
+				$docp=date("Y-m-d");
+				$project_location_name='';*/
+			}
+			else
+			{
+				//echo "<pre>";print_r($m['GetUAMDetailResult']['NewDataSet']['Table']);exit;
+				 $fetched='Y';
+				 $msg_conn='Data Found...........';
+				 /*$udyog_community_name=strtoupper(trim($m['GetUAMDetailResult']['NewDataSet']['Table']['SocialCategory']));
+				 $project_location_name=trim($m['GetUAMDetailResult']['NewDataSet']['Table']['Address']);*/
+				 
+				/*switch(trim($m['GetUAMDetailResult']['NewDataSet']['Table']['SocialCategory']))
+				{
+					case 'General': $our_community = 1; break;
+					case 'SC': $our_community = 2; break;
+					case 'ST': $our_community = 3; break;
+					case 'OBC':	$our_community = 1; break;
+					default:	$our_community =0;
+					
+				}*/
+			
+			
+				switch(trim($m['GetUAMDetailResult']['NewDataSet']['Table']['DISTRICT_NAME']))
+				{
+					
+					case 'ALIPURDUAR'		: $dic_id = 20; break;
+					case 'BANKURA'			: $dic_id = 13; break;
+					case 'BARDHAMAN'		: $dic_id = 9; break;
+					case 'BIRBHUM'			: $dic_id = 8; break;
+					case 'COOCHBEHAR'		: $dic_id = 2; break;
+					case 'DAKSHIN DINAJPUR'	: $dic_id = 5; break;
+					case 'DARJEELING'		: $dic_id = 1; break;
+					case 'EAST MEDINIPUR'	: $dic_id = 19; break;
+					case 'HOOGHLY'			: $dic_id = 12; break;
+					case 'HOWRAH'			: $dic_id = 16; break;
+					case 'JALPAIGURI'		: $dic_id = 3; break;
+					case 'KOLKOTA'			: $dic_id = 17; break;
+					case 'MALDA'			: $dic_id = 6; break;
+					case 'MURSHIDABAD'		: $dic_id = 7; break;
+					case 'N. 24- PRAGANAS'	: $dic_id = 11; break;
+					
+					case 'NADIA'			: $dic_id = 10; break;
+					case 'PURULIA'			: $dic_id = 14; break;
+					case 'SOUTH 24-PRAGANAS': $dic_id = 18; break;
+					case 'UTTAR DINAJPUR'	: $dic_id = 4; break;
+					default					: $dic_id =0;
+				}
+				
+				switch(trim($m['GetUAMDetailResult']['NewDataSet']['Table']['state_name']))
+				{
+					case 'ANDHRA PRADESH'				: $state_code = 2; break;
+					case 'ARUNACHAL PRADESH'			: $state_code = 3; break;
+					case 'ASSAM'						: $state_code = 4; break;
+					case 'BIHAR'						: $state_code = 5; break;
+					case 'CHANDIGARH'					: $state_code = 6; break;
+					case 'CHHATTISGARH'					: $state_code = 7; break;
+					case 'DADRA AND NAGAR HAVELI'		: $state_code = 8; break;
+					case 'DAMAN AND DIU'				: $state_code = 9; break;
+					case 'DELHI'						: $state_code = 10; break;
+					case 'GOA'							: $state_code = 11; break;
+					case 'GUJARAT'						: $state_code = 12; break;
+					case 'HARYANA'						: $state_code = 13; break;
+					case 'HIMACHAL PRADESH'				: $state_code = 14; break;
+					case 'JAMMU AND KASHMIR'			: $state_code = 15; break;
+					case 'JHARKHAND'					: $state_code = 16; break;
+					case 'KARNATAKA'					: $state_code = 17; break;
+					case 'KERALA'						: $state_code = 18; break;
+					case 'LAKSHADWEEP'					: $state_code = 19; break;
+					case 'MADHYA PRADESH'				: $state_code = 20; break;
+					case 'MAHARASHTRA'					: $state_code = 21; break;
+					case 'MANIPUR'						: $state_code = 22; break;
+					case 'MEGHALAYA'					: $state_code = 23; break;
+					case 'MIZORAM'						: $state_code = 24; break;
+					case 'NAGALAND'						: $state_code = 25; break;
+					case 'ODISHA'						: $state_code = 26; break;
+					case 'PUDUCHERRY'					: $state_code = 27; break;
+					case 'PUNJAB'						: $state_code = 28; break;
+					case 'RAJASTHAN'					: $state_code = 29; break;
+					case 'SIKKIM'						: $state_code = 30; break;
+					case 'TAMIL NADU'					: $state_code = 31; break;
+					case 'TELANGANA'					: $state_code = 32; break;
+					case 'TRIPURA'						: $state_code = 33; break;
+					case 'UTTAR PRADESH'				: $state_code = 34; break;
+					case 'UTTARAKHAND'					: $state_code = 35; break;
+					case 'WEST BENGAL'					: $state_code = 1; break;
+					case 'ANDAMAN AND NICOBAR ISLAND'	: $state_code = 36; break;
+					default								: $state_code =0;
+				}
+				
+				switch(trim($m['GetUAMDetailResult']['NewDataSet']['Table']['Gender']))
+				{
+					
+					case 'Male'			: $gender = 'M'; break;
+					case 'Female'		: $gender = 'F'; break;
+					case '3rd Gender'	: $gender = 'T'; break;
+					default				: $gender = 0;
+				}
+				
+				
+				
+				/*$total_investment   = $m['GetUAMDetailResult']['NewDataSet']['Table']['InvestmentCost'];
+				$m_s_m_type= strtoupper($m['GetUAMDetailResult']['NewDataSet']['Table']['EnterpriseType']);
+				$docp    =  DateTime::createFromFormat('d/m/Y',$m['GetUAMDetailResult']['NewDataSet']['Table']['CommmenceDate'])->format('d-m-Y');*/
+			}
+				
+				$ownersName 								=	trim($m['GetUAMDetailResult']['NewDataSet']['Table']['OwnerName']);
+				$arrName									=	explode(" ",$ownersName);
+				if(sizeof($arrName)>=3){
+					$web_data_set["fname"]					= $arrName[0];
+					$web_data_set["mname"]					= $arrName[1];
+					$web_data_set["lname"]					= $arrName[2];
+				}else{
+					$web_data_set["fname"]					= $arrName[0];
+					$web_data_set["mname"]					= "";
+					$web_data_set["lname"]					= $arrName[1];
+				}
+				$web_data_set["OwnerName"]					=	trim($m['GetUAMDetailResult']['NewDataSet']['Table']['OwnerName']);
+				
+				$web_data_set["aadharno"]					=	trim($m['GetUAMDetailResult']['NewDataSet']['Table']['Adharno']);
+				$web_data_set["gender"]						=	$gender;
+				$web_data_set["mobile"]						=	trim($m['GetUAMDetailResult']['NewDataSet']['Table']['MobileNo']);
+				$web_data_set["email"]						=	trim($m['GetUAMDetailResult']['NewDataSet']['Table']['EmailId']);
+				$web_data_set["pan"]						=	trim($m['GetUAMDetailResult']['NewDataSet']['Table']['PanNo']);
+				
+				$web_data_set["district"]					=	$dic_id;
+				$web_data_set["state_code"]					=	trim($state_code);
+				$web_data_set["address"]					=	trim($m['GetUAMDetailResult']['NewDataSet']['Table']['Address']);
+				
+				$web_data_set["pincode"]					=	trim($m['GetUAMDetailResult']['NewDataSet']['Table']['PINCode']);
+				
+				
+				
+				/*$web_data_set["total_investment"]			=	$total_investment;
+				$web_data_set["m_s_m_type"]					=	$m_s_m_type;
+				$web_data_set["docp"]						=	$docp;*/
+				
+				$web_data_set["fetched"]=$fetched;
+				$web_data_set["msg"]=$msg_conn;
+			
+			
+			//echo "<pre>";print_r($web_data_set);exit;
+			return $web_data_set;
+			
+}
+
+/**************************************************** udyogaadhaar end *******************************************/
+
+function serviceDetails($uid){
+
+	global $user;
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');	
+	
+	$query = db_select('a_service_info', 'asi'); 
+	$query ->fields('asi', array('service_id','sservice_cadre','s_doj','s_promotion_doj','s_dob','s_gender','s_uid','s_status','s_confirmdate','s_recruitmenttype'));
+	$query->condition('asi.s_status', 1, '='); 
+	$query->condition('asi.s_uid', $user->uid, '='); 
+	$result = $query->execute();
+	$resultData1 = $result->fetchAssoc();
+	
+	if($resultData1['sservice_cadre'] == 1) { $service_cadre = 'WBES'; }
+	 elseif ($resultData1['sservice_cadre'] == 2) { $service_cadre = 'WBLS'; }
+	 elseif ($resultData1['sservice_cadre'] == 3) { $service_cadre = 'Others'; }
+	
+	if($resultData1['s_gender'] == 'M') { $gender = 'Male'; } else { $gender = 'Female';}
+		
+	//print_r($resultData); exit;
+	$header_service = array();
+    $rows_service 	= array();
+   
+	$header_service  = array(  
+		  array('data' => t('Service/Cadre')),  
+		  array('data' => t('Date of Joining')),
+		  array('data' => t('Date of Confirmation')),
+		  array('data' => t('Date of Birth')),
+		  array('data' => t('Type of Recruitment')),
+		  array('data' => t('Gender')),
+	);
+	 
+   //foreach($resultData as $val){	 
+	$rows_service [] = array(  
+		  array('data' => $service_cadre),  
+		  array('data' => t(date('j-F-Y',strtotime($resultData1['s_doj'])))),
+		  array('data' => t(date('j-F-Y',strtotime($resultData1['s_confirmdate'])))),
+		  array('data' => t(date('j-F-Y',strtotime($resultData1['s_dob'])))), 
+		  array('data' => $resultData1['s_recruitmenttype']),  
+		  array('data' => $gender), 
+	);
+	
+ $output = theme_table(
+    array(
+      'header' => $header_service,
+      'rows' => $rows_service,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>Service Information</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+ return '<div class="formdvider viewlist">'.$output.'</div>';	
+	
+}
+
+/*------------------------------------------------- ESTABLISHMENT INFO BEGIN -----------------------------------*/
+
+function establishment_info($uid){
+	
+	$est_list_query_result_data = array();
+	
+	 $sort = 'DESC';
+	 $order = 'created_date';
+	
+	 $est_list_query = db_select('ld_establishment_details', 'e');
+	 $est_list_query->leftJoin('district_master', 'd', 'd.district_code=e.district');
+	 $est_list_query->fields('d',array('district_name'));
+	 $est_list_query->fields('e',array('est_id','uid','e_clinid','est_name','ownership_type','ownership_typesub','ownership_typesub1','ownership_typesub2',	
+	  								   'ownership_otext','govtpvt_otext','identity_cardtype','identity_cardno','pincode','state','district','subdivision','areatype','block',	
+									   'panchayat','policestation','postoffice','address','created_date','latitude','longitude'));
+	 $est_list_query->condition('e.uid',$uid,'=');
+	 $est_list_query->orderBy($order, $sort); 
+	 $est_list_query_result = $est_list_query->execute();
+	 $est_list_query_result_data = $est_list_query_result->fetchAll();
+	 
+	 return $est_list_query_result_data;
+}
+
+/*----------------------------------------------- Educational Details Begin -----------------------------------------*/
+
+function educationDetails($uid){
+	
+	global $user;
+    $query = db_select('a_service_edu', 'ase');
+	$query->leftJoin('a_service_info', 'asi', 'ase.service_id = asi.service_id'); 
+	$query->fields('ase', array('s_edu_id', 's_qual', 's_univ', 's_division', 's_edu_status', 's_qual_type', 's_graduate_type', 's_technicaltype', 's_nontechnicaltype', 'service_id'));
+	$query->condition('ase.s_edu_status', 1, '='); 
+	$query->condition('ase.s_uid', $uid , '=');
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	$header_edu = array();
+    $rows_edu 	= array();
+	
+	$header_edu = array(
+					array('data'=> 'Sl No.'),
+					array('data'=> 'Qualification'),
+					array('data'=> 'Under Graduation Type'),
+					array('data'=> 'Graduation/Post Graduation Type'),
+					array('data'=> 'Technical Type'),
+					array('data'=> 'Non Technical Type'),
+					array('data'=> 'University/Institute'),
+					array('data'=> 'Division'),
+				 );
+				 
+	$i = 0;
+	if(!empty($resultData)){
+	foreach($resultData as $val){
+		$i++;
+	  
+	  $rows_edu [] = array(  
+	 		  $i,
+	  		  array('data' => t($val->s_qual)),
+			  array('data' => t($val->s_qual_type)),
+			  array('data' => t($val->s_graduate_type)),
+			  array('data' => t($val->s_technicaltype)),
+			  array('data' => t($val->s_nontechnicaltype)),
+			  array('data' => t($val->s_univ)), 
+			  array('data' => t($val->s_division)),
+			  //array('data' => ($val->landacquistion_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->landacquistion_date))) : 'N/A'),
+		); 
+	}
+  }
+  
+  $output = theme_table(
+    array(
+      'header' => $header_edu,
+      'rows' => $rows_edu,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>Educational Information</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+ return '<div class="formdvider viewlist">'.$output.'</div>';			
+}	
+	
+	
+/*----------------------------------------------- Educational Details End -----------------------------------------*/
+
+/*----------------------------------------------- Posting Details Begin -----------------------------------------*/
+
+function postingDetails($uid){ 
+
+ 	global $user;
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+    $query = db_select('a_posting_details', 'apd');
+	$query->leftJoin('a_service_info', 'asi', 'apd.service_id = asi.service_id'); 
+	$query->leftJoin('district_master', 'd', 'apd.s_posting_district = d.district_code'); 
+	$query->leftJoin('sub_division', 'sd', 'apd.s_posting_subdivision = sd.sub_div_code'); 
+	$query->fields('apd', array('s_posting_id','s_designation','s_order_no','s_order_date','s_office_name','s_posting_district','s_posting_subdivision','s_posting_type','s_posting_from','s_posting_to','s_pstatus'));
+	$query->fields('d', array('district_name'));
+	$query->fields('sd', array('sub_div_name'));
+	$query->condition('apd.s_pstatus', 1, '='); 
+	$query->condition('apd.s_uid', $user->uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	$header_posting = array();
+    $rows_posting 	= array();
+	
+	$header_posting = array(
+						array('data'=> 'Sl No.'),
+						array('data'=> 'Designation'),
+						array('data'=> 'Order Number'),
+						array('data'=> 'Order Date'),
+						array('data'=> 'Office Name'),
+						array('data'=> 'District'),
+						array('data'=> 'Sub-division'),
+						array('data'=> 'Posting Type'),
+						array('data'=> 'Posting From'),
+						array('data'=> 'Posting Upto'), 
+					);
+	
+	$i = 0;
+	if(!empty($resultData)){
+	foreach($resultData as $val){
+		$i++;
+	  
+	$rows_posting [] = array(  
+						  $i,
+						  array('data' => t($val->s_designation)), 	
+						  array('data' => t($val->s_order_no)),
+						  array('data' => t($val->s_order_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->s_order_date))) : 'N/A' ),
+						  array('data' => t($val->s_office_name)),
+						  array('data' => t($val->district_name)),
+						  array('data' => t($val->sub_div_name)),
+						  array('data' => t($val->s_posting_type)),
+						  array('data' => t($val->s_posting_from) != 'N/A' ? t(date('d-m-Y',strtotime($val->s_posting_from))) : 'N/A' ),
+						  array('data' => t($val->s_posting_to) != 'N/A' ? t(date('d-m-Y',strtotime($val->s_posting_to))) : 'N/A' ),
+					); 
+		}
+	}
+	
+  $output = theme_table(
+    array(
+      'header' => $header_posting,
+      'rows' => $rows_posting,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>Posting Details</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  return '<div class="formdvider viewlist">'.$output.'</div>';	
+}
+
+/*----------------------------------------------- Posting Details End -----------------------------------------*/
+	
+/*---------------------------------------------- In-service Training Details Begin ----------------------------*/
+
+function inserviceTrainingDetails($uid){ 
+
+ 	global $user;
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$query = db_select('a_inservice_training', 'ait');
+	$query ->leftJoin('a_service_info', 'asi', 'ait.service_id = asi.service_id');  
+	$query ->fields('ait', array('s_inserv_id', 's_training_from', 's_training_to', 's_training_name', 's_training_institute', 's_training_city', 
+					's_training_duration', 's_training_status','s_training_country','service_id','s_training_type'));
+	$query->condition('ait.s_training_status', 1, '='); 
+	$query->condition('ait.s_uid', $user->uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	$header_inservicetraining = array();
+    $rows_inservicetraining	  = array();
+	
+	$header_inservicetraining = array(
+									array('data'=> 'Sl No.'),
+									array('data'=> 'Training Name'),
+									array('data'=> 'Training Type'),
+									array('data'=> 'In-Service Training Year From'),
+									array('data'=> 'In-Service Training Year To'),
+									array('data'=> 'Training Institute'),
+									array('data'=> 'Training Country'),
+									array('data'=> 'Training City'),
+									array('data'=> 'Training Duration'),
+								);
+	
+	
+	$i = 0;
+	if(!empty($resultData)){
+	foreach($resultData as $val){
+		$i++;
+	  
+	$rows_inservicetraining [] = array(  
+									  $i,
+									  array('data' => t($val->s_training_name)),
+									  array('data' => t($val->s_training_type)),
+									  array('data' => t($val->s_training_from) != 'N/A' ? t(date('d-m-Y',strtotime($val->s_training_from))) : 'N/A' ),
+									  array('data' => t($val->s_training_to) != 'N/A' ? t(date('d-m-Y',strtotime($val->s_training_to))) : 'N/A' ),
+									  array('data' => t($val->s_training_institute)),
+									  array('data' => t($val->s_training_country)),
+									  array('data' => t($val->s_training_city)),
+									  array('data' => t($val->s_training_duration)),
+							    ); 
+	  }
+	}
+	
+  $output = theme_table(
+    array(
+      'header' => $header_inservicetraining,
+      'rows' => $rows_inservicetraining,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>In-Service Training Information</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  return '<div class="formdvider viewlist">'.$output.'</div>';	
+
+}
+
+/*----------------------------------------------- In-service Training Details End -----------------------------------------*/
+
+/*----------------------------------------------- Foreign Training Details Begin -----------------------------------------*/
+
+function foreignTrainingDetails($uid){ 
+
+ 	global $user;
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$query = db_select('a_foreign_training', 'aft');
+	$query ->leftJoin('a_service_info', 'asi', 'aft.service_id = asi.service_id'); 
+	$query ->fields('aft', array('s_ftraining_id', 's_ftraining_name', 's_ftraining_from', 's_ftraining_to', 
+					's_ftraining_institute', 's_ftraining_country', 's_ftraining_city', 's_ftraining_duration', 's_ftraining_status','s_ftraining_type'));
+	$query->condition('aft.s_ftraining_status', 1, '='); 
+	$query->condition('aft.s_uid', $user->uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	$header_foreigntraining = array();
+    $rows_foreigntraining	= array();
+	
+	$header_foreigntraining = array(
+								array('data'=> 'Sl No.'),
+								array('data'=> 'Training Name'),
+								array('data'=> 'Training Type'),
+								array('data'=> 'Training From'),
+								array('data'=> 'Training To'),
+								array('data'=> 'Training Institute'),
+								array('data'=> 'Country'),
+								array('data'=> 'City'),
+								array('data'=> 'Duration'),
+							);
+							
+	$i = 0; 
+	if(!empty($resultData)){
+	foreach($resultData as $val){
+		$i++;
+	  
+	  $rows_foreigntraining [] = array(  
+									  $i,
+									  array('data' => t($val->s_ftraining_name)),
+									  array('data' => t($val->s_ftraining_type)),
+									  array('data' => t($val->s_ftraining_from) != 'N/A' ? t(date('d-m-Y',strtotime($val->s_ftraining_from))) : 'N/A' ),
+									  array('data' => t($val->s_ftraining_to) != 'N/A' ? t(date('d-m-Y',strtotime($val->s_ftraining_to))) : 'N/A' ),  
+									  array('data' => t($val->s_ftraining_institute)),
+									  array('data' => t($val->s_ftraining_country)),
+									  array('data' => t($val->s_ftraining_city)),
+									  array('data' => t($val->s_ftraining_duration)),
+								); 
+	  }
+	}						
+
+ $output = theme_table(
+    array(
+      'header' => $header_foreigntraining,
+      'rows' => $rows_foreigntraining,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>Foreign Training Information</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  return '<div class="formdvider viewlist">'.$output.'</div>';	
+
+}
+
+/*----------------------------------------------- Foreign Training Details End -----------------------------------------*/
+	
+/*----------------------------------------------- Awards/Publications Details Begin ------------------------------------*/
+
+function awardpubDetails($uid){ 
+
+	global $user;
+	drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+	
+	$query = db_select('a_service_awards', 'asa');
+	$query ->leftJoin('a_service_info', 'asi', 'asa.service_id = asi.service_id'); 
+	$query ->fields('asa', array('s_awards_id', 's_aname', 's_agivenby', 's_ayear', 's_adesc', 's_alevel', 's_astatus'));
+	$query->condition('asa.s_astatus', 1, '='); 
+	$query->condition('asa.s_uid', $user->uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	$header_awardspub = array();
+    $rows_awardspub   = array();
+	
+	$header_awardspub = array(
+							array('data'=> 'Sl No.'),
+							array('data'=> 'Activity Category'),
+							array('data'=> 'Name'),
+							array('data'=> 'Awards Given By/Publishers Name'),
+							array('data'=> 'Year'),
+							array('data'=> 'Description'),
+							array('data'=> 'Level'),
+						);
+	
+	$i = 0;
+	if(!empty($resultData)){
+	foreach($resultData as $val){
+		$i++;
+		$editLink = l('<div class="hidden-sm hidden-xs action-buttons"><i class="ace-icon fa fa-pencil bigger-130"></i>', 'service/sawardedit/'.$val->s_awards_id, array('html' => TRUE,'attributes'=>array('title' => 'Edit', 'class'=>array('green'))));	
+		$delLink = l('<i class="ace-icon fa fa-trash-o bigger-130"></i></div>','service/sawarddel/'.$val->s_awards_id,array('html' => TRUE,'attributes'=>array('title' => 'Delete','class'=>array('red'))));
+	  
+	  $rows_awardspub [] = array( 
+								  $i,
+								  array('data' => t($val->s_acategorytype)),
+								  array('data' => t($val->s_aname)),
+								  array('data' => t($val->s_agivenby)),
+								  array('data' => t($val->s_ayear)),
+								  array('data' => t($val->s_adesc)),
+								  array('data' => t($val->s_alevel)),
+							); 
+	 }
+	}
+	
+ $output = theme_table(
+    array(
+      'header' => $header_awardspub,
+      'rows' => $rows_awardspub,
+      'attributes' => array('id'=>'table_div_replace',  'class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>Award Publication Information</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  return '<div class="formdvider viewlist">'.$output.'</div>';	
+}
+
+function servicegeninfo($uid){
+	
+    //global $user;	 
+	
+	$query = db_select('a_service_info', 'asi'); 
+	$query ->fields('asi', array('service_id','sservice_cadre','s_doj','s_promotion_doj','s_dob','s_gender','s_uid','s_status','s_confirmdate','s_recruitmenttype','s_forwardstatus'));
+	$query->condition('asi.s_status', 1, '='); 
+	$query->condition('asi.s_uid', $uid, '='); 
+	$result = $query->execute();
+	$resultData1 = $result->fetchAssoc();
+	
+	return $resultData1;	
+}
+
+
+function educationinfo($uid){
+	
+	global $user;
+	
+	$query = db_select('a_service_edu', 'ase');
+	$query->leftJoin('a_service_info', 'asi', 'ase.service_id = asi.service_id'); 
+	$query->fields('ase', array('s_edu_id', 's_qual', 's_univ', 's_division', 's_edu_status', 's_qual_type', 's_graduate_type', 's_technicaltype', 's_nontechnicaltype', 'service_id'));
+	$query->condition('ase.s_edu_status', 1, '='); 
+	$query->condition('ase.s_uid', $user->uid , '=');
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	return $resultData;	
+}
+
+function postinginfo($uid){
+	
+	global $user;
+	
+	$query = db_select('a_posting_details', 'apd');
+	$query->leftJoin('a_service_info', 'asi', 'apd.service_id = asi.service_id'); 
+	$query->leftJoin('district_master', 'd', 'apd.s_posting_district = d.district_code'); 
+	$query->leftJoin('sub_division', 'sd', 'apd.s_posting_subdivision = sd.sub_div_code'); 
+	$query->fields('apd', array('s_posting_id','s_designation','s_order_no','s_order_date','s_office_name','s_posting_district','s_posting_subdivision','s_posting_type','s_posting_from','s_posting_to','s_pstatus'));
+	$query->fields('d', array('district_name'));
+	$query->fields('sd', array('sub_div_name'));
+	$query->condition('apd.s_pstatus', 1, '='); 
+	$query->condition('apd.s_uid', $user->uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	return $resultData;
+}
+
+function inserviceinfo($uid){
+	
+	global $user;
+	
+	$query = db_select('a_inservice_training', 'ait');
+	$query ->leftJoin('a_service_info', 'asi', 'ait.service_id = asi.service_id');  
+	$query ->fields('ait', array('s_inserv_id', 's_training_from', 's_training_to', 's_training_name', 's_training_institute',
+					 's_training_city', 's_training_duration', 's_training_status','s_training_country','service_id','s_training_type'));
+	$query->condition('ait.s_training_status', 1, '='); 
+	$query->condition('ait.s_uid', $user->uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	return $resultData;
+}
+
+function foreigninfo($uid){
+	
+	global $user;
+	
+	$query = db_select('a_foreign_training', 'aft');
+	$query ->leftJoin('a_service_info', 'asi', 'aft.service_id = asi.service_id'); 
+	$query ->fields('aft', array('s_ftraining_id', 's_ftraining_name', 's_ftraining_from', 's_ftraining_to',
+				    's_ftraining_institute', 's_ftraining_country', 's_ftraining_city', 's_ftraining_duration', 's_ftraining_status','s_ftraining_type'));
+	$query->condition('aft.s_ftraining_status', 1, '='); 
+	$query->condition('aft.s_uid', $user->uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	return $resultData;
+}
+
+function awardpubinfo($uid){
+	
+	global $user;
+	
+	$query = db_select('a_service_awards', 'asa');
+	$query ->leftJoin('a_service_info', 'asi', 'asa.service_id = asi.service_id'); 
+	$query ->fields('asa', array('s_awards_id', 's_aname', 's_agivenby', 's_ayear', 's_adesc', 's_alevel', 's_astatus','s_acategorytype'));
+	$query->condition('asa.s_astatus', 1, '='); 
+	$query->condition('asa.s_uid', $user->uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	return $resultData;
+}
+
+function MANDETORY_TEXTBOX_TEXT_VALIDATE($element, &$form_state) {
+   if(trim($element['#value'])){
+       if (preg_match('/^[0-9]{10}$/', trim($element['#value'])) === 0) {
+           form_error($element, t($element['#title'].'  must be 10 digit long.'));
+       }
+	  	$val="a".trim($element['#value']);
+		if(stripos($val,"~") >0  || stripos($val,"!") >0 || stripos($val,"@")>0 || stripos($val,"<")>0 || stripos($val,">")>0 || stripos($val,"'")>0 || stripos($val,"$")>0 || stripos($val,"#")>0 || stripos($val,"%")>0 || stripos($val,"^")>0 || stripos($val,"&")>0 || stripos($val,"*")>0 || stripos($val,"-")>0){
+       		form_error($element, t($element['#title'].' contain illegal character.'));
+	   }    
+   }else{ 
+   		form_error($element, t($element['#title'].' field is required.')); 
+   }
+}
+
+
+
+/***** added by Naren *******************/
+/** 
+ *-------------PHP code example-----------------
+ */
+/**
+ * Decrypt data from a CryptoJS json encoding string
+ *
+ * @param mixed $passphrase
+ * @param mixed $jsonString
+ * @return mixed
+ */
+function cryptoJsAesDecrypt($passphrase, $jsonString){
+    $jsondata = json_decode($jsonString, true);
+    $salt = hex2bin($jsondata["s"]);
+    $ct = base64_decode($jsondata["ct"]);
+    $iv  = hex2bin($jsondata["iv"]);
+    $concatedPassphrase = $passphrase.$salt;
+    $md5 = array();
+    $md5[0] = md5($concatedPassphrase, true);
+    $result = $md5[0];
+    for ($i = 1; $i < 3; $i++) {
+        $md5[$i] = md5($md5[$i - 1].$concatedPassphrase, true);
+        $result .= $md5[$i];
+    }
+    $key = substr($result, 0, 32);
+    $data = openssl_decrypt($ct, 'aes-256-cbc', $key, true, $iv);
+    return json_decode($data, true);
+}
+
+/**
+ * Encrypt value to a cryptojs compatiable json encoding string
+ *
+ * @param mixed $passphrase
+ * @param mixed $value
+ * @return string
+ */
+function cryptoJsAesEncrypt($passphrase, $value){
+    $salt = openssl_random_pseudo_bytes(8);
+    $salted = '';
+    $dx = '';
+    while (strlen($salted) < 48) {
+        $dx = md5($dx.$passphrase.$salt, true);
+        $salted .= $dx;
+    }
+    $key = substr($salted, 0, 32);
+    $iv  = substr($salted, 32,16);
+    $encrypted_data = openssl_encrypt(json_encode($value), 'aes-256-cbc', $key, true, $iv);
+    $data = array("ct" => base64_encode($encrypted_data), "iv" => bin2hex($iv), "s" => bin2hex($salt));
+    return json_encode($data);
+}
+/***** end by Naren *******************/ 
+	
+
+
+	
+

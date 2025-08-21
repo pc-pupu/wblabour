@@ -1,0 +1,1207 @@
+<?php
+
+function applicant_registration_init(){
+  drupal_add_js(drupal_get_path('module', 'applicant_registration') . '/js/jquery.validationEngine.js');
+  drupal_add_js(drupal_get_path('module', 'applicant_registration') . '/js/jquery.validationEngine-en.js');
+  drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/validationEngine.jquery.css');
+  drupal_add_css(drupal_get_path('module', 'dashboard') . '/build/css/custom.css');
+  drupal_add_js(drupal_get_path('module', 'applicant_registration') . '/js/appreg.js');
+  //drupal_add_js(drupal_get_path('module', 'applicant_registration') . '/js/myfunction.js');
+
+}
+
+ function applicant_registration_menu() {
+	$items=array();
+	
+	$items['uam-reg']=array(
+		'title'=>'UM Registration',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('um_reg_form'),
+		'access arguments' => array('access content'),
+		'access callback'=>TRUE
+	);
+	
+	$items['applicant-registration']=array(
+		'title'=>'Registration',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('applicant_registration_form'),
+		'access arguments' => array('access content'),
+		'access callback'=>TRUE
+	);
+	
+	$items['pinautocomplete'] = array(
+	'page callback' => 'get_pincode_autocomplete',
+	'access arguments' => array('access content'),
+	//'page arguments' => array(2),
+	'type' => MENU_CALLBACK,
+	//'file' => 'applicant_registration.module',
+  ); 
+  
+   $items['type-search/%'] = array(
+	'page callback' => 'type_search',
+	'access arguments' => array('access content'),
+	'page arguments' => array(1),
+	'type' => MENU_CALLBACK,
+	//'file' => 'corr_master_entry.form.inc',
+  ); 
+	
+   return $items;
+ }
+ 
+function um_reg_form($form, &$form_state) {
+ global $base_root, $base_path;
+  drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/sky-forms.css');
+  drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/form-design.css');
+ 
+
+  $form['#attributes']['class'][] = 'sky-form custom-form-main';
+
+	
+	$form['uamno'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#maxlength'=>'12',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Udyog Aadhaar Number', 'autocomplete' => 'off'),
+	   '#prefix' => '<div class="x_panel"><div class="x_title"><h1><span>U</span>am Registration</h1></div><div class="x_content"><fieldset><div class="col col-6"><label class="input"><i class="icon-prepend fa-credit-card"></i>Udyog Aadhaar Number',
+	   '#suffix' => '</label></div>',
+	);
+	
+	$form['aadharno'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#maxlength'=>'12',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Aadhaar Number', 'autocomplete' => 'off'),
+	   '#prefix' => '<div class="col col-6"><label class="input"><i class="icon-prepend fa-credit-card"></i>Aadhaar Number',
+  	   '#suffix' => '</label></div></fieldset>',
+	);
+	
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Submit',
+		'#attributes' => array('class'=>array('btn btn-success pull-right form-submit')),
+		'#prefix' => '<footer>',
+  		'#suffix' => '</footer></div></div></div></div>',
+     ); 
+	  
+	return  $form;
+  
+  
+}
+
+function um_reg_form_validate($form, &$form_state) {
+	
+  if (!$form_state['values']['uamno']) {
+    form_set_error('uamno', 'You must enter udyogaadhaar no before continuing');    
+  }
+  if (!$form_state['values']['aadharno']) {
+    form_set_error('aadharno', 'You must enter aadhar no before continuing');    
+  }
+  
+  $uamdataValidate 	= GetUdyogAdharData($form_state['values']['uamno'],$form_state['values']['aadharno']);
+  if($uamdataValidate['fetched']=='N'){
+	  form_set_error('', 'Invalid udyogaadhaar or aadharno');  
+  }
+}
+
+function um_reg_form_submit($form, &$form_state) {
+	
+	$_SESSION['uamno'] 		= "";
+	$_SESSION['aadharno'] 	= "";
+	
+	$_SESSION['uamno'] 		= trim($form_state['values']['uamno']);
+	$_SESSION['aadharno'] 	= trim($form_state['values']['aadharno']);
+	//$uamdata 	= GetUdyogAdharData($_SESSION['uamno'],$_SESSION['aadharno']);
+	drupal_goto('applicant-registration');
+	//print_r($uamdata);
+	//exit;
+	
+}
+ 
+ 
+function applicant_registration_form($form, &$form_state) {
+
+  global $base_root, $base_path;
+  drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/sky-forms.css');
+  drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/form-design.css');
+  //drupal_add_js(drupal_get_path('module', 'applicant_registration') . '/js/jquery-1.8.2.min');
+  drupal_add_js(drupal_get_path('module', 'applicant_registration') . '/js/myfunction.js');
+  
+  if(isset($_SESSION['uamno']) && isset($_SESSION['aadharno'])){
+	  $uamdata 	= GetUdyogAdharData($_SESSION['uamno'],$_SESSION['aadharno']);
+	  unset($_SESSION['uamno']);
+	  unset($_SESSION['uamno']);
+	  //print_r($uamdata);
+	 // exit;
+	 
+  }
+  
+
+  $form['#attributes']['class'][] = 'sky-form custom-form-main';
+
+	$form['fname'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield', 
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'First Name', 'autocomplete' => 'off'),
+	   '#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   //'#element_validate' => array('awards_textfield_validate'),
+	   //'#required' => TRUE,
+	   '#prefix'=>'<div class="x_panel"><div class="x_title"><h1><span>D</span>etails of the Applicant</h1></div><div class="x_content"><fieldset><div class="row"><section class="col col-4"><label class="input"><i class="icon-prepend icon-user"></i>First Name<span id=\'star\'>*</span>',
+	   '#suffix' => '</label></section>'
+	);	
+	
+   $form['mname'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#default_value'=>!empty($uamdata) ? $uamdata['mname'] : '',
+	   '#attributes' => array('id' => 'mname', 'autocomplete' => 'off', 'class'=>array(''),'placeholder'=>'Middle Name'),
+	   '#prefix' => '<section class="col col-4"><label class="input"><i class="icon-prepend icon-user"></i>Middle Name',
+  	   '#suffix' => '</label></section>'
+	);	
+	
+	$form['lname'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#default_value'=>!empty($uamdata) ? $uamdata['lname'] : '',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Last Name', 'autocomplete' => 'off'),
+	   '#prefix' => '<section class="col col-4"><label class="input"><i class="icon-prepend icon-user"></i>Last Name<span id=\'star\'>*</span>',
+	   '#suffix' => '</label></section></div></fieldset>'
+	);
+	
+	$form['gender'] = array(
+	   '#title'=>'',
+	   '#type' => 'radios',
+	   '#options' => array('M'=>t('<i class="custom_radio"></i>Male'),'F'=>t('<i class="custom_radio"></i>Female'),'T'=>t('<i class="custom_radio"></i>3rd Gender')),
+	   '#attributes' => array('class'=>array('')),
+	   '#default_value' => !empty($uamdata) ? $uamdata['gender'] : 'M',
+	   //'#element_validate' => array('awards_textfield_validate'),
+	   //'#required' => TRUE,
+	   '#prefix'=>'<fieldset><div class="row"><section class="col col-4 app-regs-gender"><label class="radios">Gender',
+	   '#suffix' =>'</label></section>',
+	);	
+				
+   $form['dob'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#attributes' => array('id' => 'dateofbirth', 'autocomplete' => 'off', 'class'=>array(''),'placeholder'=>'Date Of Birth'),
+	   '#prefix'=>'<section class="col col-4"><label class="input"><i class="icon-prepend icon-calendar"></i>Date Of Birth<span id=\'star\'>*</span>',
+	   '#suffix' =>'</label></section>',
+	);	
+	
+	$form['religion'] = array(
+	   '#title'=>'',
+	   '#type' => 'select',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Religion', 'autocomplete' => 'off'),
+	   '#options' => array(''=>t('Select Religion'), '1'=>t('Hinduism'),'2'=>t('Islam'),'3'=>t('Christianity'),'4'=>t('Sikhism'),'5'=>t('Buddhism'),'6'=>t('Jainism'),'7'=>t('Others')),
+	   '#prefix' => '<section class="col col-4"><label class="select"><i class="icon-prepend icon-user"></i><i class="select-icon"></i>Religion',
+  	   '#suffix' => '</label></section></div></fieldset>',
+	);
+	
+	
+	$form['country'] = array(
+	   '#title'=>'',
+	   '#type' => 'select',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Country', 'autocomplete' => 'off'),
+	   '#options' => get_country_with_ph(),
+	   '#ajax'=>array(
+	   			'callback'	=> 'ajax_dropdown_callback',
+				'event' 	=> 'change',
+				'effect' 	=> 'fade',			
+				'progress'	=>	array(
+					'type'		=>'throbber',
+					'message'	=>t('loading'),
+			    ),
+		),
+	   '#prefix' => '<fieldset><div class="row"><section class="col col-4"><label class="select"><i class="icon-prepend icon-user"></i><i class="select-icon"></i>Country<span id=\'star\'>*</span>',
+  	   '#suffix' => '</label></section>',
+	);
+	
+	$form['mobile'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#ajax' => array(
+					'event' 		=> 'blur',
+					'effect' 		=> 'fade',			
+					'callback'		=> 'getAjaxMobileCheck',
+					'progress'		=>	array(
+						'type'		=>'throbber',
+						'message'	=>t('loading'),
+						//'wrapper'   =>'ld_mobile_instant_validate'
+					),
+			),
+	   '#default_value' => !empty($uamdata) ? $uamdata['mobile'] : '',
+	   '#maxlength' => 10, 
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Mobile Number', 'autocomplete' => 'off'),
+	   '#prefix' => '<section class="col col-4"><label class="input"><i class="icon-prepend icon-phone"></i>Mobile Number<span id=\'star\'>*</span>',
+	   '#suffix' => '</label>',
+	);
+	
+	$form['mobile_validate_div'] = array(
+		'#prefix' =>'<div id="ld_mobile_instant_validate">'.$form_state['values']['mobile'],
+		'#suffix' =>'</div></section>',
+	);
+	
+	
+	
+	$form['email'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#default_value' => !empty($uamdata) ? $uamdata['email'] : '',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Email', 'autocomplete' => 'off'),
+	   //'#element_validate' => array('awards_textfield_validate'),
+	   //'#required' => TRUE,
+	   	'#prefix'=>'<section class="col col-4"><label class="input"><i class="icon-prepend icon-envelope-alt"></i>Email<span id=\'star\'>*</span>',
+	   '#suffix' => '</label></section></div></fieldset>',
+	);	
+	
+	
+	
+	$form['aadharno'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#default_value'=>!empty($uamdata) ? $uamdata['aadharno'] : '',
+	   '#maxlength' => 12,
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Aadhaar Number', 'autocomplete' => 'off'),
+	   '#prefix' => '<fieldset><div class="row"><section class="col col-4"><label class="input"><i class="icon-prepend fa-credit-card"></i>Aadhaar Number',
+  	   '#suffix' => '</label></section>',
+	);
+	
+	$form['voter'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#maxlength' => 10, 
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Voter ID', 'autocomplete' => 'off','id'=>'votercardu'),
+	   '#prefix' => '<section class="col col-4"><label class="input"><i class="icon-prepend fa-credit-card"></i>Voter ID',
+  	   '#suffix' => '</label></section>',
+	);
+	
+	$form['pancard'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#default_value'=>!empty($uamdata) ? $uamdata['pan'] : '',
+	   '#maxlength' => 10,
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'PAN', 'autocomplete' => 'off', 'id'=>'pancardu'),
+	   '#prefix' => '<section class="col col-4"><label class="input"><i class="icon-prepend fa-credit-card"></i>PAN',
+  	   '#suffix' => '</label></section></div><span id=\'star\' class="remarks">*Please fill atleast one identity</span></fieldset>',
+	);
+	
+   if(isset($form_state['values']['country']) && trim($form_state['values']['country']) == '99'){
+	
+	$form['pincodeDivStart'] = array(
+		 '#prefix' 	=> '<fieldset><div class="row">',
+		 '#suffix' 	=> ''
+	);
+	
+	   
+	$form['pincode'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#default_value'=>!empty($uamdata) ? $uamdata['pincode'] : '',
+	   '#maxlength' => 6, 
+	   '#autocomplete_path' => 'pinautocomplete',
+	   '#id'=>'pincode_autocomplete',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Pincode', 'autocomplete' => 'off'),
+	   '#prefix' => '<div id="ld_edit_emp_pincode_replace"><section class="col col-4"><label class="input"><i class="icon-prepend fa-map-pin"></i>Pincode<span id=\'star\'>*</span>',
+  	   '#suffix' => '</label></section></div>',
+	   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							)
+	);
+	
+	if(!empty($uamdata['pincode'])){
+		 $value_pincode				= isset($uamdata['pincode'])? $uamdata['pincode'] : '';
+	 }else{
+		$value_pincode				= isset($form_state['values']['pincode'])? $form_state['values']['pincode'] : '';
+	 }
+	//echo "-->".$value_pincode;
+	if(!empty($value_pincode)){
+		//echo $value_pincode;
+		//$v2 = (string)$value_pincode;
+		//$v1	=	explode('-', trim($v2)); //722144-13-1
+		//print_r($v1);
+		
+		$query = db_select('all_india_pin_code','p')
+ 	->fields('p',array('districtname','statename','pincode','district_code','state_code','po_name'))
+ 	->condition('p.pincode',trim($value_pincode),'=') ;
+	
+ 		$result = $query->execute();
+		if($result->rowcount()>0){
+			$final	=$result->fetchAssoc();
+			$pincode_v = $value_pincode;
+			$state_v	=	$final['state_code'];
+			$district_v		=	$final['district_code'];
+			$post_office = $final['po_name'];
+		}
+		//echo "post_office -->".$post_office;
+	} 
+	
+	
+	if(!empty($state_v)){
+		//echo "hyy ".$state_v;
+		$form['state'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#id'=>'state_name',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'State'),
+		   '#disabled' => TRUE, 
+		   //'#options' => array('0'=>t('Select State')),
+		   '#options' => get_all_state($state_v),
+		   '#value' => !empty($state_v) ? $state_v	:'',
+		   '#prefix' => '<div id="ld_edit_emp_state_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>State',
+		   '#suffix' => '</label></section></div>',
+		   '#ajax'				=> array(
+										'event' 		=> 'change',
+										'effect' 		=> 'fade',			
+										'callback'		=> 'get_ajax_load',
+										'progress'		=>	array(
+											'type'		=>'throbber',
+											'message'	=>t('loading'),
+										),
+								)
+		);
+	}else{
+		$form['state'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   //'#value'=>!empty($uamdata) ? $uamdata['state_code'] : '',
+		   '#id'=>'state_name',
+		   '#disabled' => TRUE,
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'State', 'readonly' => 'readonly'),
+		   '#options' => array(''=>t('Select State')),
+		   //'#options' => get_all_state(1),
+		   '#prefix' => '<div id="ld_edit_emp_state_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>State',
+		   '#suffix' => '</label></section></div>',
+		   '#ajax'				=> array(
+										'event' 		=> 'change',
+										'effect' 		=> 'fade',			
+										'callback'		=> 'get_ajax_load',
+										'progress'		=>	array(
+											'type'		=>'throbber',
+											'message'	=>t('loading'),
+										),
+								)
+		);
+	}
+	
+	$value_state				= isset($form_state['values']['state'])? $form_state['values']['state'] : '';
+	/*if(!empty($state_v)){
+		$vcom = 	$state_v;
+	}
+	$form['district'] = array(
+				'#prefix' 			=> '<div id="ld_edit_emp_district_replace">',
+				'#suffix' 			=> '</div>',
+	);*/
+	
+	if(!empty($state_v)){	
+		//echo "state:".$state_v."dist:".$district_v;
+		$form['district'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#id'=>'district_name',
+		   '#disabled' => TRUE,
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'District'),
+		   '#options' => get_district_by_id($state_v),
+		   '#value' => !empty($district_v) ? $district_v	:'',
+		   '#prefix' => '<div id="ld_edit_emp_district_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>District',
+		   '#suffix' => '</label></section></div></div>',
+		   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							)
+		);
+	}else{
+		$form['district'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#id'=>'district_name',
+		   //'#default_value'=>!empty($uamdata) ? $uamdata['district'] : '',
+		   '#disabled' => TRUE,
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'District'),
+		   '#options' => array(''=>t('Select District')),
+		   '#prefix' => '<div id="ld_edit_emp_district_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>District',
+		   '#suffix' => '</label></section></div>',
+		);
+	}
+	
+	$form['pincodeDivEnd'] = array(
+		 '#prefix' 	=> '',
+		 '#suffix' 	=> '</div>'
+	);
+	
+	$value_district	=	isset($form_state['values']['district']) ? $form_state['values']['district'] : '';
+	/*if(!empty($value_district)){
+		echo "hyy-".$value_district;
+	}*/
+	/*$form['subdivision'] = array(
+					 '#prefix' 				=> '<div id="ld_empsubdv_replace">',
+					 '#suffix' 				=> '</div>'
+					);*/
+	$form['subdivisionDivStart'] = array(
+					 '#prefix' 				=> '<div class="row">',
+					 '#suffix' 				=> ''
+					);
+	if(!empty($district_v) && !empty($state_v)){
+		
+		$form['subdivision'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Sub Division' ),
+		   //'#options' => array('0'=>t('Select Sub-Division')),
+		   '#options' => common_custom_user_subdivisionlist_list_new($district_v),
+		   '#prefix' => '<div id="ld_empsubdv_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>Sub-Division<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							)
+		);
+	}else{ 
+		
+		$form['subdivision'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Sub Division' ),
+		   '#options' => array(''=>t('Select Sub-Division')),
+		   '#prefix' => '<div id="ld_empsubdv_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-signs"></i><i class="select-icon"></i>Sub-Division<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		);
+	}
+	$value_subdivision	=	isset($form_state['values']['subdivision']) ? $form_state['values']['subdivision'] : '';
+	
+	/*$form['areatype'] = array(
+						 '#prefix' 	=> '<div id="ld_emp_areatype_replace">',
+						 '#suffix' 	=> '</div>'
+						);*/
+	
+	if(!empty($value_district) && !empty($value_state) && !empty($value_subdivision)){
+		$form['areatype'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Area Type'),
+		   //'#options' => array('0'=>t('Select Area Type'),'1'=>t('Block'),'2'=>t('Municipality'),'3'=>t('Corporation'),'4'=>t('Notified Area'),'5'=>t('SEZ')),
+		   '#options' => common_custom_user_areatype_list_new($value_district, $value_subdivision),
+		   '#prefix' => '<div id="ld_emp_areatype_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-location-arrow"></i><i class="select-icon"></i>Area Type<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							)
+		);
+	}else{
+		$form['areatype'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Area Type'),
+		   '#options' => array('0'=>t('Select Area Type')),
+		   '#prefix' => '<div id="ld_emp_areatype_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-location-arrow"></i><i class="select-icon"></i>Area Type<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		);
+	}
+	$value_areatype	=	isset($form_state['values']['areatype']) ? $form_state['values']['areatype'] : '';
+	
+	/*$form['block'] 	= array(
+						'#prefix' => '<div id="ld_empareatype_name_replace">',
+						'#suffix' => '</div>'
+					 );*/
+	
+	if(!empty($value_district) && !empty($value_state) && $value_subdivision != "" && !empty($value_areatype)){
+		
+		if ( $value_areatype == 'B' ){
+			$areatype_name	= 'Block';
+		}elseif( $value_areatype == 'M'){
+			$areatype_name	= 'Municipality';
+		}elseif( $value_areatype == 'C'){
+			$areatype_name	= 'Corporation';
+		}elseif( $value_areatype == 'S'){
+			$areatype_name	= 'SEZ';
+		}elseif($value_areatype == 'N'){
+			$areatype_name	= 'Notified Area';
+		}
+		
+		$form['block'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'subdivision'),
+		   '#options' => common_custom_user_block_list_new($value_subdivision,$value_areatype),
+		   '#prefix' => '<div id="ld_empareatype_name_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-location-arrow"></i><i class="select-icon"></i>'.$areatype_name.'<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							)
+		);
+		
+		
+	}else{
+		$form['block'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'subdivision'),
+		   '#options' => array('0'=>t('Select Block/Municipality/Corporation/SEZ/Notified Area')),
+		   '#prefix' => '<div id="ld_empareatype_name_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-location-arrow"></i><i class="select-icon"></i>Block/Municipality/Corporation/Notified Area/SEZ<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		);
+	}
+	
+	$form['subdivisionDivEnd'] = array(
+					 '#prefix' 				=> '',
+					 '#suffix' 				=> '</div>'
+					);
+	$value_block 	= 	isset($form_state['values']['block']) ? $form_state['values']['block'] : '';
+	
+	/*$form['panchayat'] 	= array(
+							'#prefix' => '<div id="ld_emp_vill_ward_replace">',
+							'#suffix' => '</div>'
+						  );*/
+	$form['panchayatDivStart'] = array(
+					 '#prefix' 				=> '<div class="row">',
+					 '#suffix' 				=> ''
+					);						  
+				
+	if(!empty($value_district) && !empty($value_subdivision) && !empty($value_areatype)  && !empty($value_block) && !empty($value_state)){
+		
+		if ( $value_areatype == 'B' ){
+			$area_name		= 'Gram Panchayat';
+			$area_code 		= 'V';
+		}elseif( $value_areatype == 'M'){
+			$area_name		= 'Ward';
+			$area_code 		= 'W';
+		}elseif( $value_areatype == 'C'){
+			$area_name		= 'Ward';
+			$area_code 		= 'C';
+		}elseif( $value_areatype == 'S'){
+			$area_name		= 'Sector';
+			$area_code 		= 'S';
+		}elseif($value_areatype == 'N'){
+			$area_name		= 'Notified Area';
+			$area_code 		= 'N';
+		}
+		
+			
+	$form['panchayat'] = array(
+	   '#title'=>'',
+	   '#type' => 'select',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'panchayat'),
+	   //'#options' => array('0'=>t('Select Gram Panchayat')),
+	   '#options' => common_custom_user_villward_list_new($value_block,$area_code),
+	   '#prefix' => '<div id="ld_emp_vill_ward_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-location-arrow"></i><i class="select-icon"></i>'.$area_name.'<span id=\'star\'>*</span>',
+	   '#suffix' => '</label></section></div>',
+	   '#ajax'=> array(
+			'event' 		=> 'change',
+			'effect' 		=> 'fade',			
+			'callback'		=> 'get_ajax_load',
+			'progress'		=>	array(
+				'type'		=>'throbber',
+				'message'	=>t('loading'),
+			),
+			)
+		);
+	}else{
+		$form['panchayat'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'panchayat'),
+		   '#options' => array('0'=>t('Select Gram Panchayat/Ward/Sector/Notified Area')),
+		   '#prefix' => '<div id="ld_emp_vill_ward_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-location-arrow"></i><i class="select-icon"></i>Gram Panchayat/Ward/Sector<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		);
+	}
+	$value_panchayat 	= 	isset($form_state['values']['panchayat']) ? $form_state['values']['panchayat'] : '';
+	
+	/*$form['policestation'] = array(
+							'#prefix' 			=> '<div id="ld_empps_replace">',
+							'#suffix' 			=> '</div>',
+						);*/
+	
+	if(!empty($value_district) && !empty($value_subdivision) && !empty($value_areatype)  && !empty($value_block) && !empty($value_state) && !empty($value_panchayat)){
+		$form['policestation'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Police Station'),
+		   //'#options' => array('0'=>t('Select Police Station')),
+		   '#options' => common_custom_user_ps_list_new($value_district),
+		   '#prefix' => '<div id="ld_empps_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-marker"></i><i class="select-icon"></i>Police Station<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		);
+	}else{
+		$form['policestation'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Police Station'),
+		   '#options' => array('0'=>t('Select Police Station')),
+		   '#prefix' => '<div id="ld_empps_replace"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-marker"></i><i class="select-icon"></i>Police Station<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		);
+	}
+	
+	if(!empty($pincode_v)){
+		$form['postoffice'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Post Office'),
+		   //'#options' => array('0'=>t('Select Post Office')),
+		   '#options' => common_custom_post_office_list_new($pincode_v),
+		   //'#value' => !empty($post_office) ? $post_office	:'',
+		   '#prefix' => '<div id="ld_post_office_div"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-marker"></i><i class="select-icon"></i>Post Office<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		);
+	}else{
+		$form['postoffice'] = array(
+		   '#title'=>'',
+		   '#type' => 'select',
+		   '#attributes' => array('class'=>array(''), 'placeholder'=>'Post Office'),
+		   '#options' => array('0'=>t('Select Post Office')),
+		   //'#options' => common_custom_post_office_list_new($pincode_v),
+		   //'#value' => !empty($post_office) ? $post_office	:'',
+		   '#prefix' => '<div id="ld_post_office_div"><section class="col col-4"><label class="select"><i class="icon-prepend fa-map-marker"></i><i class="select-icon"></i>Post Office<span id=\'star\'>*</span>',
+		   '#suffix' => '</label></section></div>',
+		);
+
+	}
+	
+  $form['panchayatDivEnd'] = array(
+		 '#prefix' 				=> '',
+		 '#suffix' 				=> '</div>'
+	);	
+	
+   }else{
+	   
+	    $form['pincodeDivStart_blank'] = array(
+			'#prefix' 	=> '<fieldset><div class="row">',
+			'#suffix' 	=> ''
+		);
+	   
+		$form['pincode_blank'] = array(
+			'#prefix' => '<div id="ld_edit_emp_pincode_replace">',
+			'#suffix' => '</div>'
+		);  
+		
+		$form['state_blank'] = array(
+			'#prefix' => '<div id="ld_edit_emp_state_replace">',
+			'#suffix' => '</div>'
+		);
+		
+		$form['district_blank'] = array(
+			'#prefix' => '<div id="ld_edit_emp_district_replace">',
+			'#suffix' => '</div>'
+		);
+		
+		$form['end_row_blank1'] = array(
+			'#prefix' => '',
+			'#suffix' => '</div>'
+		);
+		
+		$form['start_row_blank1'] = array(
+			'#prefix' => '<div class="row">',
+			'#suffix' => ''
+		);
+		
+		$form['subdivision_blank'] = array(
+			'#prefix' => '<div id="ld_empsubdv_replace">',
+			'#suffix' => '</div>'
+		);
+		$form['areatype_blank'] = array(
+			'#prefix' => '<div id="ld_emp_areatype_replace">',
+			'#suffix' => '</div>'
+		);
+		$form['block_blank'] = array(
+			'#prefix' => '<div id="ld_empareatype_name_replace">',
+			'#suffix' => '</div>'
+		);
+		
+		$form['end_row_blank2'] = array(
+			'#prefix' => '',
+			'#suffix' => '</div>'
+		);
+		
+		$form['start_row_blank2'] = array(
+			'#prefix' => '<div class="row">',
+			'#suffix' => ''
+		);
+		
+		$form['panchayat_blank'] = array(
+			'#prefix' => '<div id="ld_emp_vill_ward_replace">',
+			'#suffix' => '</div>'
+		);
+		$form['policestation_blank'] = array(
+			'#prefix' => '<div id="ld_empps_replace">',
+			'#suffix' => '</div>'
+		);
+		$form['postoffice_blank'] = array(
+			'#prefix' => '<div id="ld_post_office_div">',
+			'#suffix' => '</div>'
+		);  
+		
+		$form['panchayatDivEnd_blank'] = array(
+			 '#prefix' 	=> '',
+			 '#suffix' 	=> '</div>'
+		);
+		 
+		
+   }
+	
+	$form['address'] = array( 
+		   '#title'=>'',
+		   '#rows'=> 3,
+		   '#type' => 'textarea',
+		   '#default_value'=>!empty($uamdata) ? $uamdata['address'] : '',
+		   '#attributes' => array('id' => 'address', 'autocomplete' => 'off', 'class'=>array(''),'placeholder'=>'Address'),
+		   '#prefix'=> '<section><label class="textarea"><i class="icon-prepend fa-building"></i>Address<span id=\'star\'>*</span>',
+		   '#suffix' =>'</label></section></fieldset>',
+		);	 
+	
+	/*$form['username'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Username', 'autocomplete' => 'off'),
+	   '#prefix'=>'<div class="header-bottom">Login Details</div><fieldset><div class="row"><section class="col col-4"><label class="input"><i class="icon-prepend icon-user"></i>Username',
+	   '#suffix' =>'</label></section>',	   
+	);
+	 
+   $form['password'] = array(
+	 '#title'=>'',
+	 '#type' => 'password',
+	 '#attributes' => array('id' => 'password', 'autocomplete' => 'off', 'class'=>array(''),'placeholder'=>'Password'),
+	 '#prefix' => '<section class="col col-4"><label class="input"><i class="icon-prepend icon-lock"></i>Password',
+  	 '#suffix' => '</label></section>',
+	 );  
+	 
+	$form['cpassword'] = array(
+	   '#title'=> '',
+	   '#type' => 'password',
+	   '#attributes' => array('id' => 'cpassword', 'autocomplete' => 'off', 'class'=>array(''),'placeholder'=>'Confirm Password'),
+	   '#prefix' => '<section class="col col-4"><label class="input"><i class="icon-prepend icon-lock"></i>Confirm Password',
+	   '#suffix' => '</label></section></div></fieldset>',
+	 );*/
+	 
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Submit',
+		//'#attributes' => array('class'=>array('btn btn-primary')),
+		/*'#prefix' => '<div class="col-md-12">',  
+        '#suffix' => '</div>',*/
+		'#attributes' => array('class'=>array('btn btn-success pull-right')),
+		'#prefix' => '<footer><div class="col-md-4 remarks"><div class="row">Fields marked with * are mandatory</div></div>',
+  		'#suffix' => '</footer></div></div>',
+     ); 
+	 
+	/*$form['awards_list'] = array(
+	  '#type' => 'markup',
+
+	  '#markup' => get_awards_list(),
+	  '#prefix' => '<div class="col-md-12">',  
+      '#suffix' => '</div>',
+    ); */
+	  
+	return  $form;
+ }
+
+function ajax_dropdown_callback($form,&$form_state){
+	if(trim($form_state['values']['country']) == '99'){
+		$commands = array();
+		$commands[] = ajax_command_replace('#ld_edit_emp_pincode_replace', drupal_render($form['pincode']));
+		$commands[] = ajax_command_replace('#ld_edit_emp_state_replace', drupal_render($form['state']));
+		$commands[] = ajax_command_replace('#ld_edit_emp_district_replace', drupal_render($form['district']));
+		$commands[] = ajax_command_replace('#ld_empsubdv_replace', drupal_render($form['subdivision']));
+		$commands[] = ajax_command_replace('#ld_emp_areatype_replace', drupal_render($form['areatype']));
+		$commands[] = ajax_command_replace('#ld_empareatype_name_replace', drupal_render($form['block']));
+		$commands[] = ajax_command_replace('#ld_emp_vill_ward_replace', drupal_render($form['panchayat']));
+		$commands[] = ajax_command_replace('#ld_empps_replace', drupal_render($form['policestation']));
+		$commands[] = ajax_command_replace('#ld_post_office_div', drupal_render($form['postoffice']));
+	}else{
+		$commands[] = ajax_command_replace('#ld_edit_emp_pincode_replace', drupal_render($form['pincode_blank']));	
+		$commands[] = ajax_command_replace('#ld_edit_emp_state_replace', drupal_render($form['state_blank']));
+		$commands[] = ajax_command_replace('#ld_edit_emp_district_replace', drupal_render($form['district_blank']));
+		$commands[] = ajax_command_replace('#ld_empsubdv_replace', drupal_render($form['subdivision_blank']));
+		$commands[] = ajax_command_replace('#ld_emp_areatype_replace', drupal_render($form['areatype_blank']));
+		$commands[] = ajax_command_replace('#ld_empareatype_name_replace', drupal_render($form['block_blank']));
+		$commands[] = ajax_command_replace('#ld_emp_vill_ward_replace', drupal_render($form['panchayat_blank']));
+		$commands[] = ajax_command_replace('#ld_empps_replace', drupal_render($form['policestation_blank']));
+		$commands[] = ajax_command_replace('#ld_post_office_div', drupal_render($form['postoffice_blank']));
+		//$commands[] = ajax_command_replace('#ld_panchyatdiv_blank', drupal_render($form['panchayatDivEnd_blank']));
+		
+	}
+	
+	return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function applicant_registration_form_submit($form, &$form_state) {
+	
+	global $base_root, $base_path, $user;
+	
+	
+	$current_date = date('dmy');
+	$number = get_last_id();
+	$number++;
+	$username1 = "LD".$current_date.str_pad($number, 4, "0", STR_PAD_LEFT);
+	
+	$username					=	$username1;
+	$password					=	$username1;
+	
+	$newUser 					= 	array(
+										'name' 		=> $username,
+										'pass' 		=> $password, 
+										'mail' 		=> trim($form_state['values']['email']),
+										'status' 	=> 1,
+										'init' 		=> trim($form_state['values']['email']),
+									);
+	user_save(null, $newUser);
+	
+	$txtValue					=	$username; 
+	$fetch_info_querys 			= 	db_select('users', 'U');
+	$fetch_info_querys			->	fields('U',  array('uid'));
+	$fetch_info_querys			->	condition('U.name',$txtValue);
+	$fetch_info_querys_result 	= 	$fetch_info_querys->execute()->fetchObject();
+	$lastId						=	$fetch_info_querys_result->uid;
+	
+	$userRole 					= 	array(
+										'uid' => $lastId,
+										'rid' => '5'
+									);
+	db_insert('users_roles')->fields($userRole)->execute();
+	
+	//echo "lstid->".$lastId; 
+					
+	$fieldsUserDetailsInfo		=	array(
+										'uid'						=> 	$lastId,
+										'fname'						=>	$form_state['values']['fname'],
+										'mname'						=>	$form_state['values']['mname'], 
+										'lname'						=>	$form_state['values']['lname'], 
+										'dob'						=>	format_date(strtotime($form_state['values']['dob']), 'custom', 'Y-m-d'),
+										'country'					=>	$form_state['values']['country'],
+										'mobile'					=>	$form_state['values']['mobile'],
+										'gender'					=>	$form_state['values']['gender'], 
+										'email'						=>	$form_state['values']['email'],
+										  
+										'religion'					=>	$form_state['values']['religion'], 
+										'aadharno'					=>	!empty($form_state['values']['aadharno'])?$form_state['values']['aadharno']:0,
+										'voter'						=>	$form_state['values']['voter'], 
+										'pancard'					=>	$form_state['values']['pancard'],
+										
+										'pincode'					=>	!empty($form_state['values']['pincode'])?trim($form_state['values']['pincode']):'',
+										'state'						=>	!empty($form_state['values']['state'])?trim($form_state['values']['state']):'',
+										'district'					=>	!empty($form_state['values']['district'])?trim($form_state['values']['district']):'',
+										'subdivision'				=>	!empty($form_state['values']['subdivision'])?trim($form_state['values']['subdivision']):'',
+										'areatype'					=>	!empty($form_state['values']['areatype'])?trim($form_state['values']['areatype']):'',
+										'block'						=>	!empty($form_state['values']['block'])?trim($form_state['values']['block']):'',
+										'panchayat'					=>	!empty($form_state['values']['panchayat'])?trim($form_state['values']['panchayat']):'',
+										'policestation'				=>	!empty($form_state['values']['policestation'])?trim($form_state['values']['policestation']):'',
+										'postoffice'				=>	!empty($form_state['values']['postoffice'])?trim($form_state['values']['postoffice']):'',
+										'address'					=>	!empty($form_state['values']['address'])?trim($form_state['values']['address']):'',
+										'ldapplicationflag'			=>  '0',
+										'ld_pass'					=>	$password
+									);
+	//print_r($fieldsUserDetailsInfo);
+	//exit;
+
+	db_insert('ld_users_details')->fields($fieldsUserDetailsInfo)->execute();
+	
+	send_sms($form_state['values']['mobile'],'Welcome to single application gateway of Labour Department, Govt. of West Bengal. Your CLIN (Common Labour Identification Number) ID is '.$password);
+	
+	/*$service_url = 'https://wblc.gov.in/labourdept/eservices/createUser';
+	$service_url2 = 'https://wbboilers.gov.in/labourdept/eservices/createUser';
+	$curl_post_data = array(
+		"username"					=>	$username,
+		"password"					=>	$password,
+		"fname"						=>	$form_state['values']['fname'],
+		"mname"						=>	$form_state['values']['mname'], 
+		"lname"						=>	$form_state['values']['lname'], 
+		"email"						=>	$form_state['values']['email'],
+		"dob"						=>	format_date(strtotime($form_state['values']['dob']), 'custom', 'Y-m-d'),
+		"mobile"					=>	$form_state['values']['mobile'],
+		"gender"					=>	$form_state['values']['gender'],
+		"religion"					=>	$form_state['values']['religion'], 
+		"aadharno"					=>	$form_state['values']['aadharno'],
+		"voter"						=>	$form_state['values']['voter'], 
+		"pancard"					=>	$form_state['values']['pancard'],
+		"pincode"					=>	$form_state['values']['pincode'],
+		"state"						=>	$form_state['values']['state'],
+		"district"					=>	$form_state['values']['district'],
+		"subdivision"				=>	$form_state['values']['subdivision'],
+		"areatype"					=>	$form_state['values']['areatype'],
+		"block"						=>	$form_state['values']['block'],
+		"panchayat"					=>	$form_state['values']['panchayat'],
+		"policestation"				=>	$form_state['values']['policestation'],
+		"postoffice"				=>	$form_state['values']['postoffice'],
+		"address"					=>	$form_state['values']['address'],
+		"ldapplicationflag"			=>	"1",
+		"ld_uid"					=>	$lastId
+	);	
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+	curl_setopt($ch, CURLOPT_URL, $service_url);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode( $curl_post_data ) );
+	curl_setopt($ch, CURLOPT_POST, true);
+	$results=curl_exec($ch);
+	$errors=curl_error($ch);
+	curl_close($ch);
+	
+	///////////////////  For Boilers  /////////////////////////
+	
+	$ch2 = curl_init();
+	curl_setopt($ch2, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+	curl_setopt($ch2, CURLOPT_URL, $service_url2);
+	curl_setopt($ch2, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch2, CURLOPT_SSL_VERIFYHOST, 0);
+	curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, 0); 
+	curl_setopt($ch2, CURLOPT_FOLLOWLOCATION, 0);
+	curl_setopt($ch2, CURLOPT_POSTFIELDS, json_encode( $curl_post_data ) );
+	curl_setopt($ch2, CURLOPT_POST, true);
+	$results2=curl_exec($ch2);
+	$errors2=curl_error($ch2);
+	curl_close($ch2);*/
+	
+	temporarydashboard_user_login_credentials($username, $password);
+	
+	///////////////////////  End   ////////////////////////////
+	//drupal_set_message('Registration Successfully. Now enter your '.$username.' and '.$password.' for login.');
+	//drupal_goto('wizard');
+}
+
+function temporarydashboard_user_login_credentials($username, $password)
+{
+	//$password = trim(base64_decode(base64_decode(base64_decode($password))));	
+    if(user_authenticate($username, $password))
+    {
+	  $user_obj = user_load_by_name($username);
+	  $access_granted = in_array('investor', $user_obj->roles);
+	  if ($access_granted){	
+		  $form_state = array();
+		  $form_state['uid'] = $user_obj->uid;      
+		  user_login_submit(array(), $form_state);
+		  drupal_goto('tmpdashboard');
+	  }else{
+		   form_set_error('', t('Oopss!! You can try to login from login page.'));
+      	   return FALSE; 
+	  }
+      //return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+function getAjaxMobileCheck($form, $form_state){
+	$commands = array();
+	$query = db_select('ld_users_details', 'us');
+    $query ->fields('us', array( 'mobile'));
+    $query->condition('us.mobile',trim($form_state['values']['mobile']),'=');
+    $result = $query->execute();
+    $data = $result->fetchObject();
+    if($data->mobile!=''){
+	   $commands[] = ajax_command_replace('#ld_mobile_instant_validate', '<div id="ld_mobile_instant_validate">Mobile no already Exists</div>');
+    }else{
+		$commands[] = ajax_command_replace('#ld_mobile_instant_validate', '<div id="ld_mobile_instant_validate"></div>');
+	}
+	return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function get_ajax_load($form, $form_state){
+	$commands = array();
+	$commands[] = ajax_command_replace('#ld_edit_emp_state_replace', drupal_render($form['state']));
+	$commands[] = ajax_command_replace('#ld_edit_emp_district_replace', drupal_render($form['district']));
+	$commands[] = ajax_command_replace('#ld_empsubdv_replace', drupal_render($form['subdivision']));
+	$commands[] = ajax_command_replace('#ld_emp_areatype_replace', drupal_render($form['areatype']));
+	$commands[] = ajax_command_replace('#ld_empareatype_name_replace', drupal_render($form['block']));
+	$commands[] = ajax_command_replace('#ld_emp_vill_ward_replace', drupal_render($form['panchayat']));
+	$commands[] = ajax_command_replace('#ld_empps_replace', drupal_render($form['policestation']));
+	$commands[] = ajax_command_replace('#ld_post_office_div', drupal_render($form['postoffice']));
+	return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function get_pincode_autocomplete($string='') {
+	
+	unset($uamdata['pincode']);
+	unset($uamdata['state_code']);
+	unset($uamdata['district']);
+	
+	 $matches = array();
+	 $qry = db_select ('all_india_pin_code', 'p');
+     $qry->fields('p', array('id','pincode', 'statename', 'state_code','district_code','districtname','po_name')); 
+	 $qry->condition('pincode', '%' . trim($string) . '%', 'LIKE');
+	 $qry->range(0, 10);
+	 //echo $qry.$string; exit;
+	 $result =  $qry->execute();
+	  // save the query to matches
+    foreach ($result as $row) {
+	  $matches[$row->pincode] = check_plain($row->pincode."-".$row->districtname."-".$row->statename);
+    }
+
+    // Return the result to the form in json
+    drupal_json_output($matches);
+}
+
+/*function type_search($pincode){
+//echo "type--->".$pincode; exit;
+//$truest_name = trim($truest_name);
+
+	$query = db_select('all_india_pin_code','p')
+ 	->fields('p',array('districtname','statename','pincode','district_code','state_code'))
+ 	->condition('p.pincode',trim($pincode),'=') ;
+	
+ 	$result = $query->execute();
+	if($result->rowcount()>0){
+		//$final	=$result->fetchAssoc();
+		//$pincode	=	$final['pincode'];
+		//$state		=	$final['state_code'];
+		//$district	=	$final['district_code'];
+		//die($district);
+		
+		//print_r();
+		//$district_List = get_district_by_id($result->fetchObject()->state_code);
+		$str = $result->fetchObject()->state_code."-".$result->fetchObject()->district_code;
+		die($str);
+	}
+	
+	
+}*/
+function applicant_registration_form_validate($form, &$form_state) {
+	
+  drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/sky-forms.css');
+  drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/form-design.css');
+  	
+   if (!$form_state['values']['fname']) {
+    form_set_error('fname', 'Please enter your First Name!');   
+  }
+  
+  $fname = $form_state['values']['fname'];
+	if (!preg_match('/[A-Za-z]+$/', $fname)) {  
+    form_set_error('fname', t('First Name should be text only!!'));
+  }	
+
+   if (!$form_state['values']['lname']) {
+    form_set_error('lname', 'Please enter your Last Name!');    
+  }
+  
+  $lname = $form_state['values']['lname'];
+	if (!preg_match('/[A-Za-z]+$/', $lname)) {  
+    form_set_error('lname', t('Last Name should be text only!!'));
+  }	
+ if (!$form_state['values']['dob']) {
+    form_set_error('dob', 'Please enter your Date of Birth!');    
+  }
+  
+ /* if (!$form_state['values']['religion']) {
+    form_set_error('religion', 'Please select a Religion!');    
+  }*/
+  
+  if (!$form_state['values']['country']) {
+    form_set_error('country', 'Please select a Country!');    
+  }
+  
+  if (!$form_state['values']['mobile']) {
+    form_set_error('mobile', 'Please enter your Mobile Number!');    
+  }
+  
+  if ($form_state['values']['mobile']!="" && (strlen($form_state['values']['mobile'])<10 || strlen($form_state['values']['mobile'])>10)) {
+    form_set_error('mobile', 'Mobile Number should be of 10 digit');    
+  }
+  
+ $mobile = $form_state['values']['mobile'];
+	if (!preg_match('/^[789][0-9]{9}$/', $mobile)) {  
+    form_set_error('mobile', t('Mobile number must start with the digit 7 or 8 or 9!'));
+  } 
+  
+  $query = db_select('ld_users_details', 'us');
+  $query ->fields('us', array( 'mobile'));
+  $query->condition('us.mobile',trim($form_state['values']['mobile']),'=');
+  $result = $query->execute();
+  $data = $result->fetchObject();
+  if($data->mobile!=''){
+	  form_set_error('mobile', t('Mobile number already exist in our system. Please provide another mobile no'));
+  }
+
+  if (!$form_state['values']['email']) {
+    form_set_error('email', 'Please enter your Email Id!');    
+  } 
+  
+ $email = $form_state['values']['email'];
+ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+			form_set_error('email', t('Please enter a Valid Email Id!')); 
+ }
+
+
+
+if(!$form_state['values']['aadharno'] && !$form_state['values']['voter'] && !$form_state['values']['pancard']){
+	 form_set_error('aadharno', 'Please enter ateast one card details!');  
+	 form_set_error('voter', '');  
+	 form_set_error('pancard', '');  
+}else if(($form_state['values']['aadharno']!="") && (strlen($form_state['values']['aadharno'])<12 || strlen($form_state['values']['aadharno'])>12)){
+	form_set_error('aadharno', 'Please enter valid aadharno!');
+}else if(($form_state['values']['pancard']!="") && (strlen($form_state['values']['pancard'])<10 || strlen($form_state['values']['pancard'])>10)){
+	form_set_error('pancard', 'Please enter valid pancard!');
+}
+
+ /*if (!$form_state['values']['aadharno']!="" && (strlen($form_state['values']['aadharno'])<12 || strlen($form_state['values']['aadharno'])>12) && 
+   		!$form_state['values']['voter'] && 
+		!$form_state['values']['pancard']!="" && (strlen($form_state['values']['pancard'])<10 || strlen($form_state['values']['pancard'])>10)) {
+    form_set_error('aadharno', 'Please enter ateast one card details!');    
+  } */
+
+      // if (!preg_match("/^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$/", $PAN CARD NO))
+ if (isset($form_state['values']['pincode']) && !$form_state['values']['pincode']) {
+    form_set_error('pincode', 'Please enter Pincode!');    
+  }
+  
+ if (isset($form_state['values']['subdivision']) && !$form_state['values']['subdivision']) {
+    form_set_error('subdivision', 'Please select a Sub-Division!');    
+  } 
+ if (isset($form_state['values']['areatype']) && !$form_state['values']['areatype']) {
+    form_set_error('areatype', 'Please select a Area Type!');    
+  }
+ if (isset($form_state['values']['block']) && !$form_state['values']['block']) {
+    form_set_error('block', 'Please select a Block/Municipality/Corporation/Notified Area/SEZ!');    
+  }
+  if (isset($form_state['values']['panchayat']) && !$form_state['values']['panchayat']) {
+    form_set_error('panchayat', 'Please select a Gram Panchayat/Ward/Sector!');    
+  }
+  if (isset($form_state['values']['policestation']) && !$form_state['values']['policestation']) {
+    form_set_error('policestation', 'Please select a Police Station!');    
+  }
+  if (isset($form_state['values']['postoffice']) && !$form_state['values']['postoffice']) {
+    form_set_error('postoffice', 'Please select a Post Office!');    
+  }
+  if (!$form_state['values']['address']) {
+    form_set_error('address', 'Please enter a Address!');    
+  }
+   	  
+}
+
+function get_last_id(){
+	$query 			= 	db_select('users', 'U');
+	$query			->	fields('U',  array('uid'));
+	$query			->	orderBy('U.uid','DESC');
+	$query_result 	= 	$query->execute()->fetchObject();
+	$lastId			=	$query_result->uid;
+	return $lastId;
+}		

@@ -1,0 +1,8 @@
+;$Id$
+name = Central Inspection
+description = Central Inspection
+package = Drupal 7 Development
+version = "7.x"
+core = 7.x
+files[] = central_inspection.module
+;dependencies[] = autoload

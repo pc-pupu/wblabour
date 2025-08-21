@@ -1,0 +1,284 @@
+<?php
+
+function ssdg_flow_permission() {
+  return array(
+    'ssdg_flow_per' => array(
+      'title' => t('SSDG permission'),
+    ),
+	'wizard_per' => array ('title' => t('Wizard permission'),
+	),
+	'elligibility_per' => array ('title' => t('Elligibility permission'),
+	)
+  );
+}
+function ssdg_flow_menu(){ 
+  $items['disclaimer'] = array(
+	'title'=>'Disclaimer',
+	'page callback'=>'drupal_get_form',
+	'page arguments'=>array('disclaimer_form'),
+	'access arguments' => array('ssdg_flow_per'),
+	'access callback'=>TRUE
+  );
+  
+   $items['wizard'] = array(
+	'title'=>'Question Wizard',
+	'page callback'=>'drupal_get_form',
+	'page arguments'=>array('question_wizard_form'),
+	'access arguments' => array('wizard_per'),
+	//'access callback'=>TRUE
+  );
+
+  $items['add_service_with_wizard/%/%/%/%'] = array(
+	'page callback'=>'add_service_wizard',
+	//'page arguments'=>array('add_service_wizard'),
+	'page arguments' => array(1,2,3,4),
+	'access arguments' => array('elligibility_per'),
+	'type' => MENU_CALLBACK,
+	//'access callback'=>TRUE
+  );
+
+
+  
+  $items['elligibility_entitlements/%'] = array(
+	'title'=>'Elligibility Entitlements',
+	'page callback'=>'elegibility_entitlements_list',
+	'page arguments' => array(1),
+	//'page arguments'=>array('elegibility_entitlements_form'),
+	'access arguments' => array('elligibility_per'),
+	'access callback'=>TRUE
+  );
+  
+  $items['service_flow'] = array(
+	'title'=>'Service Flow',
+	'page callback'=>'service_flow_form',
+	//'page arguments'=>array('service_flow_form'),
+	'access arguments' => array('ssdg_flow_per'),
+	'access callback'=>TRUE
+  );
+  return $items;
+}
+function disclaimer_form($form, &$form_state) {
+	$form['#attributes']['class'][] = 'form-inline'; 
+	$form['#theme'] = 'disclaimer_page';
+    $form['first_name'] = array(
+        '#type' => 'textfield',
+        '#attributes' => array('class'=>array('form-control'), 'placeholder'=>'First Name', 'autocomplete' => 'off'),
+    );
+    $form['last_name'] = array(
+        '#type' => 'textfield',
+        '#attributes' => array('placeholder' => t('Last name')),
+    );
+    $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => 'Submit',
+    );
+    return $form;
+}
+
+function question_wizard_form($form, &$form_state){
+	$form['#theme'] = 'question_wizard_page';
+	$form['#attributes']['class'][] = 'form-horizontal form-label-left'; 
+	$form['#estid'] = $form_state['estid'];
+	$form['last_name1'] = array(
+        '#type' => 'textfield',
+        '#attributes' => array('placeholder' => t('Last name')),
+    );
+    $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => 'Submit',
+    );
+	return $form;
+}
+
+function service_flow_form(){
+	$status_msgg = "";
+	$used_profile_con = "";
+	return theme('service_flow_page',array('status_msgg'=>$status_msgg,'used_profile_con'=>$used_profile_con));
+}
+
+function elegibility_entitlements_list($val){
+	//die('ABDCFG');
+	//echo "<pre>";print_r($form_state);exit;
+	
+ 	$status_msgg = "";
+	$used_profile_con = "";
+	return theme('elegibility_entitlements_page',array('status_msgg'=>$status_msgg,'used_profile_con'=>$used_profile_con,'estid'=>$val));
+	
+  /*global $base_root, $base_path;
+  drupal_add_css(drupal_get_path('module', 'ssdg_flow') . '/css/checkbox-x.css');
+  drupal_add_css(drupal_get_path('module', 'ssdg_flow') . '/css/theme-krajee-flatblue.css');
+  drupal_add_css(drupal_get_path('module', 'dashboard') . '/build/css/custom.css');
+  drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/sky-forms.css');
+  
+  $form['#attributes']['class'][] = 'sky-form custom-form-main';
+  
+  $form['boxstart'] = array(
+	   '#type' => 'markup', 
+	   '#markup'=>'<div class="x_panel"><div class="x_title"><h1><span>E</span>ligible e-Services</h1></div><div class="x_content"><fieldset>',
+	   //'#suffix' => ''
+	);	
+	
+   $form['boxsearch'] = array(
+	   '#type' => 'markup', 
+	   '#markup'=> getEllegibleServicesList(),
+	   //'#suffix' => ''
+	);	
+	
+	
+   $form['boxend'] = array(
+	   '#type' => 'markup', 
+	   '#markup'=>'</fieldset></div></div>',
+	   //'#suffix' => ''
+	);	
+	return $form;	
+}
+
+function getEllegibleServicesList(){
+	$rows = array();
+    $header = array();
+  	$output = '';
+	 
+	$query = db_select('service_master','s');
+	$query->fields('s',array('id','act_title','directorate_name'));
+	$query->condition('s.is_active','Y','=') ;
+	$result = $query->execute();
+	$result_data = $result->fetchAll();
+  
+     $header = array(
+          array('data'=> 'Directorate'),
+		  array('data'=> 'Service Name'),
+          //array('data' => 'Action'),
+      );
+	  
+	 $i=0;
+	 foreach($result_data as $data){ 
+		$i++;
+		//$aa=$base_root.$base_path.'cmsentry/actrulesmapdel/'.$data->id;
+		//$link_s=l(t('Delete'), $aa) ;
+		$rows[] = array(
+					$data->directorate_name,
+      				$data->act_title,
+	  	);   
+	 }
+	 
+     //print_r($rows); exit; 				
+	 
+   $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+    return '<div class="table-responsive statistics_box table table-striped jambo_table bulk_action">'.$output.'</div>';*/
+}
+
+function ssdg_flow_theme($existing, $type, $theme, $path){
+  
+  
+  $items = array();	
+  $items['disclaimer_page'] = array(
+	  'render element' => 'form',
+	  //'path' => drupal_get_path('module', 'custom_donate') . '/templates',
+	  'template' => 'disclaimer_part',
+	  /*'preprocess functions' => array(
+	  'demo2_preprocess_demo2_form'
+	  ),*/
+  );
+  
+  $items['question_wizard_page'] = array(
+	  'render element' => 'form',
+	  'template' => 'question_wizard_part',
+	  'arguments' => array ('form' => NULL),
+  );
+  
+  $items['elegibility_entitlements_page'] = array(
+	  'variables' => array('status_msgg'=>NULL,'used_profile_con'=>NULL),
+	  'template'  => 'elegibility_entitlements_part', 
+  );
+  
+  $items['service_flow_page'] = array(
+	  'variables' => array('status_msgg'=>NULL,'used_profile_con'=>NULL),
+	  'template'  => 'service_flow_part', 
+  );
+  
+  
+ 
+ return $items;
+  
+}
+
+function add_service_wizard($est_id,$dc,$service_id,$act_id){
+	global $user;	
+
+	/*---- Decoding of encoded parameters -----*/
+		$est_id = trim(base64_decode($est_id));
+		$dc = trim(base64_decode($dc));
+		$service_id = trim(base64_decode($service_id));
+		$act_id = trim(base64_decode($act_id));
+
+	/*---- End of Decoding of encoded parameters -----*/
+		/*---- Condition for LC -----*/
+			$q = db_select('ld_user_service_info','lusi');
+			$q->fields('lusi',array('id'));
+			$q->condition('lusi.uid',$user->uid,'=');
+			$q->condition('lusi.service_id',$service_id,'=');
+			$q->condition('lusi.act_id',$act_id,'=');
+			//$q->condition(trim('lusi.directorate_code'),trim($dc),'=');
+			$q->condition('lusi.est_id',$est_id,'=');
+			//print $q;exit;
+			$q_result = $q->execute();
+			$num_of_results = $q_result->rowCount();
+	/*---- End Condition for LC -----*/
+	//echo $num_of_results.'===>'.trim($dc).'--serv>'.$service_id.'---act>'.$act_id.'----est>'.$est_id.'===>uid>'.$user->uid;exit;
+	if ($num_of_results > 0 && trim($dc) == 'LC') {
+			form_set_error('dservice', 'Service already exist for this establishment');  
+		}
+	else if(trim($dc) == 'LC') {
+			$d = date('Y-m-d H:i:s');
+			$newService 		= 	array(
+				'uid' 				=> $user->uid,
+				//'service_id' 		=> $service_id, 
+				'service_id'        => $service_id,
+				'act_id' 			=> $act_id, 
+				'application_time'  => $d,
+				'directorate_code' 	=> $dc,
+				'est_id'			=> $est_id,
+				'modified_date'			=> $d
+			);
+			
+			db_insert('ld_user_service_info')->fields($newService)->execute();
+			
+		}
+	else{
+
+			$d = date('Y-m-d H:i:s');
+			$newService 		= 	array(
+				'uid' 				=> $user->uid,
+				//'service_id' 		=> $service_id, 
+				'service_id'        => $service_id,
+				'act_id' 			=> $act_id, 
+				'application_time'  => $d,
+				'directorate_code' 	=> $dc,
+				'est_id'			=> $est_id,
+				'status'			=> 0,
+				'modified_date'			=> $d
+			);
+			//echo "<pre>";print_r($newService);exit;
+			db_insert('ld_user_service_info')->fields($newService)->execute();
+	}
+
+
+	drupal_goto('https://wblabour.gov.in/elligibility_entitlements/'.$est_id);
+
+}
+
+
+
+ 

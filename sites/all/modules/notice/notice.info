@@ -1,0 +1,9 @@
+;$Id$
+
+name = notice
+description = A notice module.
+package = Drupal 7 Development
+core = 7.x
+files[] = notice.module
+
+;dependencies[] = autoload
