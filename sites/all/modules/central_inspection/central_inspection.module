@@ -272,12 +272,8 @@ function mymodal_form($form, $form_state){
 	print_r($boilers_final_arr)."<br>"; 
 	exit;*/
 	
-<<<<<<< HEAD
-	$sf = 'https://wbfactories.gov.in/webservices/REST/LDScheduleStatus';
-=======
 	//$sf = 'https://wbfactories.gov.in/webservices/REST/LDScheduleStatus';
 	$sf = 'https://wbfactories.gov.in/api/rest/v2/LDScheduleStatus';
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	$ch_sf = curl_init();
 	//curl_setopt($ch_sf, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
 	curl_setopt($ch_sf, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));
@@ -871,8 +867,6 @@ function central_inspection_form($form, &$form_state) {
 				'2023-04-24',
 				'2023-04-29',
 				'2023-04-30',
-<<<<<<< HEAD
-=======
 				'2025-02-01',
 				'2025-02-02',
 				'2025-02-03',
@@ -905,7 +899,6 @@ function central_inspection_form($form, &$form_state) {
 				'2025-03-29',
 				'2025-03-30',
 				'2025-03-31',
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 
 				);
 		
@@ -1250,12 +1243,8 @@ function central_inspection_form_submit_confirm($form, &$form_state){
 		// for factory
 		
 		
-<<<<<<< HEAD
-		$fact = 'https://wbfactories.gov.in/webservices/REST/LDAddSchedules';
-=======
 		//$fact = 'https://wbfactories.gov.in/webservices/REST/LDAddSchedules';
 		$fact = 'https://wbfactories.gov.in/api/rest/v2/LDAddSchedules';
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 		$ch_fact = curl_init();
 		curl_setopt($ch_fact, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
 		curl_setopt($ch_fact, CURLOPT_URL, $fact);
@@ -1726,11 +1715,7 @@ function cis_excel_generate(){
 	$query_lb ->fields('cis', array('est_id','address','lc_estid','boiler_enrollno','factory_estid','shop_estid','pcb_est_id','risk_status_lc','risk_status_boilers','risk_status_factories','dept_from'));
 	//$query_lb->condition('cis.lc_estid', '', '!=');
 	$query_lb->condition('s.confirm_flag', '1');
-<<<<<<< HEAD
-	$query_lb->condition('s.schedule_id', 328, '=');
-=======
 	$query_lb->condition('s.schedule_id', 330, '=');
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	$query_lb->orderBy('cis.est_name','ASC');
 	//echo $query_lb; exit;
 	$query_lb_rs = $query_lb->execute();
@@ -1801,11 +1786,7 @@ function download_excel_data(){
 	$query_lb ->fields('cis', array('est_id','lc_estid','boiler_enrollno','factory_estid','shop_estid','pcb_est_id','risk_status_lc','risk_status_boilers','risk_status_factories','dept_from'));
 	//$query_lb->condition('cis.lc_estid', '', '!=');
 	$query_lb->condition('s.confirm_flag', '1');
-<<<<<<< HEAD
-	$query_lb->condition('s.schedule_id', 328, '=');
-=======
 	$query_lb->condition('s.schedule_id', 330, '=');
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	$query_lb->orderBy('cis.est_name','ASC');
 	//echo $query_lb; exit;
 	$query_lb_rs = $query_lb->execute();
@@ -1861,22 +1842,14 @@ function download_excel_data(){
 		
 		$data_post_data = 	array(
 			"source"=>"WBLD",
-<<<<<<< HEAD
-			"schedule_id"	=> 328,
-=======
 			"schedule_id"	=> 330,
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 			"est_id"    => $data->est_id,
 			"ld_id"    => $data->id
 		);
 		
 		$data_post_data_factory = 	array(
 			"source"=>"WBLD",
-<<<<<<< HEAD
-			"schedule_id"	=> 328,
-=======
 			"schedule_id"	=> 330,
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 			"est_id"    => $data->est_id,
 			"id"    => $data->id
 	  );
@@ -1917,12 +1890,8 @@ function download_excel_data(){
 			}
 		}
 		
-<<<<<<< HEAD
-		$sf = 'https://wbfactories.gov.in/webservices/REST/LDScheduleStatus';
-=======
 		//$sf = 'https://wbfactories.gov.in/webservices/REST/LDScheduleStatus';
 		$sf = 'https://wbfactories.gov.in/api/rest/v2/LDScheduleStatus';
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 		$ch_sf = curl_init();
 		//curl_setopt($ch_sf, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
 		curl_setopt($ch_sf, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));

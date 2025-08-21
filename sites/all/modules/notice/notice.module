@@ -42,7 +42,6 @@ function notice_menu(){
 	'page arguments' => array('edit_notice',2),
 	'access arguments' => array('cmsnotice_per'),
   );
-<<<<<<< HEAD
 
  $items['cmsentry/notice/download/%'] = array(
   'title' => 'Secure Download for Notice',
@@ -77,11 +76,6 @@ function notice_secure_file_download($filename) {
 }
 
 
-=======
-  return $items;
-}
-
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 function test_upload($form, &$form_state){
 	$form['#attributes']['class'][] = 'sky-form custom-form-main';
 	$form['doc_file'] = array(
@@ -224,11 +218,8 @@ $noticesearch = isset($form_state['values']['notice_search']) && !empty($form_st
 	
 }
 
-<<<<<<< HEAD
 
 
-=======
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  function notice_list_form_submit($form, &$form_state){
 	//print_r( $form_state['values']['notice_datefrom'].'hiii'. $form_state['values']['notice_dateto']);
 	//die();
@@ -429,11 +420,7 @@ function add_notice($form, &$form_state){
     $form['add_notice_pdf'] = array(
 	   '#title' => t(' Upload Scanned file of the Notification (JPG,PDF only)'),
 	   '#type' => 'managed_file',
-<<<<<<< HEAD
 	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(10*1024*1024)),
-=======
-	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	   '#upload_location' => 'public://upload/notice/',
 	   '#process' => array('import_my_file_element_process'),
 	   '#required' => TRUE,
@@ -449,7 +436,6 @@ function add_notice($form, &$form_state){
 	return  $form;
 	 
  }
-<<<<<<< HEAD
 
  function add_notice_validate($form, &$form_state) {
   $fid = $form_state['values']['add_notice_pdf'];
@@ -493,8 +479,6 @@ function add_notice($form, &$form_state){
 }
 
 
-=======
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function add_notice_submit($form, &$form_state){ 
    //echo "hi"; exit;
@@ -580,7 +564,6 @@ function edit_notice($form, &$form_state, $args=''){
 	   '#required' => TRUE,
 	);
 	
-<<<<<<< HEAD
 	// $uri = 'public://upload/notice/'.trim($result['noticefile']);
 	
 	// if (file_exists($uri)) {
@@ -627,36 +610,11 @@ if (file_exists(drupal_realpath($uri))) {
 }
 
 
-=======
-	$uri = 'public://upload/notice/'.trim($result['noticefile']);
-	
-	if (file_exists($uri)) {
-		$form['notice_file_up'] = array(
-        '#markup' => l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'),
-			     ''.$GLOBALS['base_url'].'/sites/default/files/upload/notice/'.$result['noticefile'], array('html' => TRUE,
-				 'attributes'=>array('target'=>'_blank' , 'class'=>array('pdfloc1')))),
-        );
-		$form['scan_file'] = array(
-        '#type' => 'hidden',
-		'#default_value' => trim($result['noticefile']),
-        );
-	}else{
-		$form['notice_file_up'] = array(
-        '#markup' => t('No File Exist'),
-		'#prefix' => '<div class="pdfnone">',
-	    '#suffix' => '</div>'
-        );
-	}
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 		 
     $form['edit_notice_pdf'] = array(
 	   '#title' => t(' Upload an notice Scaned file (JPG,PDF only)'),
 	   '#type' => 'managed_file',
-<<<<<<< HEAD
 	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(10*1024*1024)),
-=======
-	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	   '#upload_location' => 'public://upload/notice/',
 	   '#process' => array('import_my_file_element_process'),
 	   //'#required' => TRUE,
@@ -676,7 +634,6 @@ if (file_exists(drupal_realpath($uri))) {
 	return  $form;
 	 
  } 
-<<<<<<< HEAD
 
  function edit_notice_validate($form, &$form_state) {
   $fid = $form_state['values']['edit_notice_pdf'];
@@ -721,8 +678,6 @@ if (file_exists(drupal_realpath($uri))) {
 }
 
 
-=======
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
  
 function edit_notice_submit($form, &$form_state){ 
 //echo "hi"; exit;

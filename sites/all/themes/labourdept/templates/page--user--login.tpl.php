@@ -76,11 +76,7 @@ $(window).scroll(function() {
                     <?php }else{?>
                     
 						<!--<i class="fa fa-sign-in" aria-hidden="true"></i> <a href="<?php print $base_root.$base_path?>enlogin" class="login_link">Login</a>&nbsp;&nbsp;&nbsp;-->
-<<<<<<< HEAD
-                        <!-- <i class="fa fa-sign-in" aria-hidden="true"></i> <a href="<?php //print $base_root.$base_path?>assetlogin" class="login_link">Asset Login</a>&nbsp;&nbsp;&nbsp; -->
-=======
                         <i class="fa fa-sign-in" aria-hidden="true"></i> <a href="<?php print $base_root.$base_path?>assetlogin" class="login_link">Asset Login</a>&nbsp;&nbsp;&nbsp;
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
                         <i class="fa fa-sign-in" aria-hidden="true"></i> <a href="<?php print $base_root.$base_path?>user" class="login_link">Admin Login</a>&nbsp;&nbsp;&nbsp;
                       <?php }?> 
              <!--   <i class="fa fa-pencil-square-o" aria-hidden="true"></i> 
