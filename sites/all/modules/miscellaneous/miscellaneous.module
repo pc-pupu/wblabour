@@ -39,11 +39,7 @@ function miscellaneous_cron() {
 	$querypending->fields('dm', array('id','directorate_name'));
 	$querypending->fields('us', array('designation','directorate_code','district_code','service_status','emp_group','office_id'));
 	$querypending->condition('ud.status',0,'=');
-<<<<<<< HEAD
-	$querypending->condition('ud.dor','2023-12-31','>');
-=======
 	$querypending->condition('ud.dor','2024-12-31','>');
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	$querypending->condition('us.service_status',1,'=');
 	$querypending->orderBy('ud.fname','ASC');
 	//echo $querypending; exit;

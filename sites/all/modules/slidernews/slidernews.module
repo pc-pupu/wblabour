@@ -45,8 +45,6 @@ function slidernews_application(){
 	// $cms_news_query = $cms_news_query->range(0,3);
 	// $cms_news_query_result = $cms_news_query->execute();
 
-<<<<<<< HEAD
-=======
 	// $shutdown_message = '<p>Portal will be under maintenance w. e. f. 18th July 2025 6 p.m.</p>';
 
 	$shutdown_message = '';
@@ -55,14 +53,10 @@ function slidernews_application(){
 	}
 
 
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 	$output ='';
 
 	$output.= '<ul id="ticker">';
 
-<<<<<<< HEAD
-	$output.= '<li><span> Notification: </span> <p><a target="_blank" href="sites/default/files/upload/notice/Application invited from retired Judicial Officers not below the rank of Addl District and Session Judge for appoinment on re-employment.pdf">Application invited from retired Judicial Officers not below the rank of Additional District and ..</a>&nbsp; <b style="color:red;font-size: 18px">(New)</b></p></li>';
-=======
 	$output.= '<li>
 	     <span style="margin-top: 25px;" class="text-center"> Notification: </span>'.$shutdown_message.' 
 	      <p><a target="_blank" href="sites/default/files/upload/notice/Labr 490.pdf">Schedule of Medical Examination for the recruitment to the post of...</a>&nbsp; <b style="color:red;font-size: 18px">(New)</b></p>
@@ -74,7 +68,6 @@ function slidernews_application(){
 	</li>';
 
 
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 
 
 	// foreach($cms_circular_query_result as $data) {

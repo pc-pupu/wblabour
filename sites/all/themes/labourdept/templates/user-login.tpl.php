@@ -23,7 +23,6 @@ var decrypted = JSON.parse(CryptoJS.AES.decrypt(encrypted, key, {format: CryptoJ
 //console.log("decryyepted: "+decrypted); 
 
 function pwd_handler(form){
-<<<<<<< HEAD
   //var x = form.pass.value;
   var password = document.getElementById('edit-pass').value;
   
@@ -50,34 +49,6 @@ function pwd_handler_form(form){
    $.ajax({
            type: "POST",
        async: false,
-=======
-	//var x = form.pass.value;
-	var password = document.getElementById('edit-pass').value;
-	
-	//var y = encrpt(x);
-	//alert(y);
-	//alert(password);
-	var key = "WbAdmLb#4321";
-	var encrypted = CryptoJS.AES.encrypt(JSON.stringify(password), key, {format: CryptoJSAesJson}).toString();
-	
-	var j = JSON.parse(encrypted);
-	
-	jQuery("#edit-pass").val(j.iv);
-	jQuery("#ct_val").val(j.ct);
-	jQuery("#s_val").val(j.s);
-	//alert(j.ct);
-	//document.getElementById("password").value = encrypted;
-	//alert(encrypted);
-	//jQuery("#edit-pass").val(y);
-}
-
-function pwd_handler_form(form){
-	var base_url = window.location.origin;
-	var x = form.pass.value;
-	 $.ajax({
-           type: "POST",
-		   async: false,
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
            url: base_url+"/sites/all/themes/labourdept/templates/passwordencrypt.php",
            data: {pass: x},
 
@@ -90,7 +61,6 @@ function pwd_handler_form(form){
                 // console.log(request, error);
             }
     });
-<<<<<<< HEAD
   /*var x = btoa(btoa(btoa(form.pass.value)));
   if(form.pass.value != ""){
     jQuery("#edit-pass").val(x);
@@ -118,16 +88,6 @@ jQuery(document).ready(function () {
 
 <?php 
   
-=======
-	/*var x = btoa(btoa(btoa(form.pass.value)));
-	if(form.pass.value != ""){
-		jQuery("#edit-pass").val(x);
-	}*/
-}
-</script>
-<?php 
-	
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
   /*print drupal_render($form['name']);
   print drupal_render($form['pass']);
   print drupal_render($form['captcha']);
@@ -167,7 +127,6 @@ jQuery(document).ready(function () {
 <?php print drupal_render($form['s_val']);?>
 <?php print drupal_render($form['ct_val']);?>
 
-<<<<<<< HEAD
 <div class="captcha-wrapper">
   <?php print drupal_render($form['captcha']); ?>
   <a href="javascript:void(0);" id="refresh-captcha" title="Refresh Captcha">
@@ -178,10 +137,6 @@ jQuery(document).ready(function () {
 </div>
 
 <a href="<?php print $base_root.$base_path?>forgot-password/" style="font-size: 20px!important; color: white">Forgot password?</a>
-=======
-<?php print drupal_render($form['captcha']);?>
-</div>
->>>>>>> 14d853556ffd3e8fabc4403330a38ba0b5494614
 <div class="user-btn-box user-login-btn">
 <!--<input id="edit-submit" class="user-login-btn" name="op" value="Login" type="submit">-->
 <?php
