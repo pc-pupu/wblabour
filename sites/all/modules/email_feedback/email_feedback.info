@@ -1,0 +1,8 @@
+;$Id$
+name = EMAIL FEEDBACK LOGIN
+description = Email Feedback from Investors
+package = Applicant Registration Module
+version = "7.x"
+core = 7.x
+files[] = email_feedback.module
+;dependencies[] = autoload

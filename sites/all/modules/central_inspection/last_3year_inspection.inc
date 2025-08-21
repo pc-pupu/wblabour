@@ -1,0 +1,720 @@
+<?php
+function computerized_risk_assesment($form, &$form_state){
+	global $user;
+	drupal_add_css(drupal_get_path('module', 'central_inspection') . '/css/central_inspection.css', array('group' => CSS_DEFAULT, 'every_page' => TRUE));
+	$form['inspection_data'] = array(
+	   '#type' => 'markup',
+       '#markup' => computerized_risk_assesment_table($est_name_filter,$directorate_filter),
+	);	
+	
+	$form['central_insp_go_lnk'] = array(
+	   '#type' => 'markup',
+       '#markup' => $lm_tick = l(t('Go For CIS'), 'central-inspection', array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank', 'class'=>'btn btn-success pull-right generate-btn')))
+	);	
+	return $form;
+}
+function computerized_risk_assesment_table($est_name_filter='',$directorate_filter=''){
+	//print_r($directorate_filter);
+	global $user;
+	drupal_add_css(drupal_get_path('module', 'central_inspection') . '/css/central_inspection.css', array('group' => CSS_DEFAULT, 'every_page' => TRUE));
+	
+	$output = '';
+	$header = array(
+			  array('data' => 'SL.NO'),
+			  array('data' => 'Establishment Name'),
+			  array('data' => 'District Name'),
+			  array('data' => 'Subdivision Name'),
+			  array('data' => 'Address'),
+			  array('data' => 'LC Risk'),
+			  //array('data' => 'LC Risk'),
+			  array('data' => 'Boiler Risk'),
+			  //array('data' => 'Boiler Risk'),
+			  array('data' => 'Factory Risk'),
+			  //array('data' => 'PCB Risk'),
+			  //array('data' => 'LM Risk'),
+			  //array('data' => 'Factory Risk'),
+		 );
+	$rows = array();
+	
+	$db_or = db_or();
+	$query = db_select('ld_establishment_details_cis', 'cis');
+	$query->leftJoin('district_master', 'dm', 'cis.district = dm.district_code');  
+	$query->leftJoin('sub_division', 'sub_div', 'cis.subdivision = sub_div.sub_div_code'); 
+	$query->leftJoin('police_station', 'ps', 'cis.policestation = ps.police_station_code');
+	$query->fields('cis', array('est_id','est_name','lc_estid','boiler_enrollno','factory_estid','license_no','shop_estid','pcb_est_id','lm_est_id','policestation','address','zone','cnt_flag','lc_high_risk','pcb_high_risk','fact_insp_rpt_flag','boiler_high_risk'));
+	$query->fields('dm', array('district_name','district_code'));
+	$query->fields('sub_div', array('sub_div_name','sub_div_code'));
+	$query->fields('ps', array('name_of_police_station','police_station_code'));
+	/*if(trim($est_name_filter) != ""){
+		$query->condition('cis.est_name', '%' . db_like(trim($est_name_filter)) . '%', 'LIKE');
+	}
+	if(trim($directorate_filter['LC'])=='LC' || trim($directorate_filter['B'])=='B' || trim($directorate_filter['F'])=='F' || trim($directorate_filter['PCB'])=='PCB' || trim($directorate_filter['LM'])=='LM'){
+	if(trim($directorate_filter['LC'])=='LC'){
+		$query->condition('cis.lc_estid', '', '!=');
+		$query->condition('cis.lc_high_risk', 1, '=');
+	}
+	if(trim($directorate_filter['B'])=='B'){
+		$query->condition('cis.boiler_enrollno', '', '!=');
+		$query->condition('cis.boiler_high_risk', 1, '=');
+	}
+	if(trim($directorate_filter['F'])=='F'){
+		$query->condition('cis.factory_estid', '', '!=');
+		$query->condition('cis.license_no', '', '!=');
+		$query->condition('cis.fact_insp_rpt_flag', 1, '=');
+	}
+	if(trim($directorate_filter['PCB'])=='PCB'){
+		$query->condition('cis.pcb_est_id', '', '!=');
+		$query->condition('cis.pcb_high_risk', 1, '=');
+	}
+	if(trim($directorate_filter['LM'])=='LM'){
+		$query->condition('cis.lm_est_id', '', '!=');
+	}
+	
+	}else{
+	//echo "hii"; exit;
+	$db_or->condition('cis.boiler_high_risk', 1, '=');
+	$db_or->condition('cis.fact_insp_rpt_flag', 1, '=');
+	$db_or->condition('cis.pcb_high_risk', 1, '=');
+	$db_or->condition('cis.lc_high_risk', 1, '=');
+	$query->condition($db_or);
+	}*/
+	$query->orderBy('est_name', 'asc');
+	$query = $query->extend('PagerDefault')->limit(20);
+  	$result = $query->execute();
+  	$rsData = $result->fetchAll();
+	$i = 0;
+	foreach($rsData as $record=>$val) {
+		$i++;
+	    $lc_tick = "Low";
+		$boiler_tick = "Low";
+		$factory_tick = "Low";
+		//$pcb_tick = "";
+		//$lm_tick = "";
+		if($val->lc_high_risk == "1"){
+			//$lc_tick = '<img src="'.$GLOBALS['base_url']."/".drupal_get_path('module', 'central_inspection').'/tick.png" style="margin:0;">';
+			$lc_tick = t('High');
+		}
+		if($val->boiler_high_risk != ""){
+			$boiler_tick = t('High');
+			//$boiler_tick = '<img src="'.$GLOBALS['base_url']."/".drupal_get_path('module', 'central_inspection').'/tick.png" style="margin:0;">';
+		}
+		if($val->fact_insp_rpt_flag == "1"){
+			$factory_tick = t('High');
+			//$factory_tick = '<img src="'.$GLOBALS['base_url']."/".drupal_get_path('module', 'central_inspection').'/tick.png" style="margin:0;">';
+		}
+		/*if($val->pcb_high_risk != ""){
+			$pcb_tick = t('High');
+		}
+		if($val->lm_est_id != ""){
+			$lm_tick = t("High");
+		}*/
+			   
+		$rows[] = array(
+					$i,
+					array('data' => $val->est_name),
+					array('data' => $val->district_name),
+					array('data' => $val->sub_div_name),
+					array('data' => $val->address),
+					$lc_tick,
+					$boiler_tick,
+					$factory_tick,
+					//$pcb_tick,
+					//$lm_tick,
+		);
+  }
+  
+	$output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '<h3>Computerized Risk Assesment of Establishment</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+   return '<div class="table-responsive statistics_box centralized-table">'.$output.'</div>';	
+}
+
+function last_3_years_inspection($form, &$form_state){
+	global $user;
+	drupal_add_css(drupal_get_path('module', 'central_inspection') . '/css/central_inspection.css', array('group' => CSS_DEFAULT, 'every_page' => TRUE));
+	$form['directorate'] = array(
+	 '#type' => 'checkboxes',
+	 '#title' => t('Search with Directorate'),
+	 '#options' => array(
+	   'LC' => t('LC'),
+	   'B' => t('Boilers'),
+	   'F' => t('Factory'),
+	   'PCB' => t('PCB'),
+	   'LM' => t('LM'),
+	 ),
+	   '#default_value' => $_SESSION['DIRECTORATE_FILTER'],
+	 //'#attributes' => array('class'=>array('form-control')),
+	  '#prefix' => '<div class="col-md-8 dirchk">',
+	  '#suffix' => '</div>'
+    );
+	$form['est_name'] = array(
+	  '#type'=>'textfield',
+	  '#title' => t('Establishment Name'),
+	  '#default_value' => isset($_SESSION['EST_NAME_FILTER']) ? $_SESSION['EST_NAME_FILTER'] : '',
+	  //'#required' => TRUE,
+	  '#attributes' => array('class'=>array('form-control'),'placeholder'=>'Establishment Name','autocomplete'=>'off'),
+	  '#prefix' => '<div class="col-md-2">',
+	  '#suffix' => '</div>'
+	);
+	$form['search'] = array(
+	   '#type' => 'submit',
+       '#default_value' => 'search',
+	   '#submit' => array('search_one'),
+	   '#attributes' => array('class'=>array('btn btn-success pull-right generate-btn')),
+	   '#prefix' => '<div class="col-md-2">',
+	   '#suffix' => '</div>'
+	);	
+	$form['reset1'] = array(
+	   '#type' => 'submit',
+       '#default_value' => 'Reset',
+	   '#submit' => array('reset_one'),
+	   '#attributes' => array('class'=>array('btn btn-success pull-right generate-btn')),
+	   '#prefix' => '<div class="col-md-2">',
+	   '#suffix' => '</div>'
+	);	
+	$directorate_filter = array();
+	$est_name_filter = isset($form_state['values']['est_name']) && !empty($form_state['values']['est_name']) ? $form_state['values']['est_name'] : '';
+	//$directorate_filter = isset($form_state['values']['directorate']) && !empty($form_state['values']['directorate']) ? $form_state['values']['directorate'] : '';
+	//print_r($directorate_filter);
+	$form['inspection_data'] = array(
+	   '#type' => 'markup',
+       '#markup' => last_3_years_inspection_table($est_name_filter,$directorate_filter),
+	);	
+	
+	return $form;
+}
+function search_one($form, &$form_state) {
+	//print_r($form_state['values']);
+	unset($_SESSION['DIRECTORATE_FILTER']);
+	unset($_SESSION['EST_NAME_FILTER']);
+	//if($form_state['values']['op']== 'search'){
+		if(isset($form_state['values']['directorate']) && !empty($form_state['values']['directorate'])){
+			$_SESSION['DIRECTORATE_FILTER'] = $form_state['values']['directorate'];
+			$_SESSION['EST_NAME_FILTER'] = $form_state['values']['est_name'];
+		}
+		//$form_state['rebuild'] = TRUE;
+	//}
+	/*if($form_state['values']['op']== 'reset'){
+		drupal_goto('inspection-data');
+	}*/
+}
+function reset_one($form, &$form_state) {
+	//print_r($form_state['values']);
+	unset($_SESSION['DIRECTORATE_FILTER']);
+	unset($_SESSION['EST_NAME_FILTER']);
+	drupal_goto('inspection-data');
+}
+function last_3_years_inspection_table($est_name_filter='',$directorate_filter=''){
+	//print_r($_SESSION['DIRECTORATE_FILTER']);
+	global $user;
+	drupal_add_css(drupal_get_path('module', 'central_inspection') . '/css/central_inspection.css', array('group' => CSS_DEFAULT, 'every_page' => TRUE));
+	
+	$output = '';
+	$header = array(
+			  array('data' => 'SL.NO'),
+			  array('data' => 'Establishment Name'),
+			  array('data' => 'District Name'),
+			  array('data' => 'Subdivision Name'),
+			  array('data' => 'Address'),
+			  array('data' => 'LC'),
+			  //array('data' => 'LC Risk'),
+			  array('data' => 'Boiler'),
+			  //array('data' => 'Boiler Risk'),
+			  array('data' => 'Factory'),
+			  array('data' => 'PCB'),
+			  array('data' => 'LM'),
+			  //array('data' => 'Factory Risk'),
+		 );
+	$rows = array();
+	
+	$db_or = db_or();
+	$query = db_select('ld_establishment_details_cis', 'cis');
+	$query->leftJoin('district_master', 'dm', 'cis.district = dm.district_code');  
+	$query->leftJoin('sub_division', 'sub_div', 'cis.subdivision = sub_div.sub_div_code'); 
+	$query->leftJoin('police_station', 'ps', 'cis.policestation = ps.police_station_code');
+	$query->fields('cis', array('est_id','est_name','lc_estid','boiler_enrollno','factory_estid','license_no','shop_estid','pcb_est_id','lm_est_id','policestation','address','zone','cnt_flag', 'fact_insp_rpt_flag'));
+	$query->fields('dm', array('district_name','district_code'));
+	$query->fields('sub_div', array('sub_div_name','sub_div_code'));
+	$query->fields('ps', array('name_of_police_station','police_station_code'));
+	if(isset($_SESSION['EST_NAME_FILTER']) && trim($_SESSION['EST_NAME_FILTER']) != ""){
+		$query->condition('cis.est_name', '%' . db_like(trim($_SESSION['EST_NAME_FILTER'])) . '%', 'LIKE');
+	}
+	//if(trim($_SESSION['DIRECTORATE_FILTER']['LC'])=='LC' || trim($_SESSION['DIRECTORATE_FILTER']['B'])=='B' || trim($_SESSION['DIRECTORATE_FILTER']['F'])=='F' || trim($_SESSION['DIRECTORATE_FILTER']['PCB'])=='PCB' || trim($_SESSION['DIRECTORATE_FILTER']['LM'])=='LM'){
+		
+	if(isset($_SESSION['DIRECTORATE_FILTER'])){	
+	if(trim($_SESSION['DIRECTORATE_FILTER']['LC'])=='LC'){
+		$query->condition('cis.lc_estid', '', '!=');
+		$query->condition('cis.lc_high_risk', 1, '=');
+	}
+	if(trim($_SESSION['DIRECTORATE_FILTER']['B'])=='B'){
+		$query->condition('cis.boiler_enrollno', '', '!=');
+		$query->condition('cis.boiler_high_risk', 1, '=');
+	}
+	if(trim($_SESSION['DIRECTORATE_FILTER']['F'])=='F'){
+		//echo "hii"; exit;
+		$query->condition('cis.factory_estid', '', '!=');
+		$query->condition('cis.license_no', '', '!=');
+		$query->condition('cis.fact_insp_rpt_flag', 1, '=');
+	}
+	if(trim($_SESSION['DIRECTORATE_FILTER']['PCB'])=='PCB'){
+		$query->condition('cis.pcb_est_id', '', '!=');
+		$query->condition('cis.pcb_high_risk', 1, '=');
+	}
+	if(trim($_SESSION['DIRECTORATE_FILTER']['LM'])=='LM'){
+		$query->condition('cis.lm_est_id', '', '!=');
+	}
+	
+	}else{
+	//echo "hii"; exit;
+	$db_or->condition('cis.boiler_high_risk', 1, '=');
+	$db_or->condition('cis.fact_insp_rpt_flag', 1, '=');
+	$db_or->condition('cis.pcb_high_risk', 1, '=');
+	$db_or->condition('cis.lc_high_risk', 1, '=');
+	$query->condition($db_or);
+	}
+	/*$query->condition('cis.pcb_high_risk', 1, '=');
+	$query->condition('cis.fact_high_risk', 1, '=');
+	$query->condition('cis.boiler_high_risk', 1, '=');*/
+	/*$query->condition('us.directorate_code', $user_info['directorate_code'], '=');
+	$query->condition('us.office_id', '0', '!=');
+	$query->condition('r.name', $roles, 'NOT IN');*/
+  	$query->orderBy("cis.est_name", "ASC");
+	$query = $query->extend('PagerDefault')->limit(40);
+	//echo $query;
+  	$result = $query->execute();
+  	$rsData = $result->fetchAll();
+	$i = 1;
+	foreach($rsData as $record=>$val) {
+		//$i++;
+	    $lc_tick = "";
+		$boiler_tick = "";
+		$factory_tick = "";
+		$pcb_tick = "";
+		$lm_tick = "";
+		if($val->lc_estid != ""){
+			//$lc_tick = '<img src="'.$GLOBALS['base_url']."/".drupal_get_path('module', 'central_inspection').'/tick.png" style="margin:0;">';
+			$lc_tick = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/rule.png">'), 'report-details-lc/'.$val->lc_estid, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+		}
+		if($val->boiler_enrollno != ""){
+			$boiler_tick = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/rule.png">'), 'report-details-boilers/'.$val->boiler_enrollno, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+			//$boiler_tick = '<img src="'.$GLOBALS['base_url']."/".drupal_get_path('module', 'central_inspection').'/tick.png" style="margin:0;">';
+		}
+		if($val->factory_estid != "" && $val->license_no != "" && $val->fact_insp_rpt_flag == '1'){
+			$factory_tick = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/rule.png">'), 'report-details-factories/'.$val->factory_estid.'/'.$val->license_no, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+			//$factory_tick = '<img src="'.$GLOBALS['base_url']."/".drupal_get_path('module', 'central_inspection').'/tick.png" style="margin:0;">';
+		}
+		if($val->pcb_est_id != ""){
+			$pcb_tick = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/rule.png">'), 'report-details-pcb/'.$val->pcb_est_id, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+			//$pcb_tick = '<img src="'.$GLOBALS['base_url']."/".drupal_get_path('module', 'central_inspection').'/tick.png" style="margin:0;">';
+		}
+		if($val->lm_est_id != ""){
+			$lm_tick = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/rule.png">'), 'report-details-lm/'.$val->lm_est_id, array('html' => TRUE,'attributes'=>array('title' => 'View','target'=>'_blank')));
+			//$lm_tick = '<img src="'.$GLOBALS['base_url']."/".drupal_get_path('module', 'central_inspection').'/tick.png" style="margin:0;">';
+		}
+		
+		if($val->lc_estid != "" || $val->boiler_enrollno != "" || ($val->factory_estid != "" && $val->license_no != "" && $val->fact_insp_rpt_flag == '1') || $val->pcb_est_id != "" || $val->lm_est_id != ""){	   
+		$rows[] = array(
+					$i++,
+					array('data' => $val->est_name),
+					array('data' => $val->district_name),
+					array('data' => $val->sub_div_name),
+					array('data' => $val->address),
+					$lc_tick,
+					$boiler_tick,
+					$factory_tick,
+					$pcb_tick,
+					$lm_tick,
+		);
+		}
+  }
+  
+   /*$output .= theme('datatable', array(
+        'header' => $header,
+        'rows' => $rows,
+        'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+        'sticky' => true,
+        'caption' => '<h3>Last 3 Years Inspection Report </h3>',
+        'colgroups' => array(),
+        'empty' => t("No data found!") // The message to be displayed if table is empty
+      )
+    ).theme('pager');*/
+	$output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>Last 3 Years Inspection Report</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+  // Returning the output
+  return '<div class="formdvider viewlist">'.$output.'</div>';		
+}
+
+function report_details_lc($args){
+	//die($args);
+	 $data_post_data = 	array(
+			"source"=>"WBLD",
+			"est_id"    => $args,
+	  );
+	  
+	$lc = 'https://wblc.gov.in/labourdept/eservices/ld_cis_insp_report';
+	$ch_lc = curl_init();
+	//curl_setopt($ch_lc, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+	curl_setopt($ch_lc, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));
+	curl_setopt($ch_lc, CURLOPT_URL, $lc);
+	curl_setopt($ch_lc, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch_lc, CURLOPT_SSL_VERIFYHOST, 0);
+	curl_setopt($ch_lc, CURLOPT_SSL_VERIFYPEER, 0); 
+	curl_setopt($ch_lc, CURLOPT_FOLLOWLOCATION, 0);
+	curl_setopt($ch_lc, CURLOPT_SSLVERSION , 6);
+	curl_setopt($ch_lc, CURLOPT_POSTFIELDS, json_encode( $data_post_data ) );
+	curl_setopt($ch_lc, CURLOPT_POST, true);
+	$result_lc=curl_exec($ch_lc);
+	$errors_lc=curl_error($ch_lc);
+	curl_close($ch_lc);
+	$lc_final_arr = json_decode($result_lc);
+	//print_r($lc_final_arr); exit;
+	//print_r($lc_final_arr->content->reports)."<br>"; 
+	//exit;
+	
+	drupal_add_css(drupal_get_path('module', 'central_inspection') . '/css/central_inspection.css', array('group' => CSS_DEFAULT, 'every_page' => TRUE));	
+	
+	$output = '';
+	$header = array(
+			  array('data' => 'SL.NO'),
+			  array('data' => 'Act'),
+			  array('data' => 'Report No'),
+			  array('data' => 'Inspection Date'),
+			  array('data' => 'Report Issue Date'),
+			  array('data' => 'PDF Link'),
+		 );
+	$rows = array();
+	$i=0;
+	foreach($lc_final_arr->insReport as $record=>$val) {
+		$i++;
+		$pdf_link = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'), $val->pdf_file, array('html' => TRUE,'attributes'=>array('title' => 'View', 'target'=>'_blank')));
+		$rows[] = array(
+					$i,
+					array('data' => $val->act_name),
+					array('data' => $val->ins_file_number),
+					array('data' => $val->ins_date),
+					array('data' => $val->ins_submission_date),
+					$pdf_link
+		);
+	}
+	$output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>Last 3 Years Inspection Report</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+  // Returning the output
+  return '<div class="formdvider viewlist">'.$output.'</div>';
+}
+
+function report_details_boilers($args){
+	//die($args);
+	 $data_post_data = 	array(
+			"source"=>"WBLD",
+			"est_id"    => $args,
+	  );
+	  
+	//print_r($data_post_data); exit;
+	  
+	$lc = 'https://wbboilers.gov.in/labourdept/eservices/ld_cis_insp_report';
+	$ch_lc = curl_init();
+	//curl_setopt($ch_lc, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+	curl_setopt($ch_lc, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));
+	curl_setopt($ch_lc, CURLOPT_URL, $lc);
+	curl_setopt($ch_lc, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch_lc, CURLOPT_SSL_VERIFYHOST, 0);
+	curl_setopt($ch_lc, CURLOPT_SSL_VERIFYPEER, 0); 
+	curl_setopt($ch_lc, CURLOPT_FOLLOWLOCATION, 0);
+	curl_setopt($ch_lc, CURLOPT_SSLVERSION , 6);
+	curl_setopt($ch_lc, CURLOPT_POSTFIELDS, json_encode( $data_post_data ) );
+	curl_setopt($ch_lc, CURLOPT_POST, true);
+	$result_lc=curl_exec($ch_lc);
+	$errors_lc=curl_error($ch_lc);
+	curl_close($ch_lc);
+	$lc_final_arr = json_decode($result_lc);
+	//print_r($lc_final_arr->content->reports)."<br>"; 
+	//exit;
+	
+	drupal_add_css(drupal_get_path('module', 'central_inspection') . '/css/central_inspection.css', array('group' => CSS_DEFAULT, 'every_page' => TRUE));	
+	
+	$output = '';
+	$header = array(
+			  array('data' => 'SL.NO'),
+			  array('data' => 'Report Type'),
+			  array('data' => 'Report No'),
+			  array('data' => 'Inspection Date'),
+			  array('data' => 'Report Issue Date'),
+			  array('data' => 'PDF Link'),
+		 );
+	$rows = array();
+	$i=0;
+	foreach($lc_final_arr->content->reports as $record=>$val) {
+		$i++;
+		$pdf_link = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'), $val->pdf_link, array('html' => TRUE,'attributes'=>array('title' => 'View', 'target'=>'_blank')));
+		$rows[] = array(
+					$i,
+					array('data' => $val->report_type),
+					array('data' => $val->report_no),
+					array('data' => $val->inspection_date),
+					array('data' => $val->report_issue_date),
+					$pdf_link
+		);
+	}
+	$output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>Last 3 Years Inspection Report</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+  // Returning the output
+  return '<div class="formdvider viewlist">'.$output.'</div>';
+}
+
+
+function report_details_factories($est_id,$license_no){
+	 $data_post_data = 	array(
+			"source"=>"WBLD",
+			"est_id"    => $est_id,
+			"lic_no" => $license_no
+	  );
+	  
+	//$lc = 'https://wbfactories.gov.in/webservices/REST/inspection_report_3_yr';
+	$lc = 'https://wbfactories.gov.in/api/rest/v2/inspection_report_3_yr';
+	$ch_lc = curl_init();
+	//curl_setopt($ch_lc, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+	curl_setopt($ch_lc, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));
+	curl_setopt($ch_lc, CURLOPT_URL, $lc);
+	curl_setopt($ch_lc, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch_lc, CURLOPT_SSL_VERIFYHOST, 0);
+	curl_setopt($ch_lc, CURLOPT_SSL_VERIFYPEER, 0); 
+	curl_setopt($ch_lc, CURLOPT_FOLLOWLOCATION, 0);
+	curl_setopt($ch_lc, CURLOPT_SSLVERSION , 6);
+	curl_setopt($ch_lc, CURLOPT_POSTFIELDS, json_encode( $data_post_data ) );
+	curl_setopt($ch_lc, CURLOPT_POST, true);
+	$result_lc=curl_exec($ch_lc);
+	$errors_lc=curl_error($ch_lc);
+	curl_close($ch_lc);
+	$lc_final_arr = json_decode($result_lc);
+	//print_r($lc_final_arr)."<br>"; 
+	//exit;
+	
+	drupal_add_css(drupal_get_path('module', 'central_inspection') . '/css/central_inspection.css', array('group' => CSS_DEFAULT, 'every_page' => TRUE));	
+	
+	$output = '';
+	$header = array(
+			  array('data' => 'SL.NO'),
+			  //array('data' => 'Report Type'),
+			  array('data' => 'Report No'),
+			  array('data' => 'Inspection Date'),
+			  array('data' => 'Report Issue Date'),
+			  array('data' => 'PDF Link'),
+		 );
+	$rows = array();
+	$i=0;
+	foreach($lc_final_arr->content->reports as $record=>$val) {
+		$i++;
+		$pdf_link = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'), $val->report_url, array('html' => TRUE,'attributes'=>array('title' => 'View', 'target'=>'_blank')));
+		$rows[] = array(
+					$i,
+					//array('data' => $val->report_type),
+					array('data' => $val->report_no),
+					array('data' => $val->inspection_date),
+					array('data' => $val->report_issue_date),
+					$pdf_link
+		);
+	}
+	$output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>Last 3 Years Inspection Report</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  return '<div class="formdvider viewlist">'.$output.'</div>';
+}
+
+function report_details_pcb($args){
+	//die($args);
+	 $data_post_data = 	array(
+			"est_id"    => $args
+	  );
+	  
+	$lc = 'http://emis.wbpcb.gov.in/emis/reportCisCug';
+	$ch_lc = curl_init();
+	//curl_setopt($ch_lc, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+	curl_setopt($ch_lc, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));
+	curl_setopt($ch_lc, CURLOPT_URL, $lc);
+	curl_setopt($ch_lc, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch_lc, CURLOPT_SSL_VERIFYHOST, 0);
+	curl_setopt($ch_lc, CURLOPT_SSL_VERIFYPEER, 0); 
+	curl_setopt($ch_lc, CURLOPT_FOLLOWLOCATION, 0);
+	curl_setopt($ch_lc, CURLOPT_SSLVERSION , 6);
+	curl_setopt($ch_lc, CURLOPT_POSTFIELDS, json_encode( $data_post_data ) );
+	curl_setopt($ch_lc, CURLOPT_POST, true);
+	$result_lc=curl_exec($ch_lc);
+	$errors_lc=curl_error($ch_lc);
+	curl_close($ch_lc);
+	$lc_final_arr = json_decode($result_lc);
+	//print_r($lc_final_arr); exit;
+	//print_r($lc_final_arr->content->reports)."<br>"; 
+	//exit;
+	
+	drupal_add_css(drupal_get_path('module', 'central_inspection') . '/css/central_inspection.css', array('group' => CSS_DEFAULT, 'every_page' => TRUE));	
+	
+	$output = '';
+	$header = array(
+			  array('data' => 'SL.NO'),
+			  //array('data' => 'Report Type'),
+			  //array('data' => 'Report No'),
+			  array('data' => 'Inspection Date'),
+			  array('data' => 'Inspector Name'),
+			  array('data' => 'PDF Link'),
+		 );
+	$rows = array();
+	$i=0;
+	foreach($lc_final_arr->message as $record=>$val) {
+		$i++;
+		$pdf_link = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'), $val->report_file_link, array('html' => TRUE,'attributes'=>array('title' => 'View', 'target'=>'_blank')));
+		$rows[] = array(
+					$i,
+					//array('data' => $val->report_type),
+					//array('data' => $val->report_no),
+					array('data' => $val->inspection_dt),
+					array('data' => $val->inspector_name),
+					$pdf_link
+		);
+	}
+	$output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>Last 3 Years Inspection Report</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+  // Returning the output
+  return '<div class="formdvider viewlist">'.$output.'</div>';
+}
+
+function report_details_lm($args){
+	//die($args);
+	 /*$data_post_data = 	array(
+			"est_id"    => $args
+	  );*/
+	  
+	$url = 'https://dolmwb.gov.in/eparimapApi/cis/getInspectionLicenceDetailsByLMEstablishmentId?lmEstablishmentId='.$args;
+	$crl = curl_init();
+	
+	curl_setopt($crl, CURLOPT_URL, $url);
+	curl_setopt($crl, CURLOPT_FRESH_CONNECT, true);
+	curl_setopt($crl, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($crl, CURLOPT_SSL_VERIFYPEER, false);
+	$response = curl_exec($crl);
+	
+	if(!$response){
+	  die('Error: "' . curl_error($crl) . '" - Code: ' . curl_errno($crl));
+	}
+	curl_close($crl);
+	$lc_final_arr = json_decode($response);
+	//print_r($lc_final_arr);  
+	//exit;
+	  
+	/*$url = 'https://www.dolmwb.gov.in/eparimapApi/cis/getInspectionLicenceDetailsByLMEstablishmentId?lmEstablishmentId='.$args;
+	$ch_lc = curl_init();
+	
+	curl_setopt($ch_lc, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Accept: application/json'));
+	curl_setopt($ch_lc, CURLOPT_URL, $url);
+	curl_setopt($ch_lc, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch_lc, CURLOPT_SSL_VERIFYHOST, 0);
+	curl_setopt($ch_lc, CURLOPT_SSL_VERIFYPEER, 0); 
+	curl_setopt($ch_lc, CURLOPT_FOLLOWLOCATION, 0);
+	curl_setopt($ch_lc, CURLOPT_SSLVERSION , 6);
+	$response = curl_exec($ch_lc);
+	
+	if(!$response){
+	  die('Error: "' . curl_error($crl) . '" - Code: ' . curl_errno($crl));
+	}
+	curl_close($ch_lc);
+	$lc_final_arr = json_decode($response);
+	print_r($lc_final_arr); exit; 
+	exit;*/
+	
+	drupal_add_css(drupal_get_path('module', 'central_inspection') . '/css/central_inspection.css', array('group' => CSS_DEFAULT, 'every_page' => TRUE));	
+	
+	$output = '';
+	$header = array(
+			  array('data' => 'SL.NO'),
+			  array('data' => 'Report No'),
+			  array('data' => 'Inspection Status'),
+			  array('data' => 'Applied For'),
+			  array('data' => 'Application Status'),
+			  array('data' => 'PDF Link'),
+		 );
+	$rows = array();
+	$i=0;
+	foreach($lc_final_arr->resObject as $record=>$val) {
+		$i++;
+		$pdf_link = l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'), $val->baseUrl.$val->inspectionReportUrl, array('html' => TRUE,'attributes'=>array('title' => 'View', 'target'=>'_blank')));
+		$rows[] = array(
+					$i,
+					array('data' => $val->applicationNumber),
+					array('data' => $val->inspectionStatus),
+					array('data' => $val->appliedFor),
+					array('data' => $val->applicationStatus),
+					$pdf_link
+		);
+	}
+	$output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'pretty', 'table-bordered table-hover')),
+      'sticky' => true,
+      'caption' => '<h3>Last 3 Years Inspection Report</h3>',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+  
+  // Returning the output
+  return '<div class="formdvider viewlist">'.$output.'</div>';
+}

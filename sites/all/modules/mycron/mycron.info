@@ -1,0 +1,9 @@
+;$Id$
+
+name = My CRON
+description = A mycron module.
+package = Drupal 7 Development
+core = 7.x
+files[] = mycron.module
+
+;dependencies[] = autoload

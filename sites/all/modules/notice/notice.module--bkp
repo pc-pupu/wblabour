@@ -1,0 +1,369 @@
+<?php
+function notice_permission() {
+  return array(
+    'cmsnotice_per' => array(
+      'title' => t('cms Notice add/edit permission'),
+    ),
+	'notice_per' => array(
+      'title' => t('Notice list permission'),
+    )
+  );
+}
+
+function notice_menu(){ 
+ $items['notice'] = array(
+	'title' => 'Notice List',
+	'page callback' => 'notice_list',
+	//'page arguments' => array('notice_list'),
+	'access arguments' => array('notice_per'),
+  );
+  $items['cmsentry/cmsnotice'] = array(
+	'title' => 'CMS Notice List',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('cmsnotice_list'),
+	'access arguments' => array('cmsnotice_per'),
+  );	 
+  $items['cmsentry/cmsnotice/addcmsnotice'] = array(
+	'title' => 'CMS Notice Entry',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('add_notice'),
+	'access arguments' => array('cmsnotice_per'),
+  );
+  $items['cmsentry/cmsnotice/%/cmsnoticeedit'] = array(
+	'title' => 'CMS Notice Edit',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('edit_notice',2),
+	'access arguments' => array('cmsnotice_per'),
+  );
+  return $items;
+}
+
+function notice_list(){
+	 global $base_root, $base_path;
+	 $sort = 'DESC';
+	 $order = 'noticedate';
+     $cms_notice_query = db_select('cms_notice', 't');
+     $cms_notice_query->fields('t', array('nid','noticedesc','noticedate','noticefile'));
+	 $cms_notice_query = $cms_notice_query->extend('TableSort')->extend('PagerDefault')->limit(20);
+	 $cms_notice_query->orderBy($order, $sort);
+	 $cms_notice_query_result = $cms_notice_query->execute();
+	 $cms_notice_query_result_data = $cms_notice_query_result->fetchAll();
+	 
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+  
+     $header = array(
+          array('data'=> 'SL.NO'),
+		  array('data'=> 'DATE'),
+          array('data' => 'DESCRIPTION'),
+		  array('data' => 'FILE'),
+      );
+	 $i=0;
+	 foreach($cms_notice_query_result_data as $data){
+		$i++;
+		$aa=$base_root.$base_path.'sites/default/files/upload/notice/'.$data->noticefile;
+		$link_s=l(t('Download'), $aa, array('attributes' => array('target'=>'_blank'))) ;
+		$rows[] = array(
+      				$i,
+					date('d-m-Y', strtotime($data->noticedate)),
+      				$data->noticedesc,
+					$link_s
+	  	);   
+	 }
+	 
+      				
+	 
+	 $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+}
+
+function cmsnotice_list($form, &$form_state){
+	
+	$form['add_notice'] = array(
+	  '#type' => 'markup',
+	  '#markup' => l('Add Notice','cmsentry/cmsnotice/addcmsnotice'),
+    );	
+	
+	$form['notice_list_details'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_notice_list(),
+    );	
+	return $form;
+}
+function get_notice_list(){
+	 global $base_root, $base_path;
+	 $sort = 'DESC';
+	 $order = 'noticedate';
+     $cms_notice_query = db_select('cms_notice', 't');
+     $cms_notice_query->fields('t', array('nid','noticedesc','noticedate'));
+	 $cms_notice_query = $cms_notice_query->extend('TableSort')->extend('PagerDefault')->limit(20);
+	 $cms_notice_query->orderBy($order, $sort);
+	 $cms_notice_query_result = $cms_notice_query->execute();
+	 $cms_notice_query_result_data = $cms_notice_query_result->fetchAll();
+	 
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+  
+     $header = array(
+          array('data'=> 'Notice SL.NO'),
+		  array('data'=> 'Notice DATE'),
+          array('data' => 'Notice DESCRIPTION'),
+		  array('data' => 'Notice VIEW/EDIT'),
+      );
+	 $i=0;
+	 foreach($cms_notice_query_result_data as $data){
+		$i++;
+		$aa=$base_root.$base_path.'cmsentry/cmsnotice/'.$data->nid.'/cmsnoticeedit';
+		$link_s=l(t('View/Edit'), $aa) ;
+		$rows[] = array(
+      				$i,
+					date('d-m-Y', strtotime($data->noticedate)),
+      				$data->noticedesc,
+					$link_s
+	  	);   
+	 }
+	 
+      				
+	 
+	 $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+}
+
+function add_notice($form, &$form_state){
+   global $base_root, $base_path;
+	 
+   $form['add_notice_date'] = array(
+	 '#title'=>' Notice Date :',
+	 '#type' => 'date',
+     '#default_value' => array(
+         'month' => format_date(time(), 'custom', 'n'),
+         'day' => format_date(time(), 'custom', 'j'),
+         'year' => format_date(time(), 'custom', 'Y'),
+       ),
+	 '#required' => TRUE,
+	 );  
+		 
+	$form['add_notice_desc'] = array(
+	   '#title'=>'Notice Description :',
+	   '#cols' => 20, 
+       '#rows' => 4,
+	   '#type' => 'textarea',
+	   '#element_validate' => array('notice_textfield_validate'),
+	   '#required' => TRUE,
+	);
+		 
+    $form['add_notice_pdf'] = array(
+	   '#title' => t(' Upload an notice Scaned file (JPG,PDF only)'),
+	   '#type' => 'managed_file',
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+	   '#upload_location' => 'public://upload/notice/',
+	   '#process' => array('import_my_file_element_process'),
+	   '#required' => TRUE,
+	);
+	
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Save',
+		'#prefix' => '<div align="center">',  
+        '#suffix' => '</div>',
+     ); 
+	  
+	return  $form;
+	 
+ }
+ 
+function add_notice_submit($form, &$form_state){ 
+	$arr = array();
+	$noticePdf = "";
+	
+	$notice_desc=check_plain($form_state['values']['add_notice_desc']);
+	$notice_date=$form_state['values']['add_notice_date']['year'].'-'.$form_state['values']['add_notice_date']['month'].'-'.$form_state['values']['add_notice_date']['day']; 
+
+	$notice_doc = file_load($form_state['values']['add_notice_pdf']);
+	if(!empty($notice_doc)){
+		$arr = explode("/", $notice_doc->uri);
+		$notice_doc->status = FILE_STATUS_PERMANENT;
+		file_save($notice_doc);
+		$noticePdf = $arr[4];
+	 }
+	
+	$noticeInfo = array('noticedate'=>$notice_date,
+						'noticedesc'=>$notice_desc,
+						'noticefile' => $noticePdf);
+						
+	$id = db_insert('cms_notice')->fields($noticeInfo)->execute();
+	drupal_set_message('Your Record has been inserted successfully.');
+
+}
+
+
+function edit_notice($form, &$form_state, $args=''){
+   global $base_root, $base_path;
+   
+   $cms_notice_query = db_select('cms_notice', 't');
+   $cms_notice_query->fields('t', array('nid','noticedesc','noticedate','noticefile'));	
+   $cms_notice_query->condition('t.nid',trim($args),'=');
+   $qry_data = $cms_notice_query->execute();
+   $result = $qry_data->fetchAssoc();
+   
+   if($result['noticedate']!=""){
+	   	$cdate = explode("-", $result['noticedate']);
+		
+		$cdate[1]= ltrim($cdate[1], '0'); 
+		$cdate[2]= ltrim($cdate[2], '0');  
+		$form['edit_notice_date'] = array(
+		 '#title'=>' Notice Date :',
+		 '#type' => 'date',
+		 '#default_value' => array(
+			 'month' => format_date(time(), 'custom', $cdate['1']),
+			 'day' => format_date(time(), 'custom', $cdate['2']),
+			 'year' => format_date(time(), 'custom', $cdate['0']),
+		   ),
+		 '#required' => TRUE,
+		 );   
+   }else{
+	   $form['edit_notice_date'] = array(
+		 '#title'=>' Notice Date :',
+		 '#type' => 'date',
+		 '#default_value' => array(
+			 'month' => format_date(time(), 'custom', 'n'),
+			 'day' => format_date(time(), 'custom', 'j'),
+			 'year' => format_date(time(), 'custom', 'Y'),
+		   ),
+		 '#required' => TRUE,
+		 );  
+   }
+		 
+	$form['edit_notice_desc'] = array(
+	   '#title'=>'Notice Description :',
+	   '#cols' => 20, 
+       '#rows' => 4,
+	   '#type' => 'textarea',
+	   '#default_value' =>trim($result['noticedesc']),
+	   '#element_validate' => array('notice_textfield_validate'),
+	   '#required' => TRUE,
+	);
+	
+	$uri = 'public://upload/notice/'.trim($result['noticefile']);
+	
+	if (file_exists($uri)) {
+		$form['notice_file_up'] = array(
+        '#markup' => l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'),
+			     ''.$GLOBALS['base_url'].'/sites/default/files/upload/notice/'.$result['noticefile'], array('html' => TRUE,
+				 'attributes'=>array('target'=>'_blank' , 'class'=>array('pdfloc1')))),
+        );
+		$form['scan_file'] = array(
+        '#type' => 'hidden',
+		'#default_value' => trim($result['noticefile']),
+        );
+	}else{
+		$form['notice_file_up'] = array(
+        '#markup' => t('No File Exist'),
+		'#prefix' => '<div class="pdfnone">',
+	    '#suffix' => '</div>'
+        );
+	}
+		 
+    $form['edit_notice_pdf'] = array(
+	   '#title' => t(' Upload an notice Scaned file (JPG,PDF only)'),
+	   '#type' => 'managed_file',
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+	   '#upload_location' => 'public://upload/notice/',
+	   '#process' => array('import_my_file_element_process'),
+	   //'#required' => TRUE,
+	);
+	$form['notice_id'] = array(
+		'#title' => t('Notice Id'),
+		'#type' => 'hidden',
+		'#default_value' => isset($args) ? $args : NULL,
+	);	
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Save',
+		'#prefix' => '<div align="center">',  
+        '#suffix' => '</div>',
+     ); 
+	  
+	return  $form;
+	 
+ } 
+ 
+function edit_notice_submit($form, &$form_state){ 
+	$arr = array();
+	$noticePdf = "";
+	
+	$notice_desc=check_plain($form_state['values']['edit_notice_desc']);
+	$notice_date=$form_state['values']['edit_notice_date']['year'].'-'.$form_state['values']['edit_notice_date']['month'].'-'.$form_state['values']['edit_notice_date']['day']; 
+
+	$notice_doc = file_load($form_state['values']['edit_notice_pdf']);
+	if(!empty($notice_doc)){
+		$arr = explode("/", $notice_doc->uri);
+		$notice_doc->status = FILE_STATUS_PERMANENT;
+		file_save($notice_doc);
+		$noticePdf = $arr[4];
+	 }else{
+		$file_name=$form_state['values']['scan_file'];
+		$noticePdf = $file_name;
+	}
+	
+	$noticeInfo = array('noticedate'=>$notice_date,
+						'noticedesc'=>$notice_desc,
+						'noticefile' => $noticePdf);
+						
+	$query = db_update('cms_notice');
+	$query->fields(array('noticedate' =>	$notice_date,
+						 'noticedesc' =>	$notice_desc,
+ 						 'noticefile' =>	$noticePdf));
+	$query->condition('nid', $form_state['values']['notice_id']);
+	$rs = $query->execute();
+	if($rs){
+		drupal_set_message("Your data has been updated successfully");
+		drupal_goto('cmsentry/cmsnotice');
+	}
+
+} 
+
+ 
+function notice_textfield_validate($element, &$form_state) {
+   if(trim($element['#value']))
+   {
+        $val="a".trim($element['#value']);
+		if(stripos($val,"~") >0  || stripos($val,"!") >0 || stripos($val,"@")>0 || stripos($val,"<")>0 || stripos($val,">")>0 || stripos($val,"'")>0 || stripos($val,"$")>0 || stripos($val,"#")>0 || stripos($val,"%")>0 || stripos($val,"^")>0  || stripos($val,"*")>0){
+       form_error($element, t($element['#title'].'  contain illegal character .'));
+	   }
+   }
+}
+
+/* It disables the default upload button that comes with this #managed_file form 
+function import_my_file_element_process($element, &$form_state, $form) {
+  $element = file_managed_file_process($element, $form_state, $form);
+  $element['upload_button']['#access'] = FALSE;
+ 
+  return $element;
+}*/

@@ -1,0 +1,342 @@
+<?php
+
+
+//-------------------------------------------------------------------------------------------|
+//-------------------------------------------------------------------------------------------|
+//  Hooks and Setup Functions
+//-------------------------------------------------------------------------------------------|
+//-------------------------------------------------------------------------------------------|
+
+  //-------------------------------------------------------------------------------------------|
+  //  Implementation of hook_menu, this provides a front-end for the importer
+  //-------------------------------------------------------------------------------------------|
+    function csvImporter_menu() {
+      $items['csvImporter'] = array(
+        'title' => 'Import Data from CSV File',
+        'description' => 'Import content from a <abbr title="Comma Separated Values">CSV</abbr> file.',
+        //'access callback' => 'user_access',
+        'access arguments' => array('create_user_per'),
+        'page callback' => 'csvImporter_pagecallback',
+        'type' => MENU_NORMAL_ITEM,
+      );
+      return $items ;
+    }
+  //-------------------------------------------------------------------------------------------|
+  //  End hook_menu
+  //-------------------------------------------------------------------------------------------|
+  
+//-------------------------------------------------------------------------------------------|
+//-------------------------------------------------------------------------------------------|
+//  End hooks and setup functions
+//-------------------------------------------------------------------------------------------|
+//-------------------------------------------------------------------------------------------|
+
+//-------------------------------------------------------------------------------------------|
+//  Page callback function for the menu item
+//  This just returns our $form
+//-------------------------------------------------------------------------------------------|
+
+  function csvImporter_pagecallback(){
+    $module_path = drupal_get_path('module', 'csvImporter');
+    
+    $form = drupal_get_form('csvImporter_form'); 
+    
+    $output = "";
+    $output .= drupal_render($form);
+    
+    return $output;
+  }
+
+//-------------------------------------------------------------------------------------------|
+//  End page callback function for the menu item
+//-------------------------------------------------------------------------------------------|
+
+
+//-------------------------------------------------------------------------------------------|
+//-------------------------------------------------------------------------------------------|
+//  Form builder, validate, and submit functions for the importer form
+//-------------------------------------------------------------------------------------------|
+//-------------------------------------------------------------------------------------------|
+  function csvImporter_form() {
+	
+	$form['#attributes'] = array(
+      'enctype' => 'multipart/form-data'
+    );
+	
+	$form['form_begin'] = array(
+		'#type' => 'markup',
+		'#markup' => '<div class="row">',
+		'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">CSV Bulk Upload</h4> </div><div class="widget-main">',
+		//'#suffix' => '</h4>'
+	 );  
+	 
+	 $form['csvfile'] = array( 
+      '#title' => t('CSV File'),
+      '#type'  => 'file',
+      '#description' => ($max_size = parse_size(ini_get('upload_max_filesize'))) ? t('Due to server restrictions, the <strong>maximum upload file size is !max_size</strong>. Files that exceed this size will be disregarded.', array('!max_size' => format_size($max_size))) : '',
+	  '#prefix' => '<div class="col-md-12">',
+	  '#suffix' => '</div>'    
+    ) ;
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Import Activity'),
+	  '#prefix' => '<div class="col-md-12">',
+	  '#suffix' => '</div>'
+    ) ;
+    $form['#validate'] = array(
+      'csvImporter_validate_fileupload',
+      'csvImporter_form_validate',
+    ) ;
+	  
+	 $form['form_end'] = array(
+	 '#type' => 'markup',
+	 '#markup' => '</div>',
+	 '#suffix' => '</div></div>'
+   );
+    return $form ;
+  }
+
+
+  function csvImporter_validate_fileupload(&$form, &$form_state) {
+    $validators = array(
+      'file_validate_extensions' => array( 'csv' ),
+    );
+    
+    if ( $file = file_save_upload('csvfile', $validators, "public://", FILE_EXISTS_REPLACE) ) {
+      $form_state['values']['csvupload'] = $file->destination;       
+    }
+    else {
+      form_set_error('csvImporter', t('Unable to copy upload file to !dest', array('!dest' => $destination)));
+    }      
+  }
+
+
+  function csvImporter_form_validate(&$form, &$form_state) {
+    if ( isset( $form_state['values']['csvupload'] ) ) {
+      if ( $handle = fopen($form_state['values']['csvupload'], 'r') ) {
+        $line_count = 1 ;
+        $first = TRUE ;
+        if ( $line = fgetcsv($handle, 4096) ) {
+  
+          //-------------------------------------------------------------------------------------------|
+          //  This is where you can validate aspects of the file itself, like the number of columns
+          //-------------------------------------------------------------------------------------------|
+            if(count($line) != 21){
+              form_set_error('csvfile', t('This file has incorrect number of columns. Expecting 21 columns'));
+            }
+          //-------------------------------------------------------------------------------------------|
+          //  End validating aspects of the CSV file
+          //-------------------------------------------------------------------------------------------|
+        }
+        fclose($handle);
+      }
+      else {
+        form_set_error('csvfile', t('Unable to read uploaded file !filepath', array('!filepath' => $form_state['values']['csvupload'])));
+      }
+    }
+  }
+
+
+  function csvImporter_form_submit(&$form, &$form_state) {
+    $batch = array(
+      'title' => t('Importing CSV ...'),
+      'operations' => array(),
+      'init_message' => t('Commencing'),
+      'progress_message' => t('Processed @current out of @total.'),
+      'error_message' => t('An error occurred during processing'),
+      'finished' => 'csvImporter_import_finished',
+	  '#prefix' => '<div class="col-md-12">',
+	  '#suffix' => '</div>'
+    ) ;
+    if ( isset( $form_state['values']['csvupload'] ) ) {
+      if ( $handle = fopen($form_state['values']['csvupload'], 'r') ) {
+        $batch['operations'][] = array('_csvImporter_remember_filename', array( $form_state['values']['csvupload'] ) ) ;
+        $line_count = 1 ;
+        $first = TRUE ;
+        $line = fgetcsv($handle, 4096);
+        while ( $line = fgetcsv($handle, 4096) ) {
+          /**
+           * we use base64_encode to ensure we don't overload the batch
+           * processor by stuffing complex objects into it
+           */
+          $batch['operations'][] = array('_csvImporter_import_line', array(array_map('base64_encode', $line)));        
+        }
+        fclose($handle);
+      } // we caught this in csvImporter_form_validate()
+    } // we caught this in csvImporter_form_validate()
+    batch_set($batch);
+	drupal_set_message('Excel Uploaded successfully');
+  }
+
+//-------------------------------------------------------------------------------------------|
+//-------------------------------------------------------------------------------------------|
+//  End Form builder, validate, and submit functions for the importer form
+//-------------------------------------------------------------------------------------------|
+//-------------------------------------------------------------------------------------------|
+
+
+//-------------------------------------------------------------------------------------------|
+//-------------------------------------------------------------------------------------------|
+//  Batch API helpers
+//-------------------------------------------------------------------------------------------|
+//-------------------------------------------------------------------------------------------|
+
+  function csvImporter_import_finished($success, $results, $operations) {
+    if ( !empty($results['failed_rows']) ) {
+      $dir  = file_directory_path() . '/csvImporter/' ;
+      if ( file_check_directory( $dir, FILE_CREATE_DIRECTORY ) ) {
+        $csv_filename = 'failed_rows-'. basename($results['uploaded_filename']); // we validated extension on upload
+        $csv_filepath = $dir .'/'. $csv_filename;
+        $targs = array(
+          '!csv_url' => l(check_plain($csv_filename), $csv_filepath),
+          '%csv_filename' => $csv_filename,
+          '%csv_filepath' => $csv_filepath,
+        ) ;
+        if ( $handle = fopen($csv_filepath, 'w+') ) {
+          foreach( $results['failed_rows'] as $failed_row ) {
+            fputcsv($handle, $failed_row);
+          }
+          fclose($handle);
+          drupal_set_message(t('Some rows failed to import. You may download a CSV of these rows: !csv_url', $targs), 'error');
+        }
+        else {
+          drupal_set_message(t('Some rows failed to import, but unable to write error CSV to %csv_filepath', $targs), 'error');
+        }
+      }
+      else {
+        drupal_set_message(t('Some rows failed to import, but unable to create directory for error CSV at %csv_directory', $targs), 'error');
+      }
+    }
+    return t('The CSV import has completed.');
+  }
+  
+  
+  function _csvImporter_remember_filename($filename, &$context) {
+    $context['results']['uploaded_filename'] = $filename;
+  }
+
+//-------------------------------------------------------------------------------------------|
+//-------------------------------------------------------------------------------------------|
+//  End batch API helpers
+//-------------------------------------------------------------------------------------------|
+//-------------------------------------------------------------------------------------------|
+
+//-------------------------------------------------------------------------------------------|
+//  The important part, this is where we "do something" with an individual CSV line
+//-------------------------------------------------------------------------------------------|
+
+  function _csvImporter_import_line($line, &$context) {
+      
+    $context['results']['rows_imported']++;
+    $line = $cleaned_line = array_map('base64_decode', $line);
+    
+    
+    //-------------------------------------------------------------------------------------------|
+    //  Give feedback to the importer about which operation we're preforming
+    //-------------------------------------------------------------------------------------------|
+      //Show the row count by default
+      $context['message'] = t('Importing row !c', array( '!c' => $context['results']['rows_imported'] ));
+    
+      //Or, Provide some feedback about the row currently being processed
+      $context['message'] = t('Importing %title', array('%title' => $line[0]));
+    //-------------------------------------------------------------------------------------------|
+    //  End giving feedback to the importer
+    //-------------------------------------------------------------------------------------------|
+  
+    //-------------------------------------------------------------------------------------------|
+    //  This is where you would convert the line of the CSV file into a new object, be it a node, user, etc.
+    //-------------------------------------------------------------------------------------------|
+	//$uniq = db_query("select currval(pg_get_serial_sequence('users', 'uid'))")->fetchCol();
+	 //$uniq = db_query("select currval(pg_get_serial_sequence('users', 'uid'))");
+      //drupal_set_message("$line[0]");
+	  if($line[0]!="" && $line[1]!=""){
+		  
+		  $uniq = db_query("SELECT MAX(uid) as max_id FROM users")->fetchCol();
+		  $uname = trim($line[1]).$uniq[0];
+		  $newUser = array(
+			'name' => trim($line[17]),
+			'pass' => $uname, 
+			'mail' => trim($line[5]),
+			'status' => 1,
+			'init' => trim($line[5]),
+		);
+		
+		user_save(null, $newUser);
+		$id = db_query("SELECT MAX(uid) as max_id FROM users")->fetchCol();
+		
+		$usinfo = array( 'uid' => $id['0'],
+				'rid' => 8,
+			);
+		db_insert('users_roles')->fields($usinfo)->execute();
+		
+		$projectinfo = array( 'uid' => $id['0'],
+            'fname' => trim($line[0])." ".trim($line[1]),
+			'dob' => date('Y-m-d',strtotime(trim($line[8]))),
+			'doj' => date('Y-m-d',strtotime(trim($line[9]))),
+			'dor' => date('Y-m-d',strtotime(trim($line[10]))),
+			'mobile' => trim($line[4]),
+			'email' => trim($line[5]),
+			'pass' => $uname,
+			'hrms_id' => trim($line[17])
+      	);
+		$rs = db_insert('a_user_details')->fields($projectinfo)->execute();
+		
+		
+		$userDetailsService = array( 'uid' => $id['0'],
+            'directorate_code' => $line[6],
+			'district_code' => trim($line[7]),
+			'designation' => trim($line[2]),
+			'pay_scale' => trim($line[3]),
+			'emp_group' => trim($line[13]),
+			'direct_promotee' => trim($line[14]),
+			'promotion_date_empgroupa' => date('Y-m-d',strtotime(trim($line[15]))),
+			'asset_received_manner' => trim($line[16]),
+			'subdivision' => trim($line[18]),
+			'office_id' => trim($line[19]),
+			'joining_date' => date('Y-m-d',strtotime(trim($line[9])))
+      	);
+		$rsu = db_insert('a_user_details_service')->fields($userDetailsService)->execute();
+		
+		
+		$assetMst = array( 'uid' => $id['0'],
+			'declaration_yr' => trim($line[11]),
+            'directorate_code' => trim($line[6]),
+			'district_code' => trim($line[7]),
+			'designation' => trim($line[2]),
+			'created_date' => date('Y-m-d h:i:s'),
+			'status'=> trim($line[12]),
+      	);
+		$rsmst = db_insert('a_asset_mst')->fields($assetMst)->execute();
+		
+		
+		
+		send_sms(trim($line[4]),'Please submit your Asset Declaration for the year 2020, within 30th April, 2020 . Please ignore if already submitted.   Labour Department');
+		send_sms(trim($line[4]),'Please use your HRMS ID to login, update profile and track status of your asset declaration statement from the provided link https://wblabour.gov.in/assetlogin');
+	  }
+  
+    //-------------------------------------------------------------------------------------------|
+    //  End converting the line to a drupal object
+    //-------------------------------------------------------------------------------------------|
+    
+    //-------------------------------------------------------------------------------------------|
+    //  You can capture and report on failed lines by doing something like this
+    //-------------------------------------------------------------------------------------------|
+      if ( $line[1] == 'ROW' && $line[2] == 'FAILS' ) {
+        $context['results']['failed_rows'][] = $line ;
+      }
+    //-------------------------------------------------------------------------------------------|
+    //  End capturing and reporting on failed lines
+    //-------------------------------------------------------------------------------------------|
+  }
+
+//-------------------------------------------------------------------------------------------|
+//  End converting an individual line of the CSV into something new
+//-------------------------------------------------------------------------------------------|
+
+
+
+
+
+
+
+

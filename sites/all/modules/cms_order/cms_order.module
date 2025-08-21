@@ -1,0 +1,536 @@
+<?php
+function cms_order_permission() {
+  return array(
+    'cmsorder_per' => array(
+      'title' => t('cms order add/edit permission'),
+    )
+	
+  );
+}
+
+function cms_order_menu(){ 
+ 
+  $items['cmsentry/cmsorder'] = array(
+	'title' => 'CMS Order List',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('cms_order_list'),
+	'access arguments' => array('cmsorder_per')
+  );	 
+  $items['cmsentry/cmsorder/addcmsorder'] = array(
+	'title' => 'CMS Order Entry',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('add_order'),
+	'access arguments' => array('cmsorder_per')
+  );
+  $items['cmsentry/cmsorder/%/cmsorderedit'] = array(
+	'title' => 'CMS Order Edit',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('edit_order',2),
+	'access arguments' => array('cmsorder_per'),
+  );
+  return $items;
+}
+
+
+function cms_order_list($form, &$form_state){
+	
+	$form['add_order'] = array(
+	  '#type' => 'markup',
+	  '#markup' => l('Add Order','cmsentry/cmsorder/addcmsorder')
+    );	
+	
+	$form['order_list_details'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_order_list()
+    );	
+	return $form;
+}
+
+
+function get_order_list(){
+	 global $base_root, $base_path;
+	 $sort = 'DESC';
+	 $order = 'cms_order_id';
+     $order_query = db_select('cms_order', 't');
+     $order_query->fields('t', array('cms_order_id','order_date','order_no','order_issue_auth','order_file','order_file_timestamp','is_active','order_desc'));
+	 //$order_query = $order_query->extend('TableSort')->extend('PagerDefault')->limit(20);
+	 $order_query->orderBy($order, $sort);
+	 $order_query_result = $order_query->execute();
+	 $order_query_result_data = $order_query_result->fetchAll();
+	 
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+  
+     $header = array(
+          array('data'=> 'SL.NO'),
+		  array('data'=> 'ORDER DATE'),
+		  array('data'=> 'ORDER NO'),
+          array('data' => 'ORDER DESCRIPTION'),
+		  array('data' => 'VIEW/EDIT'),
+      );
+	 $i=0;
+	
+	 	 foreach($order_query_result_data as $data){
+				$i++;
+				$aa=$base_root.$base_path.'cmsentry/cmsorder/'.$data->cms_order_id.'/cmsorderedit';
+				//$aa ="#";
+				$link_s=l(t('View/Edit'), $aa) ;
+				$rows[] = array(
+		      				$i,
+							date('d-m-Y', strtotime($data->order_date)),
+							$data->order_no,
+		      				$data->order_desc,
+							$link_s
+			  	);   
+	     }
+
+
+	
+	 $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered', 'not-odd-even')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+}
+
+
+function add_order($form, &$form_state){
+   global $base_root, $base_path;
+	 
+   $form['add_order_date'] = array(
+	 '#title'=>' Order Date :',
+	 '#type' => 'date',
+     '#default_value' => array(
+         'month' => format_date(time(), 'custom', 'n'),
+         'day' => format_date(time(), 'custom', 'j'),
+         'year' => format_date(time(), 'custom', 'Y'),
+       ),
+     '#attributes' => array('max' => date('Y-m-d')),
+	 '#required' => TRUE,
+	 );
+
+	 $form['add_order_no'] = array(
+	 '#title'=>' Order No :',
+	 '#type' => 'textfield',
+     '#attributes' => array('class'=>array(''), 'placeholder'=>'Order No', 'autocomplete' => 'off'),
+	 '#required' => TRUE,
+	 );
+
+	 $form['add_issue_auth'] = array(
+	 '#title'=>' Issuing Authority :',
+	 '#type' => 'textfield',
+     '#attributes' => array('class'=>array(''), 'placeholder'=>'Issuing Authority', 'autocomplete' => 'off'),
+	 '#required' => TRUE,
+	 );     
+		 
+	$form['add_order_desc'] = array(
+	   '#title'=>'Circular Description :',
+	   '#cols' => 20, 
+       '#rows' => 4,
+	   '#type' => 'textarea',
+	   '#element_validate' => array('circular_textfield_validate'),
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Order Description', 'autocomplete' => 'off'),
+	   '#required' => TRUE,
+	);
+		 
+    $form['add_order_pdf'] = array(
+	   '#title' => t(' Upload An Order Scanned file (PDF only)'),
+	   '#type' => 'managed_file',
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf'), 'file_validate_size' => array(50*1024*1024)),
+	   '#upload_location' => 'public://upload/cmsorder/',
+	   '#process' => array('import_my_file_element_process'),
+	   '#required' => TRUE,
+	);
+     $sort = 'ASC';
+	 $order = 'cms_dir_id';
+	 $query = db_select('cms_dir', 'c');
+     $query->fields('c', array('cms_dir_id','dir_code','is_active'));
+     $query->condition('c.is_active',1,'=');
+     $query->orderBy($order, $sort);
+	 $query_result = $query->execute();
+	 $query_result_data = $query_result->fetchAll();
+
+	 foreach ($query_result_data as $result) {
+		  $dir_code = $result->dir_code;
+		  $resultarray[$result->cms_dir_id] = $dir_code; 
+
+      }
+
+	$form['directorate'] = array(
+	 '#type' => 'checkboxes',
+	 '#title' => t('Choose Directorate (A sms will be sent to selected directorates)'),
+	 '#options' => $resultarray,
+	 //'#attributes' => array('class'=>array('form-control')),
+	  
+    );
+	
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Save',
+		'#prefix' => '<div align="center">',  
+        '#suffix' => '</div>',
+     ); 
+	  
+	return  $form;
+	 
+ }
+
+ function add_order_validate($form, &$form_state){
+         
+         $order_no = trim($form_state['values']['add_order_no']);
+
+         $order_date = $form_state['values']['add_order_date']['year'].'-'.$form_state['values']['add_order_date']['month'].'-'.$form_state['values']['add_order_date']['day'];
+
+ 	     if($form_state['values']['add_order_no']){
+
+
+	 	 	 $q = db_select('cms_order', 'c');
+		     $q->fields('c', array('cms_order_id','order_no'));
+		     $q->condition('c.order_no',$order_no,'=');
+		     $q->condition('c.is_active',1,'=');
+		     //$query->orderBy($order, $sort);
+			 $q = $q->execute();
+			 $rs = $q->fetchAssoc();
+
+			 if(!empty($rs)){
+			 	form_set_error('add_order_no',t("This order no is already exists!"));
+
+			 	//return FALSE;
+			 }
+
+ 	     }
+
+ 	     if($order_date){
+
+            $order_date = strtotime($order_date);
+
+            if($order_date > time()){
+              
+              form_set_error('add_order_date',t("Invalid date!"));
+
+            }
+ 	     }
+
+ }
+
+ function add_order_submit($form, &$form_state){ 
+	$arr = array();
+	$orderPdf = "";
+	$isError = 0;
+	
+	$order_desc=check_plain($form_state['values']['add_order_desc']);
+	$order_no=check_plain($form_state['values']['add_order_no']);
+	$issue_auth=check_plain($form_state['values']['add_issue_auth']);
+	$order_date=$form_state['values']['add_order_date']['year'].'-'.$form_state['values']['add_order_date']['month'].'-'.$form_state['values']['add_order_date']['day'];
+
+	$dirIds = array_filter($form_state['values']['directorate']);
+
+	//print_r($dirIds);
+
+	//exit();
+
+     // if(check_dupli_orderNo($order_no)){
+
+     // 	$isError = 1;
+
+     // 	//drupal_set_message('This order no is already exists!','error');
+     // 	form_set_error('add_order_no',t("This order no is already exists!"));
+
+     // }
+
+
+     if($isError==0){
+
+
+     	 $order_doc = file_load($form_state['values']['add_order_pdf']);
+		if(!empty($order_doc)){
+			$arr = explode("/", $order_doc->uri);
+			$order_doc->status = FILE_STATUS_PERMANENT;
+			file_save($order_doc);
+			$orderPdf = $arr[4];
+		 }
+		
+		$orderInfo = array('order_date'=>$order_date,
+							'order_no'=>$order_no,
+							'order_issue_auth' => $issue_auth,
+	                        'order_file' => $orderPdf,
+	                        'is_active' => 1,
+	                        'insert_time' => time(),
+	                        'order_desc' => $order_desc
+						);
+							
+		$last_order_id = db_insert('cms_order')->fields($orderInfo)->execute();
+
+		//$last_order_id = db_last_insert_id('cms_order','cms_order_id');
+
+		if(count($dirIds)>0){
+
+			foreach($dirIds as $val){
+
+                 $directorate_id = $val;
+
+                 //echo $directorate_id.'<br>';
+
+                 
+
+                 $query = db_select('cms_dir', 'c');
+			     $query->fields('c', array('cms_dir_id','dir_name','dir_code','dir_phone','dir_email','is_active'));
+			     $query->condition('c.cms_dir_id',$directorate_id,'=');
+			     $query->condition('c.is_active',1,'=');
+				 $query_result = $query->execute();
+				 $query_result_data = $query_result->fetchAssoc();
+
+				 $dir_phone = $query_result_data['dir_phone'];
+
+				 if($dir_phone){
+                    
+                   send_order_sms($dir_phone,'Please submit your Asset Declaration for the year '.date('Y').', within 30th April,'.date('Y').'. Please ignore if already submitted. Nodal Officer Labour Department, WB','1107161492322066090');
+
+                   $orderDetails = array('cms_order_id'=> $last_order_id,
+							'directorate_id'=> $directorate_id,
+							'directorate_code' => $query_result_data['dir_code'],
+	                        'is_sms_sent' => 1,
+	                        'insert_time' => time()
+						);
+
+                   $res2 = db_insert('cms_order_sent')->fields($orderDetails)->execute();
+
+				 }
+			}
+		}
+
+		//exit();
+		drupal_set_message('Information for this Order has been intimated through SMS to conerned stakeholders.');
+
+		drupal_goto('cmsentry/cmsorder');
+
+     }
+	
+    
+}
+
+function edit_order($form, &$form_state){
+   global $base_root, $base_path;
+
+   $editId = arg(2);
+
+
+   $order_query = db_select('cms_order', 't');
+   $order_query->fields('t', array('cms_order_id','order_date','order_no','order_issue_auth','order_file','order_file_timestamp','is_active','order_desc'));
+   $order_query->condition('t.cms_order_id',trim($editId),'=');
+   $order_query->condition('t.is_active',1,'=');
+   $order_query = $order_query->execute();
+   $result = $order_query->fetchAssoc();
+
+   //echo $result['order_date'];
+
+   $date = explode("-", $result['order_date']);
+
+   //print_r($date);
+
+   //exit();
+
+     //$sort = 'ASC';
+	 //$order = 'cms_order_sent_id';
+	 $query = db_select('cms_order_sent', 'c');
+     $query->fields('c', array('cms_order_sent_id','directorate_code'));
+     $query->condition('c.cms_order_id',trim($editId),'=');
+     $query->condition('c.is_sms_sent',1,'=');
+     //$query->orderBy($order, $sort);
+	 $query_result = $query->execute();
+	 $query_result_data = $query_result->fetchAll();
+
+	 foreach ($query_result_data as $result2) {
+		  $dir_code = $result2->directorate_code;
+		  $resultarray[$result2->cms_order_sent_id] = $dir_code; 
+
+      }
+	 
+   $form['edit_order_date'] = array(
+	 '#title'=>' Order Date :',
+	 '#type' => 'date',
+     '#default_value' => array(
+         'month' => format_date(time(), 'custom', $date['1']),
+         'day' => format_date(time(), 'custom', $date['2']),
+         'year' => format_date(time(), 'custom', $date['0']),
+       ),
+	 '#required' => TRUE,
+	 );
+
+	 $form['edit_order_no'] = array(
+	 '#title'=>' Order No :',
+	 '#type' => 'textfield',
+	 '#default_value' =>trim($result['order_no']),
+     '#attributes' => array('class'=>array(''), 'placeholder'=>'Order No', 'autocomplete' => 'off'),
+	 '#required' => TRUE,
+	 );
+
+	 $form['edit_issue_auth'] = array(
+	 '#title'=>' Issuing Authority :',
+	 '#type' => 'textfield',
+	 '#default_value' =>trim($result['order_issue_auth']),
+     '#attributes' => array('class'=>array(''), 'placeholder'=>'Issuing Authority', 'autocomplete' => 'off'),
+	 '#required' => TRUE,
+	 );     
+		 
+	$form['edit_order_desc'] = array(
+	   '#title'=>'Circular Description :',
+	   '#cols' => 20, 
+       '#rows' => 4,
+	   '#type' => 'textarea',
+	   '#element_validate' => array('circular_textfield_validate'),
+	   '#default_value' =>trim($result['order_desc']),
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Order Description', 'autocomplete' => 'off'),
+	   '#required' => TRUE,
+	);
+
+	$uri = 'public://upload/cmsorder/'.trim($result['order_file']);
+
+	if (file_exists($uri)) {
+		$form['order_file_up'] = array(
+        '#markup' => l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'),
+			     ''.$GLOBALS['base_url'].'/sites/default/files/upload/cmsorder/'.$result['order_file'], array('html' => TRUE,
+				 'attributes'=>array('target'=>'_blank' , 'class'=>array('pdfloc1')))),
+        );
+		$form['scan_file'] = array(
+        '#type' => 'hidden',
+		'#default_value' => trim($result['order_file']),
+        );
+	}
+		 
+    $form['edit_order_pdf'] = array(
+	   '#title' => t(' Upload An Order Scanned file (PDF only)'),
+	   '#type' => 'managed_file',
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf'), 'file_validate_size' => array(50*1024*1024)),
+	   '#upload_location' => 'public://upload/cmsorder/',
+	   '#process' => array('import_my_file_element_process'),
+	   //'#required' => TRUE,
+	);
+
+	$form['directorate'] = array(
+	 '#type' => 'checkboxes',
+	 '#title' => t('(Showing total selected directorate list)'),
+	 '#options' => $resultarray,
+	 '#attributes' => array('checked' => 'checked','disabled' => 'disabled'),
+	  
+    );
+
+	$form['cms_order_id'] = array(
+		'#title' => t('Order Id'),
+		'#type' => 'hidden',
+		'#default_value' => isset($editId) ? $editId : NULL,
+	);
+     
+	
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Save',
+		'#prefix' => '<div align="center">',  
+        '#suffix' => '</div>',
+     ); 
+	  
+	return  $form;
+	 
+ }
+
+  function edit_order_submit($form, &$form_state){ 
+	$arr = array();
+	$orderPdf = "";
+	$isError = 0;
+	
+	$order_desc=check_plain($form_state['values']['edit_order_desc']);
+	$order_no=check_plain($form_state['values']['edit_order_no']);
+	$issue_auth=check_plain($form_state['values']['edit_issue_auth']);
+	$order_date=$form_state['values']['edit_order_date']['year'].'-'.$form_state['values']['edit_order_date']['month'].'-'.$form_state['values']['edit_order_date']['day'];
+	$editId = $form_state['values']['cms_order_id'];
+
+	//$dirIds = array_filter($form_state['values']['directorate']);
+
+	//print_r($dirIds);
+
+	//exit();
+
+
+	
+      
+	      $order_doc = file_load($form_state['values']['edit_order_pdf']);
+		if(!empty($order_doc)){
+			$arr = explode("/", $order_doc->uri);
+			$order_doc->status = FILE_STATUS_PERMANENT;
+			file_save($order_doc);
+			$orderPdf = $arr[4];
+		 }
+		 else{
+			$file_name=$form_state['values']['scan_file'];
+			$orderPdf = $file_name;
+	     }
+		
+		
+
+		$query = db_update('cms_order');
+	    $query->fields(array('order_date' =>	$order_date,
+						 'order_no' =>	$order_no,
+						 'order_issue_auth' => $issue_auth,
+						 'order_file' => $orderPdf,
+ 						 'update_time' => time(),
+	                     'order_desc' => $order_desc));
+	    $query->condition('cms_order_id',$editId,'=');
+        $query->condition('is_active',1,'=');
+        $rs = $query->execute();
+							
+		if($rs){
+			drupal_set_message("Your data has been updated successfully");
+			drupal_goto('cmsentry/cmsorder');
+	    }
+
+}
+
+
+function send_order_sms($dest='', $msg='', $template_id=''){
+$uid    =    'wblbr.sms';
+$pass    =    'K!dUS4I%252h';
+/*$uid   = 'wblbr.otp';
+$pass  ='K!ydd64%252h';*/
+$send    =    'WBLABR';
+$url    =    "https://smsgw.sms.gov.in/failsafe/HttpLink?";
+$data     =  "username=$uid&pin=$pass&message=$msg&mnumber=$dest&signature=$send&dlt_entity_id=1101757270000028157&dlt_template_id=$template_id";
+//echo "https://smsgw.sms.gov.in/failsafe/HttpLink?username=$uid&pin=$pass&message=$msg&mnumber=$dest&signature=$send";
+$ch     =     curl_init();
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_HEADER, 0);
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER,false);
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,1);
+curl_setopt($ch, CURLOPT_CAINFO,'/etc/pki/tls/certs/ca-bundle.crt');
+$test=curl_exec($ch);
+
+
+/*if(curl_error($ch))
+	echo 'Curl error: ' . curl_error($ch);
+if (curl_errno($ch)) 
+	echo 'Curl error: ' . curl_error($ch);
+else
+	echo 'sms sent';*/
+curl_close($ch);
+return $test;
+}
+
+
+
+
+
+
+
+

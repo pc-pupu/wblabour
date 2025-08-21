@@ -1,0 +1,121 @@
+
+
+
+/**********************this is the css for the welcome page 19-07-2017**********************/
+.newcsfcss1{
+	 font-size:20px;
+}
+.newcsfcss2{ 
+font-size:22px; 
+color:#5ba337;
+}
+.timeline {
+    position: relative;
+    /*padding: 21px 0px 10px;
+    margin-top: 4px;
+    margin-bottom: 30px;*/
+	width:100%;
+	text-align: center;
+}
+
+.timeline .line {
+    position: absolute;
+    width: 4px;
+    display: block;
+    background: currentColor;
+    top: 0px;
+    bottom: 0px;
+    margin-left: 30px;
+}
+
+.timeline .separator {
+    border-top: 1px solid currentColor;
+    padding: 5px;
+    padding-left: 40px;
+    font-style: italic;
+    font-size: .9em;
+    margin-left: 30px;
+}
+
+.timeline .line::before { top: -4px; }
+.timeline .line::after { bottom: -4px; }
+.timeline .line::before,
+.timeline .line::after {
+    content: '';
+    position: absolute;
+    left: -4px;
+    width: 12px;
+    height: 12px;
+    display: block;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.timeline .panel {
+    position: relative;
+    margin: 0 auto;
+    clear: both;
+}
+
+.timeline .panel::before {
+    position: absolute;
+    display: block;
+    top: 8px;
+    left: -24px;
+    content: '';
+    width: 0px;
+    height: 0px;
+    border: inherit;
+    border-width: 12px;
+    border-top-color: transparent;
+    border-bottom-color: transparent;
+    border-left-color: transparent;
+}
+
+.timeline .panel .panel-heading.icon * { font-size: 20px; vertical-align: middle; line-height: 40px; }
+.timeline .panel .panel-heading.icon {
+    position: absolute;
+    left: -59px;
+    display: block;
+    width: 40px;
+    height: 40px;
+    padding: 0px;
+    border-radius: 50%;
+    text-align: center;
+    float: left;
+}
+
+.timeline .panel-outline {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+}
+
+.timeline .panel-outline .panel-body {
+    padding: 10px 0px;
+}
+
+.timeline .panel-outline .panel-heading:not(.icon),
+.timeline .panel-outline .panel-footer {
+    display: none;
+}
+/**********************this is the css for the welcome page ends 19-07-2017**********************/
+/*udyog-popup*/
+.udyog-popup .modal-dialog {width: 400px;}
+.udyog-popup .icon{ width:100%;}
+.udyog-popup .icon img {width: 100%;margin: 0;}
+.udyog-popup p{font-size: 20px;text-align: center;margin: 30px 10px;}
+.udyog-popup .modal-content{text-align: center;}
+.udyog-popup .modal-content {padding-bottom: 30px;}
+.udyog-popup button.close{margin: 10px; background: #000000;border-radius: 50%;width: 30px;height: 30px;opacity: 1;color: #fff;text-shadow: none;position: absolute;right: 0;z-index: 1;}
+.udyog-popup a{color: #fff;padding: 5px 25px !important;font-size: 16px;}
+.udyog-popup .modal-body {padding: 0;}
+
+
+
+
+.timeline .panel {position: relative;}
+.timeline .panel a{position: absolute;right: 115px;bottom: 50px;}
+.timeline .panel a .btn-lg {padding: 8px 8px !important;font-size: 14px;border-radius: 0;font-weight: 600;}
+.page-service-flow .section5{ margin:0; }
+.page-service-flow .whitebg2 {padding: 20px 0 0;margin: 0;}

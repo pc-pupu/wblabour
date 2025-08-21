@@ -1,0 +1,422 @@
+<?php
+
+/*function otp_login_init(){
+	ctools_include('modal');
+    ctools_modal_add_js();	
+}*/
+
+function otp_login_permission() {
+  return array(
+    'otp_login_per' => array(
+      'title' => t('OTP Login Permission'),
+    )
+	
+  );
+}
+
+function otp_login_menu() {
+	$items=array();
+	
+	/*$items['otpmymodal/%ctools_js'] = array(
+    	'page callback' => 'mymodal_login_callback',
+    	'page arguments' => array(1),
+		'access arguments' => TRUE,
+    	'access callback' => TRUE,
+    	'type' => MENU_CALLBACK,
+    );*/
+	
+	$items['enlogin'] = array(
+		'title'=>'OTP Login',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('otp_login_form'),
+		'access arguments' => array('otp_login_per'),
+		'access callback'=>TRUE,
+		'type' 				=> 	MENU_CALLBACK,
+	  );
+	
+	return $items;
+	
+}
+
+
+
+function otp_login_form($form, &$form_state) {
+	
+	global $base_root, $base_path;
+  drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/sky-forms.css');
+  drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/form-design.css');
+  
+  	if(isset($_SESSION['OTP'])){
+		unset($_SESSION['OTP']);
+	}
+	
+	$form['#attributes']['class'][] = 'sky-form custom-form-main';
+	$form['#theme'] = 'otp_login_page';
+	
+	
+	
+	$form['mobile'] = array(
+	   '#title'=>'',
+	   '#maxlength' => 10, 
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Mobile Number', 'autocomplete' => 'off',),
+	   	'#prefix'=>'<div class="col-md-12"><label>Enter your mobile number</label>',
+	   '#suffix' => '</div>',
+	);	
+	
+	$form['showmsg_success'] = array(
+		'#prefix' => '<div id="success_div">',
+		'#suffix' => '</div>',   
+     );
+	 
+	$form['showmsg_error'] = array(
+		'#prefix' => '<div id="error_div">',
+		'#suffix' => '</div>',   
+     ); 
+	 
+	  $form['endtimer'] = array(
+			'#prefix' => '<div id="divEndTimer">',
+			'#suffix' => '</div>',   
+		 ); 
+	 
+	  $form['showtimer'] = array(
+			'#prefix' => '<div id="divCounter">',
+			'#suffix' => '</div>',   
+		 ); 
+	
+	$form['otp'] = array(
+	   '#title'=>'',
+	   '#maxlength' => 6, 
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Enter 6 Digit OTP', 'autocomplete' => 'off'),
+	   '#prefix' => '<div class="col-md-12"><label>Enter One Time Password(OTP)</label>',
+	   '#suffix' => '</div>',
+	);
+	
+	
+ $form['sent_otp'] = array (
+        '#type' => 'submit',
+        '#value' => 'Generate OTP',
+		'#id'=>'genotp',
+		'#attributes' => array('class'=>array('send-otp')),
+		'#ajax' => array(
+			'callback' => '_handle_form_submit',
+			'effect' => 'fade',
+		),
+		'#prefix' => '',
+  		'#suffix' => '',
+     ); 
+	 
+ $form['submit_send'] = array (
+        '#type' => 'submit',
+        '#value' => 'login',
+		'#attributes' => array('class'=>array('login')),
+		/*'#ajax' => array(
+			'callback' => '_handle_otp_final_submit',
+			'effect' => 'fade',
+		),*/
+		'#prefix' => '',
+  		'#suffix' => '',
+     ); 	 
+	
+    return $form;
+}
+
+function otp_login_theme($existing, $type, $theme, $path){
+  
+  
+  $items = array();	
+  $items['otp_login_page'] = array(
+	  'render element' => 'form',
+	  //'path' => drupal_get_path('module', 'custom_donate') . '/templates',
+	  'template' => 'otp_login_part',
+	  /*'preprocess functions' => array(
+	  'demo2_preprocess_demo2_form'
+	  ),*/
+  );
+  
+  return $items;
+  
+}
+
+function otp_login_form_validate($form, &$form_state) {
+  if (!$form_state['values']['mobile']) {
+    form_set_error('mobile', 'You must enter mobile number before continuing');    
+  }
+}
+
+function otp_login_form_submit($form, &$form_state) {
+	$form_state['rebuild'] = true;
+	$form_state['flag'] = 1;
+	
+	if($form_state['values']['op']=='login'){
+	
+		if ($_SESSION['timeout'] + 5 * 60 < time()) {
+		 unset($_SESSION['OTP']);
+		} else {
+		 	
+			$query = db_select('ld_users_details', 'us');
+			$query->leftJoin('users', 'u', 'u.uid=us.uid');
+			$query ->fields('us', array( 'fname','mname','lname','gender','dob','mobile','email','pincode','state','district','subdivision','areatype','block','panchayat','policestation','postoffice','address','ldapplicationflag'));
+			$query ->fields('u', array( 'uid','name','pass'));
+			$query->condition('us.mobile',trim($form_state['values']['mobile']),'=');
+			$result = $query->execute();
+			$data = $result->fetchObject();
+			
+			$uid = $data->uid;
+			$username = $data->name;
+		 	if($uid)
+			{
+			  if(isset($_SESSION['OTP']) && $_SESSION['OTP']== trim($form_state['values']['otp'])){	
+				  $user_obj = user_load_by_name($username);
+				  $access_granted = in_array('investor', $user_obj->roles);
+				  if ($access_granted){
+					  $form_state = array();
+					  $form_state['uid'] = $user_obj->uid;      
+					  user_login_submit(array(), $form_state);
+					  unset($_SESSION['OTP']);
+					  drupal_goto('dashboard');
+					  return true;
+				  }else{
+					 unset($_SESSION['OTP']); 
+					 form_set_error('', t('Only investor can login!!'));
+					 return FALSE; 
+				  }
+			  }else{
+				  	unset($_SESSION['OTP']);
+					drupal_set_message('Invalid OTP! Please re-generate OTP and Enter Correct OTP', $type='warning');
+					drupal_goto('enlogin');
+				   	//form_set_error('', t('Invalid OTP! Please Enter OTP'));
+					//return FALSE; 
+			   }
+			}
+			else
+			{
+				unset($_SESSION['OTP']);
+				drupal_set_message('You are not authenticated user', $type='warning');
+				drupal_goto('enlogin');
+				//form_set_error('', t('You are not authenticated user'));
+				//return false;
+			}
+		 
+		}
+		exit;
+	}
+}
+
+
+
+function _handle_form_submit($form, &$form_state) {
+	
+	global $base_root, $base_path, $user;
+	
+	$rand_num = rand(100000,999999);
+	$otp_msg = 'Use '.$rand_num.' as your login OTP (One Time Password), it is valid for 5 minute. OTP is confidential, we never call to verify your OTP.';
+	
+	$res = send_otp_for_login($form_state['values']['mobile'],$otp_msg);
+	$_SESSION['OTP'] = $rand_num;
+	$_SESSION['timeout'] = time();
+	
+	$commands = array();
+	
+	$number =  $form_state['values']['mobile'];
+	$masked =  str_pad(substr($number, -4), strlen($number), '*', STR_PAD_LEFT);
+	//print $masked;
+   // exit;
+	
+	$form=array();
+	if($res == 'success'){
+		//$output='OTP has been sent to you on your mobile number: '.$form_state['values']['mobile'];
+		
+		$output='OTP has been sent to you on your mobile number: '.$masked;
+		
+		$form['showmsg_success'] = array(
+		  '#prefix' => '<div id="success_div">'.$output,
+		  '#suffix' => '</div>',   
+		);
+		
+		$form['showmsg_error'] = array(
+			'#prefix' => '<div id="error_div">',
+			'#suffix' => '</div>',   
+		 );
+		 
+		  $form['endtimer'] = array(
+			'#prefix' => '<div id="divEndTimer">',
+			'#suffix' => '</div>',   
+		 );  
+		 
+		 $form['showtimer'] = array(
+			'#prefix' => '<div id="divCounter"><script>getTimer()</script>',
+			'#suffix' => '</div>',   
+		 ); 
+		 
+		$commands[] =ajax_command_replace('#divEndTimer',drupal_render($form['endtimer']));
+			 
+		$commands[] =ajax_command_replace('#error_div',drupal_render($form['showmsg_error']));
+			 
+		$commands[] =ajax_command_replace('#success_div',drupal_render($form['showmsg_success']));
+		
+		$commands[] =ajax_command_replace('#divCounter',drupal_render($form['showtimer']));
+		
+	}else if($res == 'failure'){
+		$output='Please enter correct mobile number';	
+		
+		$form['showmsg_error'] = array(
+			'#prefix' => '<div id="error_div">'.$output,
+			'#suffix' => '</div>',   
+		 );
+		 
+		 $form['showmsg_success'] = array(
+		  '#prefix' => '<div id="success_div">',
+		  '#suffix' => '</div>',   
+		); 
+			 
+		$commands[] =ajax_command_replace('#error_div',drupal_render($form['showmsg_error']));
+		$commands[] =ajax_command_replace('#success_div',drupal_render($form['showmsg_success']));
+	}	  
+		
+		return array('#type' => 'ajax','#commands' => $commands);
+	
+	
+}
+
+
+function get_string_between($string, $start, $end){
+    $string = ' ' . $string;
+    $ini = strpos($string, $start);
+    if ($ini == 0) return '';
+    $ini += strlen($start);
+    $len = strpos($string, $end, $ini) - $ini;
+    return substr($string, $ini, $len);
+}
+
+function send_otp_for_login($dest='', $msg=''){
+/*$uid    =    'wblbr.sms';
+$pass    =    'K!dUS4I%252h';*/
+$uid   = 'wblbr.otp';
+$pass  ='K!ydd64%252h';
+$send    =    'WBLABR';
+$url    =    "https://smsgw.sms.gov.in/failsafe/HttpLink?";
+$data     =  "username=$uid&pin=$pass&message=$msg&mnumber=$dest&signature=$send";
+//echo "https://smsgw.sms.gov.in/failsafe/HttpLink?username=$uid&pin=$pass&message=$msg&mnumber=$dest&signature=$send";
+$ch     =     curl_init();
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_HEADER, 0);
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER,false);
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,1);
+curl_setopt($ch, CURLOPT_CAINFO,'/etc/pki/tls/certs/ca-bundle.crt');
+$test=curl_exec($ch);
+$arr = explode("=",get_string_between($test,'~','&'));
+if(trim($arr[1]) == 'API000')
+{
+	return 'success';
+}else{
+	return 'failure';
+}
+
+
+
+
+//$tarr1 = explode('&',$test);
+//print_r($tarr1); exit;
+//$tarr2 = explode('&',$test);
+
+/*
+
+if(curl_error($ch))
+	echo 'Curl error: ' . curl_error($ch);
+if (curl_errno($ch)) 
+	echo 'Curl error: ' . curl_error($ch);
+else
+	echo '';
+curl_close($ch);
+return $test;*/
+}
+
+
+/*function mymodal_login_callback($ajax){
+  if ($ajax) {
+    ctools_include('ajax');
+    ctools_include('modal');
+    $form_state = array(
+      'ajax' => TRUE,
+      'title' => t(''),
+	  //'noteID'=>$ID,
+    );
+    $output = ctools_modal_form_wrapper('mymodal_login_form', $form_state);
+    if (!empty($form_state['ajax_commands'])) {
+      $output = $form_state['ajax_commands'];
+    }
+    print ajax_render($output);
+    drupal_exit();
+  }else {
+    return drupal_get_form('mymodal_login_form');
+  }
+} 
+
+function mymodal_login_form($form, $form_state){
+  $form = array();
+  global $base_root, $base_path;
+  drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/sky-forms.css');
+  drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/form-design.css');
+	
+	$form['#attributes']['class'][] = 'sky-form custom-form-main';
+	//$form['#attributes']['class'][] = 'form-inline'; 
+	#$form['#theme'] = 'otp_login_page';
+	$form['mobile'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'Mobile Number', 'autocomplete' => 'off'),
+	   	'#prefix'=>'<fieldset><div class="row"><section class="col col-4"><label class="input"><i class="icon-prepend icon-envelope-alt"></i>Mobile Number',
+	   '#suffix' => '</label></section>',
+	);	
+	
+	$form['otp'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array(''), 'placeholder'=>'otp', 'autocomplete' => 'off'),
+	   '#prefix' => '<section class="col col-4"><label class="input"><i class="icon-prepend icon-phone"></i>Enter Your OTP',
+	   '#suffix' => '</label></section>',
+	);
+	
+	
+ $form['sent_otp'] = array (
+        '#type' => 'submit',
+        '#value' => 'Send Otp',
+		'#attributes' => array('class'=>array('')),
+		'#ajax' => array(
+			'callback' => '_handle_form_submit',
+			'effect' => 'fade',
+		),
+		'#prefix' => '<footer>',
+  		'#suffix' => '</footer></div></div>',
+     ); 
+	 
+ $form['submit_send'] = array (
+        '#type' => 'submit',
+        '#value' => 'login',
+		'#attributes' => array('class'=>array('')),
+		'#ajax' => array(
+			'callback' => '_handle_otp_final_submit',
+			'effect' => 'fade',
+		),
+		'#prefix' => '<footer>',
+  		'#suffix' => '</footer></div></div>',
+     ); 	 
+	
+    return $form;
+}*/
+
+//function mymodal_login_form_submit(&$form, &$form_state) {
+  // Generate the new link using the submitted text value.
+  //$link = _mymodule_make_link($form_state['values']['new_link_text']);
+
+  // Tell the browser to close the modal.
+  //$form_state['ajax_commands'][] = ctools_modal_command_dismiss();
+
+  // Tell the browser to replace the old link with the new one.
+  //$form_state['ajax_commands'][] = ajax_command_replace('#magical-modal-link', $link);
+//}

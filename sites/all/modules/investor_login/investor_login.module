@@ -1,0 +1,175 @@
+<?php
+
+function investor_login_menu() {
+  $menu_items['investor/login'] = array(
+    'title' => t('Investor Login Page'),
+    'page callback' => 'investor_login_fun',
+    'page arguments' => array(),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  return $menu_items;
+}
+
+function investor_login_fun() {
+  return theme('investor_login_template');
+}
+
+function investor_login_theme() {
+  $path = drupal_get_path('module', 'investor_login');
+  $theme = array(
+    'investor_login_template' => array(
+      'template' => 'investor_login_page',
+      'render element' => 'form',
+      'path' => $path,
+    ),
+  );
+  return $theme;
+}
+
+function template_preprocess_investor_login_template(&$variables) {
+ 
+  $form = drupal_get_form('user_login');
+  
+  #krumo($form);	
+  
+  $form['name']['#attributes'] = array('class' => array('form-control'), 'autocomplete' => 'off', 'placeholder'=>"Username");
+  $form['pass']['#attributes'] = array('class' => array('form-control'), 'autocomplete' => 'off', 'placeholder'=>"Password");
+  $form['captcha']['#attributes'] = array('class' => array('captcha'), 'autocomplete' => 'off');
+  $form['actions']['submit']['#attributes'] = array('class' => array('login-btm'));	
+  
+  
+  $form['hidden_investor_login_form'] = array(
+    '#type' => 'hidden',
+    '#value' => 'investor_login',
+    '#name' => 'hidden_investor_login_form',
+  );
+  #$variables['rendered'] 				= drupal_render($form);
+  
+ 
+  
+  $variables['rendered_name'] 							= drupal_render($form['name']);
+  $variables['rendered_pass'] 							= drupal_render($form['pass']);
+  $variables['rendered_captcha'] 						= drupal_render($form['captcha']);
+  $variables['rendered_form_build_id'] 					= drupal_render($form['form_build_id']);
+  $variables['rendered_form_id'] 						= drupal_render($form['form_id']);
+  $variables['rendered_actions'] 						= drupal_render($form['actions']);
+  $variables['rendered_hidden_investor_login_form'] 	= drupal_render($form['hidden_investor_login_form']);
+  
+  
+  //$form['name']['#title'] = t('abcd');
+  
+  
+}
+
+
+
+function investor_login_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'user_login') {
+    $form['#validate'][] = 'investor_login_external_validate';
+  }
+}
+
+function investor_login_external_validate($form, &$form_state) {
+	
+  if (isset($form_state['input']['hidden_investor_login_form']) && $form_state['input']['hidden_investor_login_form'] == 'investor_login') {
+	 
+	  
+    //$user = user_load($form_state['uid']);
+	$username = trim($form_state['values']['name']);
+	//$password = trim($form_state['values']['pass']);
+	$password = trim(base64_decode(base64_decode(base64_decode($form_state['values']['pass']))));	
+	
+	
+	if(user_authenticate($username, $password))
+    {
+      $user_obj = user_load_by_name($username);
+	  $access_granted = in_array('investor', $user_obj->roles);
+	  if ($access_granted){
+		  $form_state = array();
+		  $form_state['uid'] = $user_obj->uid;      
+		  user_login_submit(array(), $form_state);
+		  drupal_goto('dashboard1');
+		  //return true;
+	  }else{
+		 form_set_error('', t('Only investor can login!!'));
+      	 return FALSE; 
+	  }
+    }
+    else
+    {
+		form_set_error('', t('You are not authenticated user'));
+        return false;
+    }
+	
+	/*$query = db_select('users', 'u');
+	$query ->fields('u', array( 'uid'));
+    $query->condition('u.name',$username,'=');
+	$result = $query->execute();
+	$result = $result->fetchAssoc();
+	$user = user_load($result['uid']);
+	//print_r($user);
+	//exit;
+ 
+    $access_granted = in_array('administrator', $user->roles);
+    if ($access_granted) {
+		//echo "correct"; exit;
+      //return TRUE;
+	  	if($uid = user_authenticate($username, $password))
+		{
+		  user_login_submit(array(), array('uid' => $uid));
+		  return true;
+		}
+		else
+		{
+			return false;
+		}
+    }
+    else {
+      form_set_error('', t('Only site administrator can login.'));
+      return FALSE;
+    }*/
+  }else{
+	$username = trim($form_state['values']['name']);
+	$password = trim(base64_decode(base64_decode(base64_decode($form_state['values']['pass']))));	
+	//echo "username".$username."+"."Password".$password;
+	//exit;
+	if(user_authenticate($username, $password))
+    {
+      $user_obj = user_load_by_name($username);
+      $access_granted = in_array('cmsmanager', $user_obj->roles);
+	  $access_granted1 = in_array('administrator', $user_obj->roles);
+	  $access_granted2 = in_array('assetadmin', $user_obj->roles);
+	  $access_granted3 = in_array('asset', $user_obj->roles);
+	  $access_granted_maptrack = in_array('maptrackuser', $user_obj->roles);
+	  
+	  if ($access_granted || $access_granted1 || $access_granted2 || $access_granted3 || $access_granted_maptrack){
+		  $form_state = array();
+		  $form_state['uid'] = $user_obj->uid;      
+		  user_login_submit(array(), $form_state);
+		  drupal_goto('cmsentry/cmscircular');
+      	  return true;
+	  }else{
+		 form_set_error('', t('Only cmsmanager can login.'));
+      	 return FALSE; 
+	  }
+	  
+    }
+    else
+    {
+		form_set_error('', t('You are not authenticated user'));
+        return false;
+    }  
+  }
+ /* else {
+    $user = user_load($form_state['uid']);
+    $user_access_granted = in_array('cmsmanager', $user->roles);
+    if ($user_access_granted) {
+      form_set_error('', t('Only front user can login.'));
+      return FALSE;
+    }
+    else {
+      return TRUE;
+    }
+  }*/
+}

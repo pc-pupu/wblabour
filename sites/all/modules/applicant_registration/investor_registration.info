@@ -1,0 +1,8 @@
+;$Id$
+name = Investor Registration
+description = Investor Registration
+package = Applicant Registration Module
+version = "7.x"
+core = 7.x
+files[] = investor_registration.module
+;dependencies[] = autoload

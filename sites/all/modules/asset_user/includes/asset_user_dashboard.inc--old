@@ -1,0 +1,83 @@
+<?php
+function asset_user_dashboard($form, &$form_state){
+	global $base_root,$base_path,$user;
+	$status = getUserProfileStatus($user->uid);
+	if($status['one_time_pass_flag'] == '0') {
+			drupal_goto('profileupdate');
+			exit;
+	}else{
+		drupal_add_css(drupal_get_path('module', 'asset_user') . '/def.css');
+		
+		$form = array();
+		$form['#attributes']['class'][] = 'form-vertical';
+		$form['form_begin'] = array(
+			'#type' => 'markup',
+			'#markup' => '<div class="row">',
+			'#prefix' => '<div class="widget-box"><div class="widget-header"><h4 class="widget-title">Submitted Data</h4> <div class="widget-toolbar">
+						 </div></div><div class="widget-main">',
+			//'#suffix' => ''
+		);
+		$form['submission_data'] = array(
+			'#prefix' => '<div class="col-md-12">'.getSubmissionData($user->uid, 1),
+			'#suffix' => '</div>'
+		);
+	 	$form['form_end'] = array(
+			'#type' => 'markup',
+			'#markup' => '</div>',
+			'#suffix' => '</div></div>'
+		);
+		return $form;
+	}
+}
+
+function getSubmissionData($uid, $status){
+	$query = db_select('a_asset_mst', 'assetmst');
+	$query ->fields('assetmst', array('id','uid','declaration_yr','service_type','designation','appointed_as','substantive_pay','special_pay','created_date','status','file_name'));
+	$query->condition('assetmst.status',$status,'=');
+	$query->condition('assetmst.uid', $uid, '='); 
+	$result = $query->execute();
+	$resultData = $result->fetchAll();
+	
+	$output = '';
+	$header = array(
+				array('data'=> 'AY Year'),
+				array('data'=> 'Service'),
+				array('data'=> 'Designation'),
+				array('data'=> 'Now appointed as'),
+				array('data'=> 'Substantive Pay'),
+				array('data'=> 'Special Pay'),
+				array('data'=> 'Submission Date'),
+				array('data'=> 'PDF'),
+			);
+			
+	$rows = array();
+	foreach($resultData as $val){
+	
+	$generatePDF = l('View Generated PDF',$base_root.$base_path.'sites/default/files/upload/asset/'.$val->file_name,array('html' => TRUE,'attributes'=>array('target'=>'_blank','title' => 'View','class'=>array('btn btn-yellow'))));
+	  
+	  $rows [] = array(  
+			  array('data' => t($val->declaration_yr)), 	
+			  array('data' => t($val->service_type)), 
+			  array('data' => t($val->designation)),
+			  array('data' => t($val->appointed_as)),
+			  array('data' => t($val->substantive_pay)), 
+			  array('data' => t($val->special_pay)),
+			  array('data' => trim($val->created_date) != 'N/A' ? t(date('d-m-Y',strtotime($val->created_date))) : 'N/A'),
+			  array('data' => $generatePDF),
+		); 
+	}
+	
+	$output = theme_table(
+		array(
+		  'header' => $header,
+		  'rows' => $rows,
+		  'attributes' => array('id'=>'table_div_replace', 'class' => array('table', 'pretty', 'table-bordered table-hover')),
+		  'sticky' => true,
+		  'caption' => '',
+		  'colgroups' => array(),
+		  'empty' => t("No data found") // The message to be displayed if table is empty
+		)
+	  ).theme('pager');	
+	  
+	return $output;
+}

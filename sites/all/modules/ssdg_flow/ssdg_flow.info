@@ -1,0 +1,9 @@
+;$Id$
+
+name = SSDG Flow
+description = A SSDG flow module.
+package = Drupal 7 Development
+core = 7.x
+files[] = ssdg_flow.module
+
+;dependencies[] = autoload

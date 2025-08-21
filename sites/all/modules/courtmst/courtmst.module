@@ -1,0 +1,286 @@
+<?php
+function courtmst_permission() {
+  return array(
+    'cmscourtmst_per' => array(
+      'title' => t('cms Court add/edit permission'),
+    )/*,
+	'courtmst_per' => array(
+      'title' => t('Court list permission'),
+    )*/
+  );
+}
+
+function courtmst_menu(){ 
+/* $items['courtmst'] = array(
+	'title' => 'Court List',
+	'page callback' => 'courtmst_list',
+	'access arguments' => array('courtmst_per'),
+  );*/
+  $items['cmsentry/cmscourtmst'] = array(
+	'title' => 'CMS Court List',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('cmscourtmst_list'),
+	'access arguments' => array('cmscourtmst_per'),
+  );
+   $items['cmsentry/cmscourtmst/addcmscourtmst'] = array(
+	'title' => 'CMS courtmst Entry',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('add_courtmst'),
+	'access arguments' => array('cmscourtmst_per'),
+  );	 
+  
+  $items['cmsentry/cmscourtmst/%/cmscourtmstedit'] = array(
+	'title' => 'CMS Court Edit',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('edit_courtmst',2),
+	'access arguments' => array('cmscourtmst_per'),
+  );
+   $items['cmsentry/cmscourtmst/%/cmscourtmstdelete'] = array(
+	'title' => 'CMS Court Delete',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('delete_courtmst',2,3),
+	'access arguments' => array('cmscourtmst_per'),
+  );
+  return $items;
+}
+
+/*function courtmst_list(){
+	 global $base_root, $base_path;
+	 $sort = 'DESC';
+     $cms_courtmst_query = db_select('cms_labour_court_mst', 't');
+     $cms_courtmst_query->fields('t', array('id','court_no'));
+	 $cms_courtmst_query = $cms_courtmst_query->extend('TableSort')->extend('PagerDefault')->limit(20);
+	 //$cms_courtmst_query->orderBy($order, $sort);
+	 $cms_courtmst_query_result = $cms_courtmst_query->execute();
+	 $cms_courtmst_query_result_data = $cms_courtmst_query_result->fetchAll();
+	 
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+  
+     $header = array(
+          array('data'=> 'SL.NO'),
+          array('data' => 'COURT NO'),
+      );
+	 $i=0;
+	 foreach($cms_courtmst_query_result_data as $data){
+		$i++;
+		$rows[] = array(
+      				$i,
+      				$data->court_no
+	  	);   
+	 }
+	 
+	 $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+}*/
+function delete_courtmst($form, &$form_state, $id='') {
+	
+	$cms_courtmst_query = db_select('cms_labour_court_mst', 't');
+    $cms_courtmst_query->fields('t', array('court_no'));
+	$cms_courtmst_query->condition('id', trim($id));
+	$result = $cms_courtmst_query->execute()->fetchAssoc();
+	//print_r($cms_courtmst_query_result_data); exit;
+	if(!empty($result)){
+		
+		$query = db_delete('cms_labour_court_mst');
+		$query->condition('id', $id);
+		$rs = $query->execute();
+		
+		db_delete('court_no')->condition('id',trim($id))->execute();
+		
+		drupal_set_message("Your data has been deleted successfully");
+		drupal_goto('cmsentry/cmscourtmst');
+	}
+	
+	
+}
+
+
+function cmscourtmst_list($form, &$form_state){
+	
+	$form['add_courtmst'] = array(
+	  '#type' => 'markup',
+	  '#markup' => l('Add Court','cmsentry/cmscourtmst/addcmscourtmst'),
+    );	
+	
+	$form['courtmst_list_details'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_courtmst_list(),
+    );	
+	return $form;
+}
+function get_courtmst_list(){
+	
+	 global $base_root, $base_path;
+	 //$sort = 'DESC';
+     $cms_courtmst_query = db_select('cms_labour_court_mst', 't');
+     $cms_courtmst_query->fields('t', array('id','court_no'));
+	 $cms_courtmst_query = $cms_courtmst_query->extend('TableSort')->extend('PagerDefault')->limit(20);
+	 //$cms_courtmst_query->orderBy($order, $sort);
+	 $cms_courtmst_query_result = $cms_courtmst_query->execute();
+	 $cms_courtmst_query_result_data = $cms_courtmst_query_result->fetchAll();
+	//echo "aaa"; 
+	 //print_r($cms_courtmst_query_result_data); exit;
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+  
+     $header = array(
+          array('data'=> 'COURT SL.NO'),
+          array('data' => 'COURT NO'),
+		  array('data' => 'COURT VIEW/EDIT'),
+		  array('data' => 'ACTION')
+      );
+	 $i=0;
+	 foreach($cms_courtmst_query_result_data as $data){
+		$i++;
+		$aa=$base_root.$base_path.'cmsentry/cmscourtmst/'.$data->id.'/cmscourtmstedit';
+		$delete=$base_root.$base_path.'cmsentry/cmscourtmst/'.$data->id.'/cmscourtmstdelete';
+		$link_s=l(t('View/Edit'), $aa) ;
+		$link_delete=l(t('Delete'), $delete) ;
+		$rows[] = array(
+      				$i,
+      				$data->court_no,
+					$link_s,
+					$link_delete,
+	  	);   
+	 }
+	 
+	 $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+}
+
+function add_courtmst($form, &$form_state){
+	
+   global $base_root, $base_path;
+	//echo "fdgdfgdf";exit();
+   		
+	$form['add_courtno'] = array(
+	   '#title'=>'Court No. :',
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array('form-control')),
+	   '#element_validate' => array('courtmst_textfield_validate'),
+	   '#required' => TRUE,
+	); 
+   
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Save',
+		'#prefix' => '<div align="center">',  
+        '#suffix' => '</div>',
+     ); 
+	  
+	return  $form;
+	 
+ }
+ 
+function add_courtmst_submit($form, &$form_state){ 
+	$arr = array();
+	
+	$courtmst_no=check_plain($form_state['values']['add_courtno']);
+
+	
+	$courtmstInfo = array('court_no'=>$courtmst_no);
+						
+	$id = db_insert('cms_labour_court_mst')->fields($courtmstInfo)->execute();
+	drupal_set_message('Your Record has been inserted successfully.');
+}
+
+function edit_courtmst($form, &$form_state, $args=''){
+   global $base_root, $base_path;
+   
+   $cms_courtmst_query = db_select('cms_labour_court_mst', 't');
+   $cms_courtmst_query->fields('t', array('id','court_no'));	
+   $cms_courtmst_query->condition('t.id',trim($args),'=');
+   $qry_data = $cms_courtmst_query->execute();
+   $result = $qry_data->fetchAssoc();
+   
+   //echo "aaa"; 
+	 //print_r($cms_courtmst_query); exit;
+		 
+	$form['edit_courtmst_court_no'] = array(
+	   '#title'=>'Court No. :',
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array('form-control')),
+	   '#default_value' =>trim($result['court_no']),
+	   '#element_validate' => array('courtmst_textfield_validate'),
+	   '#required' => TRUE,
+	);
+		 
+	$form['courtmst_id'] = array(
+		'#title' => t('courtmst Id'),
+		'#type' => 'hidden',
+		'#default_value' => isset($args) ? $args : NULL,
+	);	
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Save',
+		'#prefix' => '<div align="center">',  
+        '#suffix' => '</div>',
+     ); 
+	  
+	return  $form;
+	 
+ } 
+ 
+function edit_courtmst_submit($form, &$form_state){ 
+	$arr = array();
+	
+	$courtmst_no=check_plain($form_state['values']['edit_courtmst_court_no']);
+	
+	$courtmstInfo = array('court_no'=>$courtmst_no);
+						
+	$query = db_update('cms_labour_court_mst');
+	$query->fields(array('court_no' =>	$courtmst_no));
+	$query->condition('id', $form_state['values']['courtmst_id']);
+	$rs = $query->execute();
+	if($rs){
+		drupal_set_message("Your data has been updated successfully");
+		drupal_goto('cmsentry/cmscourtmst');
+	}
+	
+} 
+
+ 
+function courtmst_textfield_validate($element, &$form_state) {
+   if(trim($element['#value']))
+   {
+        $val="a".trim($element['#value']);
+		if(stripos($val,"~") >0  || stripos($val,"!") >0 || stripos($val,"@")>0 || stripos($val,"<")>0 || stripos($val,">")>0 || stripos($val,"'")>0 || stripos($val,"$")>0 || stripos($val,"#")>0 || stripos($val,"%")>0 || stripos($val,"^")>0  || stripos($val,"*")>0){
+       form_error($element, t($element['#title'].'  contain illegal character .'));
+	   }
+   }
+}
+
+/* It disables the default upload button that comes with this #managed_file form 
+function import_my_file_element_process($element, &$form_state, $form) {
+  $element = file_managed_file_process($element, $form_state, $form);
+  $element['upload_button']['#access'] = FALSE;
+ 
+  return $element;
+}*/

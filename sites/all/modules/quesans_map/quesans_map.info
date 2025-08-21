@@ -1,0 +1,10 @@
+;$Id$
+
+name = Question and Answer Map
+description = Question and Answer Map module.
+package = Question Wizard Master Entry Module
+version = "7.x"
+core = 7.x
+files[] = quesans_map.module
+
+;dependencies[] = autoload

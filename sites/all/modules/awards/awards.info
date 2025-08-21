@@ -1,0 +1,9 @@
+;$Id$
+
+name = awards
+description = A awards module.
+package = Drupal 7 Development
+core = 7.x
+files[] = awards.module
+
+;dependencies[] = autoload

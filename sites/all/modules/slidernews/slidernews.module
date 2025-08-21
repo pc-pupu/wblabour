@@ -1,0 +1,99 @@
+<?php
+
+/**
+ * Implementation of hook_block_info().
+ */
+function slidernews_block_info() {
+  $blocks['slidernews-block'] = array(
+    'info' => t('Slider News'),
+  );
+  return $blocks;
+}
+ 
+/**
+ * Implementation of hook_block_view().
+ */
+function slidernews_block_view($delta='') {
+  $block = array();
+  switch ($delta) {
+    case 'slidernews-block':
+	  $block['subject'] = ''; 
+      $block['content'] = slidernews_application();
+      break;
+  }
+  return $block;
+}
+
+function slidernews_application(){
+
+	// $cms_circular_query = db_select('cms_circular', 't');
+	// $cms_circular_query->fields('t', array('cid','circulardesc','circulardate','circularfile'));
+	// $cms_circular_query->orderBy('circulardate', 'DESC');
+	// $cms_circular_query = $cms_circular_query->range(0,3);
+	// $cms_circular_query_result = $cms_circular_query->execute();
+	
+	
+	// $cms_notice_query = db_select('cms_notice', 't');
+  //   $cms_notice_query->fields('t', array('nid','noticedesc','noticedate','noticefile','noticeno'));
+	// $cms_notice_query->orderBy('noticedate', 'DESC');
+	// $cms_notice_query = $cms_notice_query->range(0,3);
+	// $cms_notice_query_result = $cms_notice_query->execute();
+	
+	// $cms_news_query = db_select('cms_news', 't');
+  //   $cms_news_query->fields('t', array('newsid','newsdesc','newsdate'));
+	// $cms_news_query->orderBy('newsdate', 'DESC');
+	// $cms_news_query = $cms_news_query->range(0,3);
+	// $cms_news_query_result = $cms_news_query->execute();
+
+	// $shutdown_message = '<p>Portal will be under maintenance w. e. f. 18th July 2025 6 p.m.</p>';
+
+	$shutdown_message = '';
+	if(date('Y-m-d H:i:s') >= '2025-07-11 17:00:00'){
+		// $shutdown_message = '<p><a target="" href="#">Test  <b style="color:red;font-size: 18px">(New)</b></a></p><br>';
+	}
+
+
+	$output ='';
+
+	$output.= '<ul id="ticker">';
+
+	$output.= '<li>
+	     <span style="margin-top: 25px;" class="text-center"> Notification: </span>'.$shutdown_message.' 
+	      <p><a target="_blank" href="sites/default/files/upload/notice/Labr 490.pdf">Schedule of Medical Examination for the recruitment to the post of...</a>&nbsp; <b style="color:red;font-size: 18px">(New)</b></p>
+
+	    <p><a target="_blank" href="sites/default/files/upload/notice/Application Forms and Qualifications for Safety Officer and Welfare Officer.pdf">Application Forms and Qualifications for Safety Officer and Welfare Officer.</a>&nbsp; <b style="color:red;font-size: 18px">(New)</b></p>
+
+	    <p><a target="_blank" href="sites/default/files/upload/notice/List of recommended candidates for the post of GDMO under WB ESI Medical Service under Labour Department, Govt of West Bengal.pdf">List of recommended candidates for the post of GDMO under WB ESI Medical Service under Labour Department, Government of West Bengal.</a>&nbsp; <b style="color:red;font-size: 18px">(New)</b></p>
+
+	</li>';
+
+
+
+
+	// foreach($cms_circular_query_result as $data) {
+	// 	$output.= '<li><span> Circular: </span> <p><a target="_blank" href="sites/default/files/upload/circular/'.$data->circularfile.'">'.truncate_utf8(strip_tags($data->circulardesc), 100, TRUE, TRUE).'</a></p></li>';
+	// }
+	// foreach($cms_notice_query_result as $datat) {
+	// 	$noticeNo = trim($datat->noticeno);
+
+	// 	if($noticeNo=='No Labr 100 Dte I Trib'){
+
+	// 		$output.= '<li><span> Notification: </span> <p><a target="_blank" href="sites/default/files/upload/notice/'.$datat->noticefile.'">'.truncate_utf8(strip_tags($datat->noticedesc), 100, TRUE, TRUE).'</a>&nbsp; <b style="color:red;font-size: 18px">(New)</b></p></li>';
+
+	// 		//break();
+
+	// 	}
+	// 	else{
+	// 		$output.= '<li><span> Notification: </span> <p><a target="_blank" href="sites/default/files/upload/notice/'.$datat->noticefile.'">'.truncate_utf8(strip_tags($datat->noticedesc), 100, TRUE, TRUE).'</a></p></li>';
+
+	// 	}
+		
+	// }
+	/*foreach($cms_news_query_result as $datan) {
+		$output.= '<li><span> News: </span> <p>'.truncate_utf8(strip_tags($datan->newsdesc), 150, TRUE, TRUE).'</p></li>';
+	}*/
+	$output.= '</ul>';
+	
+	return $output;
+        
+}        

@@ -1,0 +1,368 @@
+<?php
+function news_permission() {
+  return array(
+    'cmsnews_per' => array(
+      'title' => t('cms news add/edit permission'),
+    ),
+	'news_per' => array(
+      'title' => t('news list permission'),
+    )
+  );
+}
+
+function news_menu(){ 
+ $items['news'] = array(
+	'title' => 'News List',
+	'page callback' => 'news_list',
+	//'page arguments' => array('news_list'),
+	'access arguments' => array('news_per'),
+  );
+  $items['cmsentry/cmsnews'] = array(
+	'title' => 'CMS News List',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('cmsnews_list'),
+	'access arguments' => array('cmsnews_per'),
+  );	 
+  $items['cmsentry/cmsnews/addcmsnews'] = array(
+	'title' => 'CMS News Entry',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('add_news'),
+	'access arguments' => array('cmsnews_per'),
+  );
+  $items['cmsentry/cmsnews/%/cmsnewsedit'] = array(
+	'title' => 'CMS News Edit',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('edit_news',2),
+	'access arguments' => array('cmsnews_per'),
+  );
+  $items['daily-session'] = array(
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('daily_session'),
+	'access arguments' => array('news_per'),
+	'file' => 'include/daily_session.inc',
+  );
+  return $items;
+}
+
+function news_list(){
+	 global $base_root, $base_path;
+	 $sort = 'DESC';
+	 $order = 'newsdate';
+     $cms_news_query = db_select('cms_news', 't');
+     $cms_news_query->fields('t', array('newsid','newsdesc','newsdate','newsfile'));
+	 $cms_news_query = $cms_news_query->extend('TableSort')->extend('PagerDefault')->limit(20);
+	 $cms_news_query->orderBy($order, $sort);
+	 $cms_news_query_result = $cms_news_query->execute();
+	 $cms_news_query_result_data = $cms_news_query_result->fetchAll();
+	 
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+  
+     $header = array(
+          array('data' => 'News SL.NO'),
+		  array('data' => 'News DATE'),
+          array('data' => 'News DESCRIPTION'),
+		  array('data' => 'FILE'),
+      );
+	 $i=0;
+	 foreach($cms_news_query_result_data as $data){
+		$i++;
+		$aa=$base_root.$base_path.'sites/default/files/upload/news/'.$data->newsfile;
+		$link_s=l(t('Download'), $aa, array('attributes' => array('target'=>'_blank'))) ;
+		$rows[] = array(
+      				$i,
+					date('d-m-Y', strtotime($data->newsdate)),
+      				$data->newsdesc,
+					$link_s
+	  	);   
+	 }
+	 
+      				
+	 
+	 $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+}
+
+function cmsnews_list($form, &$form_state){
+	
+	$form['add_news'] = array(
+	  '#type' => 'markup',
+	  '#markup' => l('Add News','cmsentry/cmsnews/addcmsnews'),
+    );	
+	
+	$form['news_list_details'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_news_list(),
+    );	
+	return $form;
+}
+function get_news_list(){
+	 global $base_root, $base_path;
+	 $sort = 'DESC';
+	 $order = 'newsdate';
+     $cms_news_query = db_select('cms_news', 't');
+     $cms_news_query->fields('t', array('newsid','newsdesc','newsdate'));
+	 $cms_news_query = $cms_news_query->extend('TableSort')->extend('PagerDefault')->limit(20);
+	 $cms_news_query->orderBy($order, $sort);
+	 $cms_news_query_result = $cms_news_query->execute();
+	 $cms_news_query_result_data = $cms_news_query_result->fetchAll();
+	 
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+  
+     $header = array(
+          array('data'=> 'News SL.NO'),
+		  array('data'=> 'News DATE'),
+          array('data' => 'News DESCRIPTION'),
+		  array('data' => 'News VIEW/EDIT'),
+      );
+	 $i=0;
+	 foreach($cms_news_query_result_data as $data){
+		$i++;
+		$aa=$base_root.$base_path.'cmsentry/cmsnews/'.$data->newsid.'/cmsnewsedit';
+		$link_s=l(t('View/Edit'), $aa) ;
+		$rows[] = array(
+      				$i,
+					date('d-m-Y', strtotime($data->newsdate)),
+      				$data->newsdesc,
+					$link_s
+	  	);   
+	 }
+	 
+      				
+	 
+	 $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+}
+
+function add_news($form, &$form_state){
+   global $base_root, $base_path;
+	 
+   $form['add_news_date'] = array(
+	 '#title'=> 'News Date :',
+	 '#type' => 'date',
+     '#default_value' => array(
+         'month' => format_date(time(), 'custom', 'n'),
+         'day' => format_date(time(), 'custom', 'j'),
+         'year' => format_date(time(), 'custom', 'Y'),
+       ),
+	 '#required' => TRUE,
+	 );  
+		 
+	$form['add_news_desc'] = array(
+	   '#title'=>'News Description :',
+	   '#cols' => 20, 
+       '#rows' => 4,
+	   '#type' => 'textarea',
+	   '#element_validate' => array('news_textfield_validate'),
+	   '#required' => TRUE,
+	);
+		 
+    $form['add_news_pdf'] = array(
+	   '#title' => t('Upload a Scanned file of the News (JPG,PDF only)'),
+	   '#type' => 'managed_file',
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+	   '#upload_location' => 'public://upload/news/',
+	   '#process' => array('import_my_file_element_process'),
+	   '#required' => TRUE,
+	);
+	
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Save',
+		'#prefix' => '<div align="center">',  
+        '#suffix' => '</div>',
+     ); 
+	  
+	return  $form;
+	 
+ }
+ 
+function add_news_submit($form, &$form_state){ 
+	$arr = array();
+	$newsPdf = "";
+	
+	$news_desc=check_plain($form_state['values']['add_news_desc']);
+	$news_date=$form_state['values']['add_news_date']['year'].'-'.$form_state['values']['add_news_date']['month'].'-'.$form_state['values']['add_news_date']['day']; 
+
+	$news_doc = file_load($form_state['values']['add_news_pdf']);
+	if(!empty($news_doc)){
+		$arr = explode("/", $news_doc->uri);
+		$news_doc->status = FILE_STATUS_PERMANENT;
+		file_save($news_doc);
+		$newsPdf = $arr[4];
+	 }
+	
+	$newsInfo = array('newsdate'=>$news_date,
+						'newsdesc'=>$news_desc,
+						'newsfile' => $newsPdf);
+						
+	$id = db_insert('cms_news')->fields($newsInfo)->execute();
+	drupal_set_message('Your Record has been inserted successfully.');
+
+}
+
+
+function edit_news($form, &$form_state, $args=''){
+   global $base_root, $base_path;
+   
+   $cms_news_query = db_select('cms_news', 't');
+   $cms_news_query->fields('t', array('newsid','newsdesc','newsdate','newsfile'));	
+   $cms_news_query->condition('t.newsid',trim($args),'=');
+   $qry_data = $cms_news_query->execute();
+   $result = $qry_data->fetchAssoc();
+   
+   if($result['newsdate']!=""){
+	   	$cdate = explode("-", $result['newsdate']);
+		
+		$cdate[1]= ltrim($cdate[1], '0'); 
+		$cdate[2]= ltrim($cdate[2], '0');  
+		$form['edit_news_date'] = array(
+		 '#title'=>' news Date :',
+		 '#type' => 'date',
+		 '#default_value' => array(
+			 'month' => format_date(time(), 'custom', $cdate['1']),
+			 'day' => format_date(time(), 'custom', $cdate['2']),
+			 'year' => format_date(time(), 'custom', $cdate['0']),
+		   ),
+		 '#required' => TRUE,
+		 );   
+   }else{
+	   $form['edit_news_date'] = array(
+		 '#title'=>'News Date :',
+		 '#type' => 'date',
+		 '#default_value' => array(
+			 'month' => format_date(time(), 'custom', 'n'),
+			 'day' => format_date(time(), 'custom', 'j'),
+			 'year' => format_date(time(), 'custom', 'Y'),
+		   ),
+		 '#required' => TRUE,
+		 );  
+   }
+		 
+	$form['edit_news_desc'] = array(
+	   '#title'=>'News Description :',
+	   '#cols' => 20, 
+       '#rows' => 4,
+	   '#type' => 'textarea',
+	   '#default_value' =>trim($result['newsdesc']),
+	   '#element_validate' => array('news_textfield_validate'),
+	   '#required' => TRUE,
+	);
+	
+	$uri = 'public://upload/news/'.trim($result['newsfile']);
+	
+	if (file_exists($uri)) {
+		$form['news_file_up'] = array(
+        '#markup' => l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'),
+			     ''.$GLOBALS['base_url'].'/sites/default/files/upload/news/'.$result['newsfile'], array('html' => TRUE,
+				 'attributes'=>array('target'=>'_blank' , 'class'=>array('pdfloc1')))),
+        );
+		$form['scan_file'] = array(
+        '#type' => 'hidden',
+		'#default_value' => trim($result['newsfile']),
+        );
+	}else{
+		$form['news_file_up'] = array(
+        '#markup' => t('No File Exist'),
+		'#prefix' => '<div class="pdfnone">',
+	    '#suffix' => '</div>'
+        );
+	}
+		 
+    $form['edit_news_pdf'] = array(
+	   '#title' => t('Upload a Scanned file of the News (JPG,PDF only)'),
+	   '#type' => 'managed_file',
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+	   '#upload_location' => 'public://upload/news/',
+	   '#process' => array('import_my_file_element_process'),
+	   //'#required' => TRUE,
+	);
+	$form['news_id'] = array(
+		'#title' => t('News Id'),
+		'#type' => 'hidden',
+		'#default_value' => isset($args) ? $args : NULL,
+	);	
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Save',
+		'#prefix' => '<div align="center">',  
+        '#suffix' => '</div>',
+     ); 
+	  
+	return  $form;
+	 
+ } 
+ 
+function edit_news_submit($form, &$form_state){ 
+	$arr = array();
+	$newsPdf = "";
+	
+	$news_desc=check_plain($form_state['values']['edit_news_desc']);
+	$news_date=$form_state['values']['edit_news_date']['year'].'-'.$form_state['values']['edit_news_date']['month'].'-'.$form_state['values']['edit_news_date']['day']; 
+
+	$news_doc = file_load($form_state['values']['edit_news_pdf']);
+	if(!empty($news_doc)){
+		$arr = explode("/", $news_doc->uri);
+		$news_doc->status = FILE_STATUS_PERMANENT;
+		file_save($news_doc);
+		$newsPdf = $arr[4];
+	 }else{
+		$file_name=$form_state['values']['scan_file'];
+		$newsPdf = $file_name;
+	}
+	
+	$newsInfo = array('newsdate'=>$news_date,
+						'newsdesc'=>$news_desc,
+						'newsfile' => $newsPdf);
+						
+	$query = db_update('cms_news');
+	$query->fields(array('newsdate' =>	$news_date,
+						 'newsdesc' =>	$news_desc,
+ 						 'newsfile' =>	$newsPdf));
+	$query->condition('newsid', $form_state['values']['news_id']);
+	$rs = $query->execute();
+	if($rs){
+		drupal_set_message("Your data has been updated successfully");
+		drupal_goto('cmsentry/cmsnews');
+	}
+
+} 
+
+ 
+function news_textfield_validate($element, &$form_state) {
+   if(trim($element['#value']))
+   {
+        $val="a".trim($element['#value']);
+		if(stripos($val,"~") >0  || stripos($val,"!") >0 || stripos($val,"@")>0 || stripos($val,"<")>0 || stripos($val,">")>0 || stripos($val,"'")>0 || stripos($val,"$")>0 || stripos($val,"#")>0 || stripos($val,"%")>0 || stripos($val,"^")>0  || stripos($val,"*")>0){
+       form_error($element, t($element['#title'].'  contain illegal character .'));
+	   }
+   }
+}
+

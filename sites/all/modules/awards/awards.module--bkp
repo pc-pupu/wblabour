@@ -1,0 +1,599 @@
+<?php
+
+function awards_permission() {
+  return array(
+    'cmsawards_per' => array(
+      'title' => t('Cms awards add/edit permission'),
+    ),
+	'awards_per' => array(
+      'title' => t('Awards list permission'),
+    )
+  );
+}
+
+function awards_menu(){ 
+ $items['awards'] = array(
+	'title' => 'Awards List',
+	'page callback' => 'awards_list',
+	//'page arguments' => array('awards_list'),
+	'access arguments' => array('awards_per'),
+  );
+  $items['cmsentry/cmsawards'] = array(
+	'title' => 'CMS Awards List',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('cmsawards_form'),
+	'access arguments' => array('cmsawards_per'),
+  );	 
+  $items['cmsentry/cmsawards/%/cmsawardsedit'] = array(
+	'title' => 'CMS Awards Edit',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('edit_awards',2),
+	'access arguments' => array('cmsawards_per'),
+  );
+  $items['cmsentry/cmsawards/%/%/cmsawardsdelete'] = array(
+	'title' => 'CMS Awards Delete',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('delete_awards',2,3),
+	'access arguments' => array('cmsawards_per'),
+  );
+  return $items;
+}
+
+
+function delete_awards($form, &$form_state, $arg='',$fid='') {
+	
+	$cms_awards_query = db_select('cms_awards', 't');
+    $cms_awards_query->fields('t', array('awardsfile'));
+	$cms_awards_query->condition('aid', trim($arg));
+	$result = $cms_awards_query->execute()->fetchAssoc();
+	
+	if(!empty($result)){
+		$dest_dir='public://upload/awards/'.trim($result['awardsfile']);  	
+		
+		$query = db_delete('cms_awards');
+		$query->condition('aid', $arg);
+		$rs = $query->execute();
+		
+		db_delete('file_managed')->condition('fid',trim($fid))->execute();
+		file_unmanaged_delete($dest_dir);
+		
+		drupal_set_message("Your data has been deleted successfully");
+		drupal_goto('cmsentry/cmsawards');
+	}
+	
+	
+}
+
+function awards_list(){
+	 global $base_root, $base_path;
+	 $sort = 'DESC';
+	 $order = 'awardsdate';
+     $cms_awards_query = db_select('cms_awards', 't');
+	 $cms_awards_query->leftJoin('cms_labour_court_mst', 'lc', 'lc.id=t.court_id');
+     $cms_awards_query->fields('t', array('aid','caseno','caseyear','awardsdate','awardsparty1','awardsvs','awardsparty2','awardsfile'));
+	 $cms_awards_query->fields('lc', array('court_no'));
+	 $cms_awards_query = $cms_awards_query->extend('TableSort')->extend('PagerDefault')->limit(20);
+	 $cms_awards_query->orderBy($order, $sort);
+	 $cms_awards_query_result = $cms_awards_query->execute();
+	 $cms_awards_query_result_data = $cms_awards_query_result->fetchAll();
+	 
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+  
+     $header = array(
+          array('data'=> 'SL.NO'),
+		  array('data'=> 'CASE NUMBER'),
+		  array('data'=> 'YEAR'),
+          array('data' => 'AWARD DATE'),
+		  array('data' => 'COURT NO'),
+		  array('data' => 'PARTY'),
+		  array('data' => 'Vs'),
+		  array('data' => 'PARTY'),
+		  array('data' => 'FILE'),
+      );
+	 $i=0;
+	 foreach($cms_awards_query_result_data as $data){
+		$i++;
+		//$aa=$base_root.$base_path.'sites/default/files/upload/awards/'.$data->awardsfile;
+		//$link_s=l(t('View'), $aa, array('attributes' => array('target'=>'_blank'))) ;
+		$rows[] = array(
+      				$i,
+      				$data->caseno,
+					$data->caseyear,
+					date('d-m-Y', strtotime($data->awardsdate)),
+					$data->court_no,
+					$data->awardsparty1,
+					$data->awardsvs,
+					$data->awardsparty2,
+					l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png" style="margin:0px">'),
+			     ''.$GLOBALS['base_url'].'/sites/default/files/upload/awards/'.$data->awardsfile, array('html' => TRUE,
+				 'attributes'=>array('target'=>'_blank' , 'class'=>array('')))),
+	  	);   
+	 }
+	 
+	$output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+}
+
+function cmsawards_list($form, &$form_state){
+	
+	$form['add_awards'] = array(
+	  '#type' => 'markup',
+	  '#markup' => l('Add awards','cmsentry/cmsawards/addcmsawards'),
+    );	
+	
+	$form['awards_list_details'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_awards_list(),
+    );	
+	return $form;
+}
+function get_awards_list(){
+	 global $base_root, $base_path;
+	 $sort = 'DESC';
+	 $order = 'awardsdate';
+     $cms_awards_query = db_select('cms_awards', 't');
+	 $cms_awards_query->leftJoin('cms_labour_court_mst', 'lc', 'lc.id=t.court_id');
+     $cms_awards_query->fields('t', array('aid','caseno','caseyear','awardsdate','awardsparty1','awardsvs','awardsparty2','fid','awardsfile'));
+	 $cms_awards_query->fields('lc', array('court_no'));
+	 $cms_awards_query = $cms_awards_query->extend('TableSort')->extend('PagerDefault')->limit(20);
+	 $cms_awards_query->orderBy($order, $sort);
+	 $cms_awards_query_result = $cms_awards_query->execute();
+	 $cms_awards_query_result_data = $cms_awards_query_result->fetchAll();
+	 
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+  
+     $header = array(
+          array('data'=> 'SL.NO'),
+		  array('data'=> 'CASE NO'),
+		  array('data'=> 'YEAR'),
+          array('data' => 'AWARD DATE'),
+		  array('data' => 'COURT NO'),
+		  array('data' => 'PARTY'),
+		  array('data' => 'Vs'),
+		  array('data' => 'PARTY'),
+		  array('data' => 'FILE'),
+		  array('data' => 'ACTION'),
+      );
+	 $i=0;
+	 foreach($cms_awards_query_result_data as $data){
+		$i++;
+		$edit=$base_root.$base_path.'cmsentry/cmsawards/'.$data->aid.'/cmsawardsedit';
+		$delete=$base_root.$base_path.'cmsentry/cmsawards/'.$data->aid.'/'.$data->fid.'/cmsawardsdelete';
+		$link_delete=l(t('Delete'), $delete) ;
+		$link_edit=l(t('Edit'), $edit) ;
+		$rows[] = array(
+      				$i,
+      				$data->caseno,
+					$data->caseyear,
+					date('d-m-Y', strtotime($data->awardsdate)),
+					$data->court_no,
+					$data->awardsparty1,
+					$data->awardsvs,
+					$data->awardsparty2,
+					l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png" style="margin:0px">'),
+			     ''.$GLOBALS['base_url'].'/sites/default/files/upload/awards/'.$data->awardsfile, array('html' => TRUE,
+				 'attributes'=>array('target'=>'_blank' , 'class'=>array('')))),
+					array('data' => $link_edit.' | '.$link_delete ),	
+	  	);   
+	 }
+	 
+	/*$output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');*/
+  
+    $variables = array(
+	  //'attributes' => $attributes,
+	  'header' => $header,
+	  'rows' => $rows,
+	  'attributes' => array('class' => array('table', 'table-bordered')),
+	);
+	$output = theme('datatable', $variables);
+  
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+}
+
+function labourList(){
+   $court_no=array();
+   $court_no[0]="Please Select";
+   $court_no_query = db_select('cms_labour_court_mst', 'lc');
+   $court_no_query->fields('lc', array('id','court_no'));
+   $court_no_result=$court_no_query->execute();
+   foreach($court_no_result as $valobj) {
+		@$court_no[$valobj->id]=trim($valobj->court_no);
+   }
+   return $court_no;	
+}
+
+
+function cmsawards_form($form, &$form_state){
+   
+   drupal_add_css(drupal_get_path('module', 'awards') . '/awards.css');
+   global $base_root, $base_path;
+	
+   $form['caseno'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array('form-control')),
+	   //'#element_validate' => array('awards_textfield_validate'),
+	   //'#required' => TRUE,
+	   '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="caseNumber form_error">Awards Caseno <span style="color:red;">*</span></label>',
+	   '#suffix' =>'</div>',
+	);	
+	
+   $form['caseyear'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#attributes' => array('id' => 'casenoyear', 'autocomplete' => 'off', 'class'=>array('form-control')),
+	   '#prefix'=>'<div class="col-md-6"><label for="areaName">Awards Caseyear <span style="color:red;">*</span></label>',
+	   '#suffix' =>'</div></fieldset>',
+	   
+	);	
+	
+	$form['awardsparty1'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array('form-control')),
+	   '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="areaName">Awards Party1 <span style="color:red;">*</span></label>',
+	   '#suffix' =>'</div>',
+	);
+	$form['awardsparty2'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array('form-control')),
+	   '#prefix'=>'<div class="col-md-6"><label for="areaName">Awards Party2 <span style="color:red;">*</span></label>',
+	   '#suffix' =>'</div></fieldset>',
+	);
+	 
+   $form['awardsdate'] = array(
+	 '#title'=>'',
+	 '#type' => 'textfield',
+	 '#attributes' => array('id' => 'awarddate', 'autocomplete' => 'off', 'class'=>array('form-control')),
+	 '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="authorityName form_error">Awards Date (dd-mm-yyyy) <span style="color:red;">*</span></label>',
+	 '#suffix' =>'</div>',
+	 );  
+	 
+	$form['awardsfile'] = array(
+	   //'#title' => t('Upload an awards Scanned file (JPG,PDF only)'),
+	   '#type' => 'managed_file',
+	   '#upload_validators' => array('file_validate_name' => array(),'file_validate_extensions' => array('pdf'), 'file_validate_size' => array(50*1024*1024)),
+	   '#upload_location' => 'public://upload/awards/',
+	   //'#process' => array('import_my_file_element_process'),
+	   '#attributes' => array('class'=>array('form-control','uploadfilecustom'), 'style'=>array('padding:0px')),
+	   //'#required' => TRUE,
+	   '#field_prefix'=>'<div class="col-md-6"><label for="exampleInputFile">Upload an awards Scanned file (PDF only) <span style="color:red;">*</span></label>',
+	   '#field_suffix' =>'</div></fieldset>',
+	 );
+	 
+	 $form['court_id'] = array(
+		 '#title'=>'',
+		 '#type' => 'select',
+		 '#options' => labourList(),
+		 '#attributes' => array('class'=>array('form-control')),
+		 '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="authorityName form_error">Select Court<span style="color:red;">*</span></label>',
+		 '#suffix' =>'</div></fieldset>',
+	 );  	  
+		 
+	
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Save',
+		'#attributes' => array('class'=>array('btn btn-primary')),
+		'#prefix' => '<div class="col-md-12">',  
+        '#suffix' => '</div>',
+     ); 
+	 
+	$form['awards_list'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_awards_list(),
+	  '#prefix' => '<div class="col-md-12">',  
+      '#suffix' => '</div>',
+    ); 
+	  
+	return  $form;
+	 
+ }
+ 
+
+ 
+function cmsawards_form_validate($form, &$form_state){ 
+  if (!$form_state['values']['caseno']) {
+    form_set_error('caseno', 'You must enter awards case number');    
+  }
+  if (!$form_state['values']['caseyear']) {
+    form_set_error('caseyear', 'You must enter awards case year');    
+  }
+  if (!$form_state['values']['awardsparty1']) {
+    form_set_error('awardsparty1', 'You must enter party1');    
+  }
+  if (!$form_state['values']['awardsparty2']) {
+    form_set_error('awardsparty2', 'You must enter party2');    
+  }
+  if (!$form_state['values']['awardsdate']) {
+    form_set_error('awardsdate', 'You must select awardsdate');    
+  }
+  if (!$form_state['values']['awardsfile']) {
+    form_set_error('awardsfile', 'You must upload scan pdf');    
+  }
+   if (!$form_state['values']['court_id']) {
+    form_set_error('court_id', 'You must select court no');    
+  }
+}
+
+
+ 
+function cmsawards_form_submit($form, &$form_state){ 
+	$data = array();
+	
+	$awards_doc = file_load($form_state['values']['awardsfile']);
+	//print_r($awards_doc);
+	try{ 
+		if(!empty($awards_doc)){
+			//echo "inside"; exit;
+			$arr = explode("/", $awards_doc->uri);
+			$awards_doc->status = FILE_STATUS_PERMANENT;
+			//$file = file_save_data($awards_doc,'',FILE_EXISTS_RENAME);
+			file_save($awards_doc);
+			$awardsPdf = $arr[4];
+			$fid = $awards_doc->fid;
+			
+		 }
+		 
+		$awardsdate = format_date(strtotime($form_state['values']['awardsdate']), 'custom', 'Y-m-d');
+		 
+		 $data = array('caseno'=>$form_state['values']['caseno'],'caseyear'=>$form_state['values']['caseyear'],'awardsdate'=>$awardsdate,'awardsparty1'=>$form_state['values']['awardsparty1'], 'awardsparty2'=>$form_state['values']['awardsparty2'], 'awardsfile'=>$awardsPdf, 'fid'=>$fid, 'court_id'=>$form_state['values']['court_id']);
+		 
+		 //print_r($data); exit;
+		 
+		$id = db_insert('cms_awards')->fields($data)->execute();
+		if($id){
+			drupal_set_message('Your Record has been inserted successfully!!');
+		}
+	}catch(Exception $e1) {      
+									
+		//echo $e1; exit; 
+		drupal_set_message('Your Record is unable to upload. Please try again later');    
+		drupal_goto('cmsentry/cmsawards');
+															 
+	}
+
+}
+
+function edit_awards($form, &$form_state, $args=''){
+   global $base_root, $base_path;
+   
+   $cms_awards_query = db_select('cms_awards', 't');
+   $cms_awards_query->fields('t', array('aid','caseno','caseyear','awardsdate','awardsparty1','awardsvs','awardsparty2','awardsfile','fid','court_id'));
+   $cms_awards_query->condition('t.aid',trim($args),'=');
+   $qry_data = $cms_awards_query->execute();
+   $result = $qry_data->fetchAssoc();
+	
+	$form['awards_id'] = array(
+		'#title' => t('awards Id'),
+		'#type' => 'hidden',
+		'#default_value' => isset($args) ? $args : NULL,
+	);
+	
+   drupal_add_css(drupal_get_path('module', 'awards') . '/awards.css');
+   global $base_root, $base_path;
+	
+   $form['caseno'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array('form-control')),
+	   //'#element_validate' => array('awards_textfield_validate'),
+	   //'#required' => TRUE,
+	   '#default_value' => isset($result['caseno']) ? $result['caseno'] : NULL,
+	   '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="caseNumber form_error">Awards Caseno <span style="color:red;">*</span></label>',
+	   '#suffix' =>'</div>',
+	);	
+	
+   $form['caseyear'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#attributes' => array('id' => 'casenoyear', 'autocomplete' => 'off', 'class'=>array('form-control')),
+	   //'#element_validate' => array('awards_textfield_validate'),
+	   //'#required' => TRUE,
+	   '#default_value' => isset($result['caseyear']) ? $result['caseyear'] : NULL,
+	   '#prefix'=>'<div class="col-md-6"><label for="areaName">Awards Caseyear <span style="color:red;">*</span></label>',
+	   '#suffix' =>'</div></fieldset>',
+	   
+	);	
+	
+	$form['awardsparty1'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array('form-control')),
+	   //'#element_validate' => array('awards_textfield_validate'),
+	   //'#required' => TRUE,
+	   '#default_value' => isset($result['awardsparty1']) ? $result['awardsparty1'] : NULL,
+	   '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="areaName">Awards Party1 <span style="color:red;">*</span></label>',
+	   '#suffix' =>'</div>',
+	);
+	$form['awardsparty2'] = array(
+	   '#title'=>'',
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array('form-control')),
+	   //'#element_validate' => array('awards_textfield_validate'),
+	   //'#required' => TRUE,
+	   '#default_value' => isset($result['awardsparty2']) ? $result['awardsparty2'] : NULL,
+	   '#prefix'=>'<div class="col-md-6"><label for="areaName">Awards Party2 <span style="color:red;">*</span></label>',
+	   '#suffix' =>'</div></fieldset>',
+	);
+	 
+   $form['awardsdate'] = array(
+	 '#title'=>'',
+	 '#type' => 'textfield',
+	 '#attributes' => array('id' => 'awarddate', 'autocomplete' => 'off', 'class'=>array('form-control')),
+	 //'#required' => TRUE,
+	 '#default_value' => isset($result['awardsdate']) ? format_date(strtotime($result['awardsdate']), 'custom', 'd-m-Y') : NULL, 
+	 '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="authorityName form_error">Awards Date (dd-mm-yyyy) <span style="color:red;">*</span></label>',
+	 '#suffix' =>'</div>',
+	 );  
+	 
+    $uri = 'public://upload/awards/'.trim($result['awardsfile']);
+	
+	if (file_exists($uri)) {
+		$form['scan_doc_up'] = array(
+        '#markup' => l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'),
+			     ''.$GLOBALS['base_url'].'/sites/default/files/upload/awards/'.$result['awardsfile'], array('html' => TRUE,
+				 'attributes'=>array('target'=>'_blank' , 'class'=>array('')))),
+        );
+		$form['scan_file'] = array(
+        '#type' => 'hidden',
+		'#default_value' => trim($result['awardsfile']),
+        );
+		$form['file_id'] = array(
+        '#type' => 'hidden',
+		'#default_value' => trim($result['fid']),
+        );
+	}else{
+		$form['scan_doc_up'] = array(
+        '#markup' => t('No File Exist'),
+		'#prefix' => '<div class="pdfnone">',
+	    '#suffix' => '</div>'
+        );
+	}	 
+	 
+	$form['awardsfile'] = array(
+	   //'#title' => t('Upload an awards Scanned file (JPG,PDF only)'),
+	   '#type' => 'managed_file',
+	   '#upload_validators' => array('file_validate_name' => array(),'file_validate_extensions' => array('pdf'), 'file_validate_size' => array(50*1024*1024)),
+	   '#upload_location' => 'public://upload/awards/',
+	   //'#process' => array('import_my_file_element_process'),
+	   '#attributes' => array('class'=>array('form-control','uploadfilecustom'), 'style'=>array('padding:0px')),
+	   //'#required' => TRUE,
+	   '#field_prefix'=>'<div class="col-md-6"><label for="exampleInputFile">Upload an awards Scanned file (PDF only) <span style="color:red;">*</span></label>',
+	   '#field_suffix' =>'</div></fieldset>',
+	 );
+	 
+	 
+    $form['court_id'] = array(
+		 '#title'=>'',
+		 '#type' => 'select',
+		 '#options' => labourList(),
+		 '#default_value' => isset($result['court_id']) ? $result['court_id'] : NULL,
+		 '#attributes' => array('class'=>array('form-control')),
+		 '#prefix'=>'<fieldset class="form-group"><div class="col-md-6"><label for="authorityName form_error">Select Court<span style="color:red;">*</span></label>',
+		 '#suffix' =>'</div></fieldset>',
+	 ); 	 
+		 
+	
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Update',
+		'#attributes' => array('class'=>array('btn btn-primary')),
+		'#prefix' => '<div class="col-md-12">',  
+        '#suffix' => '</div>',
+     ); 
+		
+	$form['awards_list'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_awards_list(),
+	  '#prefix' => '<div class="col-md-12">',  
+      '#suffix' => '</div>',
+    ); 
+		
+	return  $form;
+	 
+ } 
+ 
+function edit_awards_validate($form, &$form_state){ 
+  if (!$form_state['values']['caseno']) {
+    form_set_error('caseno', 'You must enter awards case number');    
+  }
+  if (!$form_state['values']['caseyear']) {
+    form_set_error('caseyear', 'You must enter awards case year');    
+  }
+  if (!$form_state['values']['awardsparty1']) {
+    form_set_error('awardsparty1', 'You must enter party1');    
+  }
+  if (!$form_state['values']['awardsparty2']) {
+    form_set_error('awardsparty2', 'You must enter party2');    
+  }
+  if (!$form_state['values']['awardsdate']) {
+    form_set_error('awardsdate', 'You must select awardsdate');    
+  }
+  if (!$form_state['values']['court_id']) {
+    form_set_error('court_id', 'You must select court no');    
+  }
+} 
+ 
+function edit_awards_submit($form, &$form_state){ 
+
+	$arr = array();
+	$awardsPdf = "";
+	$fid = 0;
+
+	$scan_doc = file_load($form_state['values']['awardsfile']);		
+	try{
+		if(!empty($scan_doc)){
+			$arr = explode("/", $scan_doc->uri);
+			$scan_doc->status = FILE_STATUS_PERMANENT;
+			file_save($scan_doc);
+			$scanPdf = $arr[4];
+			$fid = $scan_doc->fid;
+		 }
+		 else{
+			$file_name=$form_state['values']['scan_file'];
+			$scanPdf = $file_name;
+			$fid=$form_state['values']['file_id'];
+		}
+		
+		$query = db_update('cms_awards');
+		$query->fields(array('caseno'       =>	$form_state['values']['caseno'],
+							 'awardsdate'   =>	format_date(strtotime($form_state['values']['awardsdate']), 'custom', 'Y-m-d'),
+							 'awardsparty1' =>	$form_state['values']['awardsparty1'],
+							 'awardsparty2' =>	$form_state['values']['awardsparty2'],
+							 'awardsfile'   =>	$scanPdf,
+							 'caseyear'     =>  $form_state['values']['caseyear'],
+							 'fid'     		=>  $fid,
+							 'court_id'		=>	$form_state['values']['court_id']
+							 ));
+		$query->condition('aid', $form_state['values']['awards_id']);
+		$rs = $query->execute();
+		if($rs){
+			drupal_set_message("Your data has been updated successfully");
+			drupal_goto('cmsentry/cmsawards');
+		}
+	}catch(Exception $e1) { 
+		drupal_set_message("Your data unable to updated. Try again later.");
+		drupal_goto('cmsentry/cmsawards');
+	}
+} 
+
+ 
+function awards_textfield_validate($element, &$form_state) {
+   if(trim($element['#value']))
+   {
+        $val="a".trim($element['#value']);
+		if(stripos($val,"~") >0  || stripos($val,"!") >0 || stripos($val,"@")>0 || stripos($val,"<")>0 || stripos($val,">")>0 || stripos($val,"'")>0 || stripos($val,"$")>0 || stripos($val,"#")>0 || stripos($val,"%")>0 || stripos($val,"^")>0  || stripos($val,"*")>0){
+       form_error($element, t($element['#title'].'  contain illegal character .'));
+	   }
+   }
+}
+

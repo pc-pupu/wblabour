@@ -1,0 +1,1412 @@
+<?php
+function dashboard_permission() {
+  return array(
+	'dashboard_per' => array(
+      'title' => t('dashboard permission'),
+    ),
+	'dashboard_prc_per' => array(
+      'title' => t('dashboard principle sectary permission'),
+    ),
+	 'comprehensive_per' => array(
+      'title' => t('Comprehensive Information permission'),
+    ),
+  );
+}
+
+function dashboard_menu(){ 
+  $items['dashboard'] = array(
+	'title' => 'Dashboard',
+	'page callback' => 'dashboard_list',
+	'access callback' 	=> 	'user_access',
+	'access arguments' => array('dashboard_per'),
+  );
+  
+  $items['add-establishment'] = array(
+	'title' => 'Add Establishment',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('add_establishment_form'),
+	'access arguments' => array('dashboard_per'),
+  );
+  
+    
+   $items['establishment'] = array(
+	'title' => 'Establishment',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('establishment_list_form'),
+	'file' => 'dashboard.form.inc',
+	'access arguments' => array('dashboard_per'),
+  );
+   
+  $items['payment-details'] = array(
+	'title' => 'Payment Details',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('payment_details_form'),
+	'file' => 'dashboard.form.inc',
+	'access arguments' => array('dashboard_per'),
+  );
+
+  $items['addajaxservice/%ctools_js/%/%'] = array(
+   'page callback' => 'mymodaladdservice_callback',
+   'page arguments' => array(1,2,3),
+   'access callback' => TRUE,
+   'file' => 'dashboard.form.inc',
+   'type' => MENU_CALLBACK
+  );
+  
+  $items['ajaxdelservice/%/%'] = array(
+	'page callback' => 'est_service_del',
+	'page arguments' => array(1,2),
+	'access arguments' => array('dashboard_per'),
+	'type' => MENU_CALLBACK,
+	'file' => 'dashboard.form.inc',
+  );
+
+   $items['addajax_wizard_service/%ctools_js/%/%'] = array(
+   'page callback' => 'mymodaladdwizardservice_callback',
+   'page arguments' => array(1,2,3),
+   'access callback' => TRUE,
+   'file' => 'dashboard.form.inc',
+   'type' => MENU_CALLBACK
+  );
+  
+  
+  // ganga
+  $items['detailsview/%ctools_js/%'] = array(
+   'page callback' => 'showstatus_callback',
+   'page arguments' => array(1,2),
+   'access callback' => TRUE,
+   'file' => 'dashboard.form.inc',
+   'type' => MENU_CALLBACK
+  );
+  
+  $items['user-feedback'] = array(
+	'title' => 'Dashboard',
+	'page callback' => 'feedback',
+	'access callback' 	=> 	'user_access',
+	'access arguments' => array('dashboard_per'),
+  );
+  
+  /*$items['dashboard1'] = array(
+	'title' => 'Dashboard',
+	'page callback' => 'dashboard_list1',
+	'access callback' 	=> 	'user_access',
+	'access arguments' => array('dashboard_per'),
+  );
+  
+  $items['tmpdashboard'] = array(
+	'title' => 'Temporary Dashboard',
+	'page callback' => 'temporary_dashboard_list',
+	'access callback' 	=> 	'user_access',
+	'access arguments' => array('dashboard_per'),
+  );
+  
+   $items['tmpcountdownfinish'] = array(
+	'title' => 'Temporary Dashboard',
+	'page callback' => 'temporary_dashboard_timeup',
+	'access callback' 	=> 	'user_access',
+	'access arguments' => array('dashboard_per'),
+  );*/
+  
+  $items['comprehensive-information-sheet'] = array(
+	'title' => 'Comprehensive Information Sheet',
+	'page callback' => 'comprehensive_information_sheet_list',
+	'access callback' 	=> 	'user_access',
+	'access arguments' => array('comprehensive_per'),
+  );
+  
+  $items['wblc-e-services-apply-online/%'] = array(
+		'title' => 'WBLC Apply Online',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('wblc_apply_online_api_form', 1),
+		'access arguments' => array('access content'),
+	);
+  $items['pinwbautocomplete'] = array(
+	'page callback' => 'get_pincode_wbautocomplete',
+	'access arguments' => array('access content'),
+	'type' => MENU_CALLBACK,
+  ); 
+  
+  $items['apply-online/%'] = array(
+	'title' => 'Apply Online',
+	'page callback'=>'drupal_get_form',
+	'page arguments'=>array('apply_online_form', 1),
+	'access arguments' => array('dashboard_per'),
+	'file' => 'dashboard.form.inc',
+  );	
+	
+   $items['dashboard-prcsec'] = array(
+	'title' => 'Dashboard',
+	'page callback' => 'dashboard_prc_list',
+	'access callback' 	=> 	'user_access',
+	'access arguments' => array('dashboard_prc_per'),
+  );
+   $items['dwsearch'] = array(
+	'title' => 'Dashboard',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('dwsearch_form'),
+	'file' => 'dwsearch.form.inc',
+	'access arguments' => array('dashboard_prc_per'),
+  );
+   $items['boilersearch'] = array(
+	'title' => 'Dashboard',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('boilersearch_form'),
+	'file' => 'boilersearch.form.inc',
+	'access arguments' => array('dashboard_prc_per'),
+  );
+  $items['factorysearch'] = array(
+	'title' => 'Dashboard',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('factorysarch_form'),
+	'file' => 'factorysearch.form.inc',
+	'access arguments' => array('dashboard_prc_per'),
+  );
+  
+  $items['eodb-dashboard'] = array(
+	'title' => 'EODB Dashboard',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('dashboard_eodb_form'),
+	'file' => 'dashboard_eodb.form.inc',
+	'access arguments' => array('comprehensive_per'),
+  );
+  
+  return $items;
+}
+
+function wblc_apply_online_api_form($form, &$form_state, $arg=''){
+	//echo $arg; exit;
+	global $user;
+	$uid = $user->uid;
+	
+	//$service_url = 'https://wblc.gov.in/labourdept/eservices/applicantLogin';
+	$curl_post_data = array(
+		"act_id"					=>	$arg,
+		"lc_uid"					=>	$uid
+	);	
+	/*$ch = curl_init();
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8'));
+	curl_setopt($ch, CURLOPT_URL, $service_url);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode( $curl_post_data ) );
+	curl_setopt($ch, CURLOPT_POST, true);
+	$results=curl_exec($ch);
+	$errors=curl_error($ch);
+	curl_close($ch);*/
+	print_r($curl_post_data);
+	return $form;
+}
+
+function dashboard_list(){
+	$status_msgg = "";
+	$mydata_table = establishment_list();
+
+	$map = map_show();
+	
+	return theme('dashboard_application',array('status_msgg'=>$status_msgg,'mydata_table'=>$mydata_table,'map'=>$map));
+	 
+ }
+
+ function map_show(){
+ 	global $base_root, $base_path,$user;
+ 	$est_list_query_result_data = establishment_info($user->uid);
+ 	//echo "<pre>";print_r($est_list_query_result_data);exit;
+ 	foreach ($est_list_query_result_data as $key => $value) {
+ 		$val[] = array('<b>Name:</b>'.$value->est_name.'</br><b>Address:-</b>'.$value->address.' Pincode:-'.$value->pincode,$value->latitude,$value->longitude,($key+1));
+ 	}
+ 	
+ 	//echo "<pre>";print_r($val);exit;
+ 	/*---------  Maps -----------*/
+	drupal_add_js('https://maps.googleapis.com/maps/api/js?sensor=false&key=AIzaSyAtu0I-bKUMO9dDq1GZGVevd1hYOIBRO-c', 'external');
+	drupal_add_js('jQuery( document ).ready(function() {
+           
+		    var locations ='.json_encode($val).';
+		    
+
+		    var map = new google.maps.Map(document.getElementById("map_canvas"), {
+		      zoom: 6,
+		      center: new google.maps.LatLng(22.986757,87.854973),
+		      mapTypeId: google.maps.MapTypeId.ROADMAP
+		    });
+
+		    var infowindow = new google.maps.InfoWindow();
+
+		    var marker, i;
+
+		    for (i = 0; i < locations.length; i++) {  
+		      marker = new google.maps.Marker({
+		        position: new google.maps.LatLng(locations[i][1], locations[i][2]),
+		        map: map
+		      });
+
+		      google.maps.event.addListener(marker, "click", (function(marker, i) {
+		        return function() {
+		          infowindow.setContent(locations[i][0]);
+		          infowindow.open(map, marker);
+		        }
+		      })(marker, i));
+		    }
+});',array('type' => 'inline', 'scope' => 'header', 'weight' => 5));
+
+		$output = ' <div id="map_wrapper">
+            <div id="map_canvas" class="mapping"></div>
+        </div>';
+		return $output;
+
+	/*---------  End Maps -----------*/
+ }
+ 
+/*function dashboard_list1(){
+	$status_msgg = "";
+	$used_profile_con = "";
+	return theme('dashboard_application1',array('status_msgg'=>$status_msgg,'used_profile_con'=>$used_profile_con));
+	 
+ } 
+
+function temporary_dashboard_list(){
+	$status_msgg = "";
+	$used_profile_con = "";
+	return theme('temporary_dashboard_application',array('status_msgg'=>$status_msgg,'used_profile_con'=>$used_profile_con));
+} */
+
+ 
+function feedback(){
+	$status_msgg = "";
+	$used_profile_con = "";
+	return theme('feedback_rating',array('status_msgg'=>$status_msgg,'used_profile_con'=>$used_profile_con));
+	 
+ } 
+
+function comprehensive_information_sheet_list(){
+	$status_msgg = "";
+	$used_profile_con = "";
+	return theme('comprehensive_information_sheet_application',array('status_msgg'=>$status_msgg,'used_profile_con'=>$used_profile_con));
+}
+
+function dashboard_prc_list(){
+	$status_msgg = "";
+	$used_profile_con = "";
+	$mydata_table = array();
+	
+	$to_dt_cur_six = date('d-m-Y');
+	$from_dt_cur_six = date("d-m-Y", strtotime("01-01-2017")); 
+	$my_web_service_data_boiler = array();
+	$my_web_service_data_lc = array();
+	//$my_web_service_data_boiler = gerWebServiceDataForBoilerAllDistrict($from_dt_cur_six,$to_dt_cur_six);
+	//$my_web_service_data_lc = gerWebServiceDataForLCAllDistrict($from_dt_cur_six,$to_dt_cur_six);
+	
+	return theme('dashboard_prc_application',array('service_boiler'=>$my_web_service_data_boiler,'service_lc'=>$my_web_service_data_lc,'mydata_table'=>$mydata_table));
+	 
+ } 
+ 
+function dashboard_theme($existing, $type, $theme, $path){
+  return array(
+		'dashboard_application' => array(
+		'variables' => array('status_msgg'=>NULL,'used_profile_con'=>NULL),
+		'template'  => 'dashboard_part', 
+      ),
+	  'feedback_rating' => array(
+		'variables' => array('status_msgg'=>NULL,'used_profile_con'=>NULL),
+		'template'  => 'feedback_rating_part', 
+      ),
+	  /*'dashboard_application1' => array(
+		'variables' => array('status_msgg'=>NULL,'used_profile_con'=>NULL),
+		'template'  => 'dashboard_part1', 
+      ),
+	  'temporary_dashboard_application' => array(
+		'variables' => array('status_msgg'=>NULL,'used_profile_con'=>NULL),
+		'template'  => 'temporary_dashboard_part', 
+      ),*/
+	  'dashboard_est' => array(
+		'variables' => array('mydata_table'=>NULL),
+		'template'  => 'dashboard_part', 
+      ),
+	  'add_establishment_application' => array(
+		'variables' => array('status_msgg'=>NULL,'used_profile_con'=>NULL),
+		'template'  => 'add_establishment', 
+      ),
+	  'comprehensive_information_sheet_application' => array(
+		'variables' => array('status_msgg'=>NULL,'used_profile_con'=>NULL),
+		'template'  => 'comprehensive_information_sheet_part', 
+      ),
+	  'dashboard_prc_application' => array(
+		'variables' => array('mydata_table'=>NULL),
+		'template'  => 'dashboard_prc_part', 
+      ),
+	  
+  );
+}
+
+function encryption_decryption_wblabour($action, $string) {
+    $output 		= false;
+    $encrypt_method = "AES-256-CBC";
+    
+    $secret_key 	= 'wblabour';
+    $secret_iv 		= 'WbAdmLb#4321';
+	
+    $key = hash('sha512', $secret_key);
+	
+    $iv = substr(hash('sha512', $secret_iv), 0, 16);
+
+    if( $action == 'encrypt' ) {
+        $output = openssl_encrypt($string, $encrypt_method, $key, 0, $iv);
+        $output = base64_encode($output);
+    }else if( $action == 'decrypt' ){
+        $output = openssl_decrypt(base64_decode($string), $encrypt_method, $key, 0, $iv);
+    }
+    return $output;
+}
+
+function temporary_dashboard_timeup(){
+	global $user;
+	global $user;
+	/*$query = db_update('ld_users_details');
+	$query->fields(array('status'=>'0'));
+	$query->condition('uid',trim($user->uid),'=');
+	$query->execute();*/
+ 
+	$query = db_delete('ld_users_details');
+	$query->condition('uid',trim($user->uid),'=');
+	$query->execute();
+	
+	$query1 = db_delete('users');
+	$query1->condition('uid',trim($user->uid),'=');
+	$query1->execute();
+	
+	$query2 = db_delete('users_roles');
+	$query2->condition('uid',trim($user->uid),'=');
+	$query2->execute();
+}
+
+function add_establishment_form($form, &$form_state) {
+  #$form['#attributes']['class'][] = 'forms-sample'; 
+
+  drupal_add_js('https://maps.googleapis.com/maps/api/js?sensor=false&key=AIzaSyAtu0I-bKUMO9dDq1GZGVevd1hYOIBRO-c', 'external');
+	drupal_add_js('jQuery(document).ready(function(){
+
+			jQuery("#get_addr_loc_id").blur(function(){
+				var addr_val = jQuery("#get_addr_loc_id").val()+" pincode-"+jQuery("#pincode_wbautocomplete").val();
+
+				var geocoder =  new google.maps.Geocoder();
+				geocoder.geocode( { "address": addr_val}, function(results, status){if (status == google.maps.GeocoderStatus.OK){jQuery("#get_lat_id").val(results[0].geometry.location.lat());	  jQuery("#get_long_id").val(results[0].geometry.location.lng());
+			}});
+		});
+	});',array('type' => 'inline', 'scope' => 'header', 'weight' => 5));  
+  	  
+  $form['form_begin'] = array( 
+  '#prefix' => '<h3 class="page-heading mb-4">Add Establishment</h3><div class="row mb-2"><div class="col-lg-12"><div class="card"><div class="card-body">',
+  '#suffix' => '' ,
+ );
+ 
+  $form['est_info_start'] = array( 
+  '#prefix' => '<div class="row border-bottom">',
+  '#suffix' => '' ,
+  );
+
+  
+  
+  $form['ename'] = array(
+	   '#title'=> '',
+	   '#type' => 'textfield', 
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter Establishment Name', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div class="col-xl-4">',
+	   '#suffix' => '</div>'
+	);
+  
+  $form['industry_category'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#options' => array(''=>'Select Category of Industry','micro'=>t('Micro'),'small'=>t('Small'),'medium'=>t('Medium'),'large'=>t('Large')),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div class="col-xl-4"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);		
+
+ $form['ownership'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#options' => ownership_sub(''),
+	   //'#options' => $ownership_type,
+	   '#ajax'=>array(
+	   			'callback'	=> 'ajax_ownership_callback',
+				'event' 	=> 'change',
+				'effect' 	=> 'fade',			
+				'progress'	=>	array(
+					'type'		=>'throbber',
+					'message'	=>t('loading'),
+			    ),
+		),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Select Ownership Type', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div class="col-xl-4"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);	
+ 	
+	
+ if(isset($form_state['values']['ownership']) && trim($form_state['values']['ownership']) != '' && trim($form_state['values']['ownership']) != '0'){
+	 if(trim($form_state['values']['ownership']) ==  '7') {
+		  $form['ownership_text'] = array(
+		   '#title'=> '',
+		   '#type' => 'textfield', 
+		   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter Other Ownreship', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+		   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+		   '#prefix' => '<div id="ld_ownership_replace" class="col-xl-4">',
+		   '#suffix' => '</div>'
+		);
+	 }	else {
+		 if(trim($form_state['values']['ownership']) != '3' && trim($form_state['values']['ownership']) != '4' && trim($form_state['values']['ownership']) != '5' && trim($form_state['values']['ownership']) != '6'){
+		       $form['ownership_sub'] = array(
+			   '#title'=> '',
+			   '#type' => 'select',
+			   '#options' => ownership_sub($form_state['values']['ownership']),
+			   '#ajax'=>array(
+						'callback'	=> 'ajax_ownershipsub_callback',
+						'event' 	=> 'change',
+						'effect' 	=> 'fade',			
+						'progress'	=>	array(
+							'type'		=>'throbber',
+							'message'	=>t('loading'),
+						),
+				),
+	   		 '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Select Ownership', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   		//'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   		'#prefix' => '<div id="ld_ownership_replace" class="col-xl-4"><div class="selectpicker">',
+	   		'#suffix' => '</div></div>'
+			);
+		 }
+  	}
+ }
+ 
+ $form['ownership_blank'] = array(
+			'#prefix' => '<div id="ld_ownership_replace">',
+			'#suffix' => '</div>'
+		); 
+ 
+ if(isset($form_state['values']['ownership']) && trim($form_state['values']['ownership']) != '' && isset($form_state['values']['ownership_sub']) &&
+          trim($form_state['values']['ownership_sub']) != '' && trim($form_state['values']['ownership_sub']) != '0' && trim($form_state['values']['ownership']) != '3' && trim($form_state['values']['ownership']) != '4' && trim($form_state['values']['ownership']) != '5' && trim($form_state['values']['ownership']) != '6'){		
+  if(trim($form_state['values']['ownership_sub']) ==  '15' || trim($form_state['values']['ownership_sub']) ==  '19' ) {
+	 
+	 $ownership_placeholder = '';
+	 if(trim($form_state['values']['ownership_sub']) ==  '15') {
+		   $ownership_placeholder = 'Enter Other Government Ownreship Details';
+		 }else {
+			$ownership_placeholder = 'Enter Other Private Ownreship Details'; 
+		 }	 
+	 
+	 $form['ownershipsub_text'] = array(
+		   '#title'=> '',
+		   '#type' => 'textfield', 
+		  '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>$ownership_placeholder, 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+		   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+		   '#prefix' => '<div id="ld_ownershipsub_replace" class="col-xl-4">',
+		   '#suffix' => '</div>'
+		);
+	 }
+ if(trim($form_state['values']['ownership_sub']) ==  '11' && trim($form_state['values']['ownership']) != '2' && trim($form_state['values']['ownership']) != '3' && trim($form_state['values']['ownership']) != '4' && trim($form_state['values']['ownership']) != '5' && trim($form_state['values']['ownership']) != '6'){	 
+	 $form['ownership_subsub'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#options' => ownership_sub($form_state['values']['ownership_sub']),
+	   '#ajax'=>array(
+	   			'callback'	=> 'ajax_ownershipsub2_callback',
+				'event' 	=> 'change',
+				'effect' 	=> 'fade',			
+				'progress'	=>	array(
+					'type'		=>'throbber',
+					'message'	=>t('loading'),
+			    ),
+		),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Select Ownership', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div id="ld_ownershipsub_replace" class="col-xl-4"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);
+  }
+ }
+ 
+ $form['ownershipsub_blank'] = array(
+			'#prefix' => '<div id="ld_ownershipsub_replace">',
+			'#suffix' => '</div>'
+		); 
+		
+  //if(isset($form_state['values']['ownership']) && trim($form_state['values']['ownership']) != '' && isset($form_state['values']['ownership_sub']) && isset($form_state['values']['ownership_subsub']) && trim($form_state['values']['ownership_sub']) != '' && trim($form_state['values']['ownership_subsub']) != '' && trim($form_state['values']['ownership_subsub']) != '0'){	
+  if(trim($form_state['values']['ownership_subsub']) ==  '23' && trim($form_state['values']['ownership']) != '2' && trim($form_state['values']['ownership']) != '3' && trim($form_state['values']['ownership']) != '4' && trim($form_state['values']['ownership']) != '5' && trim($form_state['values']['ownership']) != '6' && trim($form_state['values']['ownership_sub']) != '8' && trim($form_state['values']['ownership_sub']) != '9' && trim($form_state['values']['ownership_sub']) != '10' && trim($form_state['values']['ownership_sub']) != '15'){	
+ $form['ownership_subsub2'] = array(
+	   '#title'=> '',
+	   '#type' => 'select',
+	   '#options' => ownership_sub($form_state['values']['ownership_subsub']),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Select Ownership', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div id="ld_ownershipsub2_replace" class="col-xl-4"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);
+  }
+ //}
+ 
+ $form['ownershipsub2_blank'] = array(
+			'#prefix' => '<div id="ld_ownershipsub2_replace">',
+			'#suffix' => '</div>'
+		); 
+ 
+ $form['id_card_type'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#options' => array('0'=>t('Select Identity Card Type'),'1'=>t('Voter Card Number'),'2'=>t('Aadhaar Card Number'),'3'=>t('Permanent Account Number (PAN)'),
+	                       '4'=>t('Tax Deduction Account Number (TAN)'),'5'=>t('Labour Identification Number (LIN)')),
+	   '#ajax'=>array(
+	   			'callback'	=> 'ajax_idcard_callback',
+				'event' 	=> 'change',
+				'effect' 	=> 'fade',			
+				'progress'	=>	array(
+					'type'		=>'throbber',
+					'message'	=>t('loading'),
+			    ),
+		),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Select Id card Type', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div class="col-xl-4"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);	
+	
+ if(isset($form_state['values']['id_card_type']) && trim($form_state['values']['id_card_type']) != '' && trim($form_state['values']['id_card_type']) != '0'){
+ $form['id_card_details'] = array(
+	   '#title'=> '',
+	   '#type' => 'textfield', 
+	   //'#options' => ownership_sub($form_state['values']['ownership']),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter your Identity Card Number', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div id="ld_idcard_replace" class="col-xl-4">',
+	   '#suffix' => '</div>'
+	);
+ }
+ 
+ $form['idcarddetails_blank'] = array(
+			'#prefix' => '<div id="ld_idcard_replace">',
+			'#suffix' => '</div>'
+		);
+ 	
+	
+	/*	
+	$form['gender_of_owner_industry'] = array(
+	   '#title'=> '',
+	   '#type' => 'radios', 
+	   '#options' => array('M'=>t('Male'),'F'=>t('Female'),'O'=>t('Others')),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   '#default_value'=> 'M',
+	   '#prefix' => '<div class="col-xl-4">',
+	   '#suffix' => '</div>'
+	);	*/
+	
+  $form['gstno'] = array(
+	   '#title'=> '',
+	   '#type' => 'textfield', 
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter GST No', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div class="col-xl-4">',
+	   '#suffix' => '</div>'
+	);	
+		 
+  $form['est_info_end'] = array( 
+  '#prefix' => '',
+  '#suffix' => '</div>' ,
+  );		
+	
+  $form['est_addr_start'] = array( 
+  '#prefix' => '<div class="row"><div class="col-md-12"><h5>Establishment Address</h5></div>',
+  '#suffix' => '' ,
+  );		
+  $form['pincode'] = array(
+	   '#title'=> '',
+	   '#type' => 'textfield',
+	   '#maxlength' => 6,
+	   '#autocomplete_path' => 'pinwbautocomplete',
+	   '#id' => 'pincode_wbautocomplete', 
+	   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter Pincode', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div class="col-xl-4"><div id="ld_edit_emp_pincode_replace">',
+	   '#suffix' => '</div></div>'
+	);
+	
+	$value_pincode				= isset($form_state['values']['pincode'])? $form_state['values']['pincode'] : '';
+	
+	if(!empty($value_pincode)){
+		//echo $value_pincode;
+		//$v2 = (string)$value_pincode;
+		//$v1	=	explode('-', trim($v2)); //722144-13-1
+		//print_r($v1);
+		
+		$query = db_select('all_india_pin_code','p')
+ 				->fields('p',array('districtname','statename','pincode','district_code','state_code','po_name'))
+ 				->condition('p.pincode',trim($value_pincode),'=') ;
+	
+ 		$result = $query->execute();
+		if($result->rowcount()>0){
+			$final	=$result->fetchAssoc();
+			$pincode_v = $value_pincode;
+			$state_v	=	$final['state_code'];
+			$district_v		=	$final['district_code'];
+			$post_office = $final['po_name'];
+		}
+		//echo "post_office -->".$post_office;
+	} 
+	
+	
+  if(!empty($state_v)){	
+	$form['state'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#id'=>'state_name',
+	   '#disabled' => TRUE, 
+	   '#options' => get_all_state($state_v),
+	   '#value' => !empty($state_v) ? $state_v	:'',
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'State', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	    '#ajax'				=> array(
+										'event' 		=> 'change',
+										'effect' 		=> 'fade',			
+										'callback'		=> 'get_ajax_load',
+										'progress'		=>	array(
+											'type'		=>'throbber',
+											'message'	=>t('loading'),
+										),
+								),
+	   '#prefix' => '<div class="col-xl-4" id="ld_edit_emp_state_replace"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);	
+ }else{
+   $form['state'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#id'=>'state_name',
+	   '#disabled' => TRUE,
+	   '#options' => array(''=>t('Select State')),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'State', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	    '#ajax'				=> array(
+										'event' 		=> 'change',
+										'effect' 		=> 'fade',			
+										'callback'		=> 'get_ajax_load',
+										'progress'		=>	array(
+											'type'		=>'throbber',
+											'message'	=>t('loading'),
+										),
+								),
+	   '#prefix' => '<div class="col-xl-4" id="ld_edit_emp_state_replace"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);
+ }
+	 
+ $value_state = isset($form_state['values']['state'])? $form_state['values']['state'] : '';	 	
+
+ if(!empty($state_v)){		
+    $form['district'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#id'=>'district_name',
+	   '#disabled' => TRUE,
+	   '#options' => get_district_by_id($state_v),
+	   '#value' => !empty($district_v) ? $district_v : '',
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'District', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							),
+	   '#prefix' => '<div class="col-xl-4" id="ld_edit_emp_district_replace"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);
+ } else {
+	 $form['district'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#id'=>'district_name',
+	   '#disabled' => TRUE,
+	   '#options' => array(''=>t('Select District')),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'District', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div class="col-xl-4" id="ld_edit_emp_district_replace"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);
+  }
+  
+ $value_district	=	isset($form_state['values']['district']) ? $form_state['values']['district'] : ''; 
+  
+ if(!empty($district_v) && !empty($state_v) && $state_v == 1){ 
+   $form['subdivision'] = array(
+	   '#title'=> '',
+	   '#type' => 'select',
+	   '#options' => common_custom_user_subdivisionlist_list_new($district_v), 
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter subdivision', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	    '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							),
+	   '#prefix' => '<div class="col-xl-4" id="ld_empsubdv_replace"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);
+ }else{ 
+		$form['subdivision'] = array(
+		   '#title'=> '',
+		   '#type' => 'select',
+		   '#options' => array(''=>t('Select Sub-division')),
+		   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter subdivision', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+		   '#prefix' => '<div class="col-xl-4" id="ld_empsubdv_replace"><div class="selectpicker">',
+		   '#suffix' => '</div></div>',
+		);
+ }
+ 
+ $value_subdivision	=	isset($form_state['values']['subdivision']) ? $form_state['values']['subdivision'] : '';
+ 
+ if(!empty($value_district) && !empty($value_state) && !empty($value_subdivision) && $state_v == 1){
+
+ $form['areatype'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   //'#options' => array(''),
+	   '#options' => common_custom_user_areatype_list_new($value_district, $value_subdivision),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter Area type', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							),
+	   '#prefix' => '<div class="col-xl-4" id="ld_emp_areatype_replace"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);
+ }else{
+		$form['areatype'] = array(
+		   '#title'=> '',
+		   '#type' => 'select', 
+		   '#options' => array(''=>t('Select Area Type')),
+	   	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter Areartype', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),	
+		   '#prefix' => '<div class="col-xl-4" id="ld_emp_areatype_replace"><div class="selectpicker">',
+		   '#suffix' => '</div></div>',
+		);	
+ }
+ 
+
+ $value_areatype	=	isset($form_state['values']['areatype']) ? $form_state['values']['areatype'] : '';
+ 
+ if(!empty($value_district) && !empty($value_state) && !empty($value_subdivision) && !empty($value_areatype) && $state_v == 1){
+		
+		if ( $value_areatype == 'B' ){
+			$areatype_name	= 'Block';
+		}elseif( $value_areatype == 'M'){
+			$areatype_name	= 'Municipality';
+		}elseif( $value_areatype == 'C'){
+			$areatype_name	= 'Corporation';
+		}elseif( $value_areatype == 'S'){
+			$areatype_name	= 'SEZ';
+		}elseif($value_areatype == 'N'){
+			$areatype_name	= 'Notified Area';
+		}
+		
+  $form['block'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#options' => common_custom_user_block_list_new($value_subdivision,$value_areatype),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter Block', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#ajax'				=> array(
+									'event' 		=> 'change',
+									'effect' 		=> 'fade',			
+									'callback'		=> 'get_ajax_load',
+									'progress'		=>	array(
+										'type'		=>'throbber',
+										'message'	=>t('loading'),
+									),
+							),
+	   '#prefix' => '<div class="col-xl-4" id="ld_empareatype_name_replace"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);
+ }else{
+		$form['block'] = array(
+		   '#title'=> '',
+	   	   '#type' => 'select', 
+	   	   '#options' => array(''=>t('Select Block')),
+	   	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter Block', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+		   '#prefix' => '<div class="col-xl-4" id="ld_empareatype_name_replace"><div class="selectpicker">',
+		   '#suffix' => '</div></div>',
+		);
+ }
+ 
+ $value_block 	= 	isset($form_state['values']['block']) ? $form_state['values']['block'] : '';
+ 
+ if(!empty($value_district) && !empty($value_subdivision) && !empty($value_areatype)  && !empty($value_block) && !empty($value_state)){
+		
+		if ( $value_areatype == 'B' ){
+			$area_name		= 'Gram Panchayat';
+			$area_code 		= 'V';
+		}elseif( $value_areatype == 'M'){
+			$area_name		= 'Ward';
+			$area_code 		= 'W';
+		}elseif( $value_areatype == 'C'){
+			$area_name		= 'Ward';
+			$area_code 		= 'C';
+		}elseif( $value_areatype == 'S'){
+			$area_name		= 'Sector';
+			$area_code 		= 'S';
+		}elseif($value_areatype == 'N'){
+			$area_name		= 'Notified Area';
+			$area_code 		= 'N';
+		}
+
+ $form['panchayat'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#options' => common_custom_user_villward_list_new($value_block,$area_code),
+	   '#ajax'=> array(
+						'event' 		=> 'change',
+						'effect' 		=> 'fade',			
+						'callback'		=> 'get_ajax_load',
+						'progress'		=>	array(
+							'type'		=>  'throbber',
+							'message'	=>  t('loading'),
+						),
+					),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter Panchayat', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div class="col-xl-4" id="ld_emp_vill_ward_replace"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);
+ }else{
+		$form['panchayat'] = array(
+		   '#title'=> '',
+	       '#type' => 'select',
+		   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter Panchayat', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+		   '#options' => array(''=>t('Select Panchayat')),
+		   '#prefix' => '<div class="col-xl-4" id="ld_emp_vill_ward_replace"><div class="selectpicker">',
+		   '#suffix' => '</div></div>',
+		);	
+	}
+	
+ $value_panchayat 	= 	isset($form_state['values']['panchayat']) ? $form_state['values']['panchayat'] : '';
+ 
+ if(!empty($value_district) && !empty($value_subdivision) && !empty($value_areatype)  && !empty($value_block) && !empty($value_state) && !empty($value_panchayat)){
+	 
+  $form['policestation'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#options' => common_custom_user_ps_list_new($value_district),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter police station', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div class="col-xl-4" id="ld_empps_replace"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);
+ }else{
+		$form['policestation'] = array(
+		   '#title'=> '',
+		   '#type' => 'select', 
+		   '#options' => array(''=>t('Select Police Station')),
+		   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter police station', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+		   '#prefix' => '<div class="col-xl-4" id="ld_empps_replace"><div class="selectpicker">',
+		   '#suffix' => '</div></div>',
+		);
+ }
+ 
+ if(!empty($pincode_v)){
+	 $form['postoffice'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#options' => common_custom_post_office_list_new($pincode_v),
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter post office', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div class="col-xl-4" id="ld_post_office_div"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);
+ }else{
+	$form['postoffice'] = array(
+	   '#title'=>'',
+	   '#type' => 'select',
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Post Office'),
+	   '#options' => array('0'=>t('Select Post Office')),
+	   '#prefix' => '<div class="col-xl-4" id="ld_post_office_div"><div class="selectpicker">',
+	   '#suffix' => '</div></div>'
+	);
+  }
+  
+ $form['address'] = array(
+	   '#title'=> '',
+	   '#rows'=> 3,
+	   '#type' => 'textarea',
+	   '#attributes' => array('class'=>array('form-control p-input'), 'placeholder'=>'Enter Address', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp','id'=>'get_addr_loc_id'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div class="col-xl-12">',
+	   '#suffix' => '</div>'
+	);
+
+ $form['latitude'] = array(
+	 	'#title' => 'Latitude',
+		'#type' => 'hidden', 
+		'#attributes' => array('id' => 'get_lat_id'),
+	);
+	
+ $form['longitude'] = array(
+ 	'#title' => 'Longitude',
+	'#type' => 'hidden', 
+	'#attributes' => array('id' => 'get_long_id'),
+);
+  		
+ $form['submit'] = array(
+	   '#title'=> '',
+	   '#type' => 'submit',
+	   '#value' => 'Submit',
+	   '#attributes' => array('class'=>array('btn btn-primary'),'placeholder'=>''),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div class="col-xl-3">',
+	   '#suffix' => '</div>'
+	);
+  $form['mandatory_msg'] = array( 
+	  '#prefix' => '<div class="col-xl-9"> <p class="text-right text-danger">*All fields are mandatory</p>',
+	  '#suffix' => '</div>' ,
+  );
+  	
+  $form['est_addr_end'] = array( 
+  '#prefix' => '',
+  '#suffix' => '</div>' ,
+  );	
+  
+ $form['form_end'] = array( 
+  '#prefix' => '',
+  '#suffix' => '</div></div></div></div>' ,
+ );
+	  
+  return  $form;
+	
+ }
+ 
+  function ajax_ownership_callback($form,&$form_state){
+	$commands = array();
+	if(trim($form_state['values']['ownership'])== 7){
+		$commands[] = ajax_command_replace('#ld_ownership_replace', drupal_render($form['ownership_text']));
+		$commands[] = ajax_command_replace('#ld_ownershipsub_replace', drupal_render($form['ownershipsub_blank']));
+		$commands[] = ajax_command_replace('#ld_ownershipsub2_replace', drupal_render($form['ownershipsub2_blank']));
+	}else if(trim($form_state['values']['ownership'])== 1 || trim($form_state['values']['ownership'])== 2 ) {
+		$commands[] = ajax_command_replace('#ld_ownership_replace', drupal_render($form['ownership_sub']));
+		$commands[] = ajax_command_replace('#ld_ownershipsub_replace', drupal_render($form['ownershipsub_blank']));
+		$commands[] = ajax_command_replace('#ld_ownershipsub2_replace', drupal_render($form['ownershipsub2_blank']));
+	}else{
+		$commands[] = ajax_command_replace('#ld_ownership_replace', drupal_render($form['ownership_blank']));
+		$commands[] = ajax_command_replace('#ld_ownershipsub_replace', drupal_render($form['ownershipsub_blank']));
+		$commands[] = ajax_command_replace('#ld_ownershipsub2_replace', drupal_render($form['ownershipsub2_blank']));		
+	}
+	return array('#type' => 'ajax', '#commands' => $commands);
+ }
+ 
+ function ajax_ownershipsub_callback($form,&$form_state){
+	$commands = array();
+	if(trim($form_state['values']['ownership_sub']) == 15 || trim($form_state['values']['ownership_sub']) == 19) {
+		$commands[] = ajax_command_replace('#ld_ownershipsub_replace', drupal_render($form['ownershipsub_text']));
+		$commands[] = ajax_command_replace('#ld_ownershipsub2_replace', drupal_render($form['ownershipsub2_blank'])); 
+   } else if(trim($form_state['values']['ownership_sub']) == 11) {
+		
+		$commands[] = ajax_command_replace('#ld_ownershipsub_replace', drupal_render($form['ownership_subsub']));
+		$commands[] = ajax_command_replace('#ld_ownershipsub2_replace', drupal_render($form['ownershipsub2_blank']));
+	}else{
+		$commands[] = ajax_command_replace('#ld_ownershipsub_replace', drupal_render($form['ownershipsub_blank']));	
+		$commands[] = ajax_command_replace('#ld_ownershipsub2_replace', drupal_render($form['ownershipsub2_blank']));
+	}
+	return array('#type' => 'ajax', '#commands' => $commands);
+ }
+ 
+ function ajax_ownershipsub2_callback($form,&$form_state){
+	if(trim($form_state['values']['ownership_subsub']) == 23) {
+		$commands = array();
+		$commands[] = ajax_command_replace('#ld_ownershipsub2_replace', drupal_render($form['ownership_subsub2']));
+	}else{
+		$commands[] = ajax_command_replace('#ld_ownershipsub2_replace', drupal_render($form['ownershipsub2_blank']));	
+	}
+	return array('#type' => 'ajax', '#commands' => $commands);
+ }
+ 
+
+ function ownership_sub($id) {
+	 
+	  $ownership_type = '';
+	   if($id == 1) {
+		   $ownership_type = 'Select Government Ownership Type';
+	   }else if($id == 2) {
+		   $ownership_type = 'Select Private Ownership Type';
+	   }else if($id == 11) {
+		   $ownership_type = 'Select Local Bodies Ownership Type';
+	   }else if($id == 23) {
+		   $ownership_type = 'Select Urban Local Bodies Ownership Type';
+	   }else {
+		   $ownership_type = 'Select Ownership Type';
+	   }  
+	
+	  $ownership_sub = array();
+	  $ownership_sub[0] = $ownership_type;
+	  $ownership_sub_query = db_select('ownership','o');
+	  $ownership_sub_query->fields('o', array('id','ownership_name','parent_id','status'));
+	  if($id == '') {
+	  	$ownership_sub_query->condition('o.status',array('1'),'=');
+	  } else {
+	  	$ownership_sub_query->condition('o.parent_id',$id,'='); 
+	  }
+	  $ownership_sub_result = $ownership_sub_query->execute();
+	  foreach($ownership_sub_result as $valobj) {
+	  		$ownership_sub[$valobj->id] = trim($valobj->ownership_name);
+	  }
+	  return $ownership_sub;
+  }
+  
+ function add_establishment_form_submit($form, &$form_state) { 
+ 	
+	global $base_root, $base_path, $user;
+	
+	$current_date = date('Y-m-d H:i:s');
+	
+	
+	$fieldsEstablishmentInfo =	array( 
+										'uid'						=> 	$user->uid,
+										'est_name'					=>	$form_state['values']['ename'],
+										
+										'ownership_type'			=>  !empty($form_state['values']['ownership'])?trim($form_state['values']['ownership']):'',
+										'ownership_typesub'			=>  !empty($form_state['values']['ownership_sub'])?trim($form_state['values']['ownership_sub']):'',
+										'ownership_typesub1'		=>  !empty($form_state['values']['ownership_subsub'])?trim($form_state['values']['ownership_subsub']):'',
+										'ownership_typesub2'		=>	!empty($form_state['values']['ownership_subsub2'])?trim($form_state['values']['ownership_subsub2']):'',
+										'ownership_otext'			=>	!empty($form_state['values']['ownership_text'])?trim($form_state['values']['ownership_text']):'',
+										'govtpvt_otext'				=>	!empty($form_state['values']['ownershipsub_text'])?trim($form_state['values']['ownershipsub_text']):'',
+										
+										'identity_cardtype' 	    =>  $form_state['values']['id_card_type'],
+										'identity_cardno' 			=>  $form_state['values']['id_card_details'],
+										
+										'industry_category' 		=>  $form_state['values']['industry_category'],
+										//'gender_of_owner_industry' 	=>  $form_state['values']['gender_of_owner_industry'],
+										
+										'pincode'					=>	!empty($form_state['values']['pincode'])?trim($form_state['values']['pincode']):'',
+										'state'						=>	!empty($form_state['values']['state'])?trim($form_state['values']['state']):'',
+										'district'					=>	!empty($form_state['values']['district'])?trim($form_state['values']['district']):'',
+										'subdivision'				=>	!empty($form_state['values']['subdivision'])?trim($form_state['values']['subdivision']):'',
+										'areatype'					=>	!empty($form_state['values']['areatype'])?trim($form_state['values']['areatype']):'',
+										'block'						=>	!empty($form_state['values']['block'])?trim($form_state['values']['block']):'',
+										'panchayat'					=>	!empty($form_state['values']['panchayat'])?trim($form_state['values']['panchayat']):'',
+										'policestation'				=>	!empty($form_state['values']['policestation'])?trim($form_state['values']['policestation']):'',
+										'postoffice'				=>	!empty($form_state['values']['postoffice'])?trim($form_state['values']['postoffice']):'',
+										'address'					=>	!empty($form_state['values']['address'])?trim($form_state['values']['address']):'',
+										
+										'created_date'				=>  $current_date,
+										'est_status'				=>  '1',
+										'latitude'					=>	trim($form_state['values']['latitude']),
+										'longitude'					=>	trim($form_state['values']['longitude']),
+										'gstno'						=>	!empty($form_state['values']['gstno'])?trim($form_state['values']['gstno']):'',
+									  );
+	
+	//print_r($fieldsEstablishmentInfo); exit; 	 							  
+	db_insert('ld_establishment_details')->fields($fieldsEstablishmentInfo)->execute();
+ 	drupal_set_message('Establishment added successfully'); 
+ }
+ 
+	
+ function add_establishment_form_validate($form, &$form_state) { 
+ 
+  if (!$form_state['values']['ename']) {
+    form_set_error('ename', 'Please enter Establishment Name!');   
+  }
+  
+  $ename = $form_state['values']['ename'];
+	if (!preg_match('/[A-Za-z]+$/', $ename)) {  
+    form_set_error('ename', t('Establishment Name should be text only!!'));
+  }	
+  
+  
+  if (isset($form_state['values']['id_card_type']) && !$form_state['values']['id_card_type']) {
+    form_set_error('id_card_type', 'Please select and enter card details!');    
+  }
+  
+ if (isset($form_state['values']['id_card_type']) !="") {
+    if (isset($form_state['values']['id_card_details']) && !$form_state['values']['id_card_details']) {
+    form_set_error('id_card_details', 'Please select and enter card details!');    
+    }  
+  }
+  
+ if ($form_state['values']['id_card_type'] ==1) { 
+	 //if(($form_state['values']['id_card_details']!="") && (strlen($form_state['values']['id_card_details'])<10 || strlen($form_state['values']['id_card_details'])>10)) {
+  	if((!preg_match('/^([a-zA-Z]){3}([0-9]){7}?$/', $form_state['values']['id_card_details']))) {
+       form_set_error('id_card_details', 'Please enter a valid voter number!'); }
+  }
+  if ($form_state['values']['id_card_type'] ==2) { 
+	 if((!preg_match('/^([0-9]){12}?$/', $form_state['values']['id_card_details']))) {
+       form_set_error('id_card_details', 'Please enter a valid aadhaar number!'); }  
+  }
+  if ($form_state['values']['id_card_type'] ==3) { 
+	 //if(($form_state['values']['id_card_details']!="") && (strlen($form_state['values']['id_card_details'])<12 || strlen($form_state['values']['id_card_details'])>12)) {
+	 if((!preg_match('/^([a-zA-Z]){5}([0-9]){4}([[a-zA-Z]){1}?$/', $form_state['values']['id_card_details']))) {
+       form_set_error('id_card_details', 'Please enter a valid PAN number!'); }    
+  }
+  if ($form_state['values']['id_card_type'] ==4) { 
+	 if(($form_state['values']['id_card_details']!="") && (strlen($form_state['values']['id_card_details'])<10 || strlen($form_state['values']['id_card_details'])>10)) {
+       form_set_error('id_card_details', 'Please enter a valid TAN number!'); } 
+  }
+  if ($form_state['values']['id_card_type'] ==5) { 
+	 if(($form_state['values']['id_card_details']!="") && (strlen($form_state['values']['id_card_details'])<10 || strlen($form_state['values']['id_card_details'])>10)) {
+       form_set_error('id_card_details', 'Please enter a valid LIN!'); } 
+  }
+  
+  if (!$form_state['values']['industry_category']) {
+    form_set_error('industry_category', 'Please select industry category!');   
+  }
+  /* if (!$form_state['values']['gstno']) {
+    form_set_error('gstno', 'Please enter GST number!');   
+  }
+ if ($form_state['values']['gstno'] !="") {
+	 if((!preg_match('/^([0][1-9]|[1-2][0-9]|[3][0-5])([a-zA-Z]{5}[0-9]{4}[a-zA-Z]{1}[1-9a-zA-Z]{1}[zZ]{1}[0-9a-zA-Z]{1})+$/', $form_state['values']['gstno']))) {
+       form_set_error('gstno', 'Please enter a valid GST number!'); }  
+  }*/
+  
+  /*if (!$form_state['values']['gender_of_owner_industry']) {
+    form_set_error('gender_of_owner_industry', 'Please enter gender of owner!');   
+  }*/
+  
+  
+  if (isset($form_state['values']['pincode']) && !$form_state['values']['pincode']) {
+    form_set_error('pincode', 'Please enter Pincode!');    
+  }
+  
+  if(isset($form_state['values']['state']) && $form_state['values']['state'] == 1){
+	 if (isset($form_state['values']['subdivision']) && !$form_state['values']['subdivision']) {
+		form_set_error('subdivision', 'Please select a Sub-Division!');    
+	  } 
+	 if (isset($form_state['values']['areatype']) && !$form_state['values']['areatype']) {
+		form_set_error('areatype', 'Please select a Area Type!');    
+	  }
+	 if (isset($form_state['values']['block']) && !$form_state['values']['block']) {
+		form_set_error('block', 'Please select a Block/Municipality/Corporation/Notified Area/SEZ!');    
+	  }
+	  if (isset($form_state['values']['panchayat']) && !$form_state['values']['panchayat']) {
+		form_set_error('panchayat', 'Please select a Gram Panchayat/Ward/Sector!');    
+	  }
+	  if (isset($form_state['values']['policestation']) && !$form_state['values']['policestation']) {
+		form_set_error('policestation', 'Please select a Police Station!');    
+	  }
+  }
+  
+  if (isset($form_state['values']['postoffice']) && !$form_state['values']['postoffice']) {
+    form_set_error('postoffice', 'Please select a Post Office!');    
+  }
+  if (!$form_state['values']['address']) {
+    form_set_error('address', 'Please enter a Address!');    
+  }
+ }
+ 
+  function get_pincode_wbautocomplete($string='') {
+	
+	unset($uamdata['pincode']);
+	unset($uamdata['state_code']);
+	unset($uamdata['district']);
+	
+	 $matches = array();
+	 $qry = db_select ('all_india_pin_code', 'p');
+     $qry->fields('p', array('id','pincode', 'statename', 'state_code','district_code','districtname','po_name')); 
+	 $qry->condition('pincode', '%' . trim($string) . '%', 'LIKE');
+	 $qry->condition('state_code', '1', '=');
+	 $qry->range(0, 10);
+	 //echo $qry.$string; exit;
+	 $result =  $qry->execute();
+	  // save the query to matches
+    foreach ($result as $row) {
+	  $matches[$row->pincode] = check_plain($row->pincode."-".$row->districtname."-".$row->statename);
+    }
+
+    // Return the result to the form in json
+    drupal_json_output($matches);
+	//echo $matches;
+}
+
+ function establishment_list(){
+	 	 
+	 global $base_root, $base_path,$user;
+	 
+	 $est_list_query_result_data = establishment_info($user->uid);
+	 
+	 //print_r($est_list_query_result_data); exit;
+	 
+	 //$rows = array();
+     $header = array();
+  	 $output = '';
+	  
+	 //Define table columns
+	 $header = array(
+	 	  //array('data'=> 'Sl No.'),
+          array('data'=> 'District Name'),
+		  array('data'=> 'Establishment Name'),
+          //array('data' => 'CLIN ID'),
+          array('data'=> 'Address'),
+      );
+	  
+	//Table data.
+	
+	//$i=0;
+	 foreach($est_list_query_result_data as $data){
+		//$i++;
+		$rows[] = array(
+					//$i,
+					$data->district_name,
+      				$data->est_name,
+					//$data->e_clinid,
+					$data->address.', Pin-'.$data->pincode,
+					//date('d-m-Y', strtotime($data->created_date)),
+	  	);   
+	 }
+	 
+	  $output .= theme('datatable', array(
+							  'header' => $header,
+							  'rows' => $rows,
+							  'attributes' => array('class' => array('table','table-striped')),
+							  'sticky' => true,
+							  'caption' => '',
+							  'colgroups' => array(),
+							  'empty' => t("No data found!") // The message to be displayed if table is empty
+							)
+						  ).theme('pager');
+	  
+	/*$variables = array(
+	  'header' => $header,
+	  'rows' => $rows,
+	  'attributes' => array('class' => array('table', 'table-bordered')),
+	);*/	
+
+	//$output .= theme('datatable', $variables);
+	return '<div class="table-responsive add_establishment table-wrapper-scroll-y ">'.$output.'</div>'; 
+
+	 
+ }
+ 
+ function gerWebServiceDataForBoilerAllDistrict($from_dt_cur_six,$to_dt_cur_six){
+	//echo "-->"; exit;
+	$mydata = array();
+	if($from_dt_cur_six!="" && $to_dt_cur_six!=""){
+		$service_url 	= 	"https://wbboilers.gov.in/labourdept/eservices/getEServiceStatisticsDistrictwise";
+		
+		$ch 			= 	curl_init();
+		$headers		=	array();
+		$curl_post_data = 	array(
+			//"service_id" 	=> "1",
+			//"district_code" => $district,
+			//"sub_div_code"  => $subdivision,       
+			"from_date" 	=> $from_dt_cur_six,
+			"to_date" 		=> $to_dt_cur_six
+		);
+		$headers[]		=	'Accept: application/json';
+		$headers[]		=	'Content-Type: application/json';
+		$headers[] 		= 	'charset=utf-8';
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_URL, $service_url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode( $curl_post_data ) );
+		curl_setopt($ch, CURLOPT_POST, true);
+		$results		=	curl_exec($ch);
+		$errors			=	curl_error($ch);
+		curl_close($ch);
+		$x				=	json_encode( $results );
+		$prsecallboilers	= 	json_decode(json_decode(trim($x)), TRUE);
+		
+		//$tmp= print_r(json_decode($results)); //exit;
+		//print_r($tmp);
+		//exit;
+		return $prsecallboilers;
+	}else{
+		return $mydata;
+	}
+}
+
+function gerWebServiceDataForLCAllDistrict($from_dt_cur_six,$to_dt_cur_six){
+	$mydata = array();
+	if($from_dt_cur_six!="" && $to_dt_cur_six!=""){
+		$service_url 	= 	"https://wblc.gov.in//labourdept/eservices/reportAllServicesAlldistrict";
+		
+		$ch 			= 	curl_init();
+		$headers		=	array();
+		$curl_post_data = 	array(
+			//"service_id" 	=> "1",
+			//"district_code" => $district,
+			//"sub_div_code"  => $subdivision,       
+			"from_date" 	=> $from_dt_cur_six,
+			"to_date" 		=> $to_dt_cur_six
+		);
+		$headers[]		=	'Accept: application/json';
+		$headers[]		=	'Content-Type: application/json';
+		$headers[] 		= 	'charset=utf-8';
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_URL, $service_url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode( $curl_post_data ) );
+		curl_setopt($ch, CURLOPT_POST, true);
+		$results		=	curl_exec($ch);
+		$errors			=	curl_error($ch);
+		curl_close($ch);
+		$x				=	json_encode( $results );
+		$prsecallwblc 		= 	json_decode(json_decode(trim($x)), TRUE);
+		
+		//$tmp= print_r(json_decode($results)); //exit;
+		//print_r($tmp);
+		//exit;
+		return $prsecallwblc;
+	}else{
+		return $mydata;
+	}
+}
+
+
+function encrypt_swo_ld($text){
+$salt = 'gbRicNlJN7r50WVb'; // encryption key
+   $iv   = 'gbRicNlJN7r50WVb';         // encryption key
+ 	$text = serialize($text);
+
+ 	return base64_encode($text);
+
+
+  // $blocksize = 16;
+  // $pad = $blocksize - (strlen($text) % $blocksize);
+  // $ptext  = $text . str_repeat(chr($pad), $pad);
+  // return trim(base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_128, $salt, $ptext, MCRYPT_MODE_CBC, $iv)));
+
+  }
+
+ function decrypt_swo_ld($text){
+$salt = 'gbRicNlJN7r50WVb';
+   $iv   = 'gbRicNlJN7r50WVb';
+
+   return unserialize(base64_decode($text)); 
+
+// $blocksize = 16;
+// $pad = $blocksize - (strlen($text) % $blocksize);
+// $ptext  = $text . str_repeat(chr($pad), $pad);
+// return unserialize(trim(mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $salt, base64_decode($ptext), MCRYPT_MODE_CBC, $iv)));
+}

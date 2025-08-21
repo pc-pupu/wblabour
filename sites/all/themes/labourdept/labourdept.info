@@ -1,0 +1,73 @@
+
+name = Labourdept
+description = A flexible, recolorable theme with many regions.
+package = Core
+version = VERSION
+core = 7.x
+
+stylesheets[all][] = css/layout.css
+;stylesheets[all][] = css/style.css
+stylesheets[all][] = css/colors.css
+stylesheets[print][] = css/print.css
+
+
+;stylesheets[all][] = css/responsive.css
+;stylesheets[all][] = css/bootstrap.css
+;stylesheets[all][] = css/font-awesome.css
+;stylesheets[all][] = css/style2.css
+
+;scripts[] = js/jasny-bootstrap.min.js
+;scripts[] = js/main.js
+;scripts[] = js/bootstrap.min.js
+;scripts[] = js/news.js
+;scripts[] = js/news2.js
+;scripts[] = js/owl.carousel.min.js
+;scripts[] = js/jquery.scrollUp.js
+;scripts[] = js/script.js
+;scripts[] = js/tickerme.min.js
+;scripts[] = js/wow.min.js
+
+
+regions[header] = Header
+regions[help] = Help
+regions[page_top] = Page top
+regions[page_bottom] = Page bottom
+regions[highlighted] = Highlighted
+
+
+regions[top_links] = Top Links
+regions[ease_of_doing_business] = Easy Of Doing Business
+regions[from_the_desk_of] = From The Desk Of
+regions[from_the_desk_of_new] = From The Desk Of New
+regions[body_area] = Body Area
+regions[body_advertisement] = Body Advertisement
+regions[labour_footer] = Labour Footer
+regions[labour_footer1] = Labour Footer1
+regions[news_section] = News Section
+regions[text_size] = Text Size
+
+
+
+regions[featured] = Featured
+regions[content] = Content
+regions[sidebar_first] = Sidebar first
+regions[sidebar_second] = Sidebar second
+
+regions[triptych_first] = Triptych first
+regions[triptych_middle] = Triptych middle
+regions[triptych_last] = Triptych last
+
+regions[footer_firstcolumn] = Footer first column
+regions[footer_secondcolumn] = Footer second column
+regions[footer_thirdcolumn] = Footer third column
+regions[footer_fourthcolumn] = Footer fourth column
+regions[footer] = Footer
+
+settings[shortcut_module_link] = 0
+
+
+; Information added by Drupal.org packaging script on 2016-02-24
+version = "7.43"
+project = "drupal"
+datestamp = "1456343506"
+

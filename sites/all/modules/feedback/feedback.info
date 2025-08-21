@@ -1,0 +1,8 @@
+;$Id$
+name = May We Help You
+description = Feedback or May we Help You Form
+package = Feedback Module
+version = "7.x"
+core = 7.x
+files[] = feedback.module
+;dependencies[] = autoload

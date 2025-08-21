@@ -1,0 +1,12 @@
+;$Id$
+
+name = slidernews
+description = A slider news module.
+package = Drupal 7 Development
+core = 7.x
+files[] = slidernews.module
+
+;dependencies[] = autoload
+;php = 5.1
+
+

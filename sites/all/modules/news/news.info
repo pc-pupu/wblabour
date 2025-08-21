@@ -1,0 +1,9 @@
+;$Id$
+
+name = news
+description = A news module.
+package = Drupal 7 Development
+core = 7.x
+files[] = news.module
+
+;dependencies[] = autoload

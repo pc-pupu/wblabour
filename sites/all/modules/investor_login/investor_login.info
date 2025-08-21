@@ -1,0 +1,9 @@
+;$Id$
+
+name = Investor Login
+description = A investor login module.
+package = Drupal 7 Development
+core = 7.x
+files[] = investor_login.module
+
+;dependencies[] = autoload

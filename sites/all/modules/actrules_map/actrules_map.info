@@ -1,0 +1,10 @@
+;$Id$
+
+name = CMS Act and Rules Map
+description = Act and Rules Map module.
+package = Act and Rules
+version = "7.x"
+core = 7.x
+files[] = actrules_map.module
+
+;dependencies[] = autoload

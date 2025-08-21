@@ -1,0 +1,552 @@
+<?php
+function circular_permission() {
+  return array(
+    'cmscircular_per' => array(
+      'title' => t('cms circular add/edit permission'),
+    ),
+	'circular_per' => array(
+      'title' => t('circular list permission'),
+    )
+  );
+}
+
+function circular_menu(){ 
+  $items['whatsapptest'] = array(
+	'title' => 'Whats app test',
+	//'page callback' => 'circular_list',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('whats_app_form'),
+	'access arguments' => array('circular_per'),
+  );	
+ $items['circular'] = array(
+	'title' => 'Circular List',
+	//'page callback' => 'circular_list',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('circular_list_form'),
+	'access arguments' => array('circular_per'),
+  );
+  $items['cmsentry/cmscircular'] = array(
+	'title' => 'CMS Circular List',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('cmscircular_list'),
+	'access arguments' => array('cmscircular_per'),
+  );	 
+  $items['cmsentry/cmscircular/addcmscircular'] = array(
+	'title' => 'CMS Circular Entry',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('add_circular'),
+	'access arguments' => array('cmscircular_per'),
+  );
+  $items['cmsentry/cmscircular/%/cmscircularedit'] = array(
+	'title' => 'CMS Circular Edit',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('edit_circular',2),
+	'access arguments' => array('cmscircular_per'),
+  );
+  return $items;
+}
+
+function whats_app_form($form, &$form_states){
+	global $base_root, $base_path;
+	drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/sky-forms.css');
+	drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/form-design.css');
+  
+	$form['whats_app_txt'] = array(
+	  '#type' => 'textfield',
+	  '#title' => t(''),
+	  '#attributes' => array('class'=>array('dateshow'), 'placeholder'=>'Message', 'autocomplete' => 'off'),
+	  '#prefix' => '<div id="dateshowfrom"> <div class="col col-4"><label class="input"><i class="icon-prepend icon-calendar"></i>Send whats app message',
+	  '#suffix' => '</label></div></div>',
+	);
+	
+	$form['whats_app_no'] = array(
+	  '#type' => 'textfield',
+	  '#title' => t(''),
+	  '#attributes' => array('class'=>array('dateshow'), 'placeholder'=>'Message', 'autocomplete' => 'off'),
+	  '#prefix' => '<div id="dateshowfrom"> <div class="col col-4"><label class="input"><i class="icon-prepend icon-calendar"></i>Country code with mobileno (Ex: 919836886161)',
+	  '#suffix' => '</label></div></div>',
+	);
+	
+	$form['submit'] = array (
+	  '#type' => 'submit',
+	  '#value' => 'Sent',
+	  '#attributes' => array('class'=>array('btn btn-success form-submit buttonforsearch')),
+	  '#prefix' => '<div class="col col-4 search-btm" style="margin-top:22px">',
+  	  '#suffix' => '</div>',
+    ); 
+	
+	return  $form;
+}
+
+function whats_app_form_submit($form, &$form_states){
+
+	$m = trim($form_states['values']['whats_app_txt']);
+	 $p = trim($form_states['values']['whats_app_no']);
+	
+	
+	$ch = curl_init();
+$curlConfig = array(
+    CURLOPT_URL            => "https://panel.apiwha.com/send_message.php",
+    CURLOPT_POST           => true,
+    CURLOPT_RETURNTRANSFER => true,
+	CURLOPT_SSL_VERIFYHOST => 0,
+	CURLOPT_SSL_VERIFYPEER => 0,
+    CURLOPT_POSTFIELDS     => array(
+        'apikey' => 'Y0K78PVDIW4F20MDQFAM',
+        'number' => $p,
+		'text' => $m,
+    )
+);
+curl_setopt_array($ch, $curlConfig);
+$result = curl_exec($ch);
+$err = curl_error($ch);
+curl_close($ch);
+echo $result;
+// Further processing ...
+//if ($server_output == "OK") { echo "ok"; } else { echo "error"; }
+	//$lc_final_arr = json_decode($result_lc);
+	
+	exit;
+	
+}
+
+function circular_list_form($form, &$form_states){
+	global $base_root, $base_path;
+  drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/sky-forms.css');
+  drupal_add_css(drupal_get_path('module', 'applicant_registration') . '/css/form-design.css');
+   drupal_add_css(drupal_get_path('module', 'circular') . '/circular.css');
+  drupal_add_js(drupal_get_path('module', 'circular') . '/myfunction.js');
+ 
+  $datefrom = isset($form_state['values']['circular_datefrom']) && !empty($form_state['values']['circular_datefrom']) ? 
+  																				$form_state['values']['circular_datefrom'] : '';	
+  $dateto = isset($form_state['values']['circular_dateto']) && !empty($form_state['values']['circular_dateto']) ? 
+  																				$form_state['values']['circular_dateto'] : '';
+																				
+ $circularsearch = isset($form_state['values']['circular_search']) && !empty($form_state['values']['circular_search']) ? 
+  																				$form_state['values']['circular_search'] : '';
+																				  
+    $form['#attributes']['class'][] = 'sky-form custom-form-main';
+	
+	 $form['circulardate'] = array(
+	   '#title'=>'',
+	   '#type' => 'radios',
+	   '#options' => array('C'=>t('Circular Date'),'T'=>t('Description Search')),
+	   '#default_value' => 'T',
+	   '#attributes' => array('class'=>array('circulardate_radio')),
+	   '#prefix' => '<div class="row"><section class="col col-12 app-regs-gender"><label class="radios">Search By',
+	   '#suffix' => '</label></section></div>',
+	);
+	
+	$form['circular_datefrom'] = array(
+	  '#type' => 'textfield',
+	  '#title' => t(''),
+	  '#attributes' => array('id' => 'awarddatefrom','class'=>array('dateshow'), 'placeholder'=>'Circular Date From', 'autocomplete' => 'off'),
+	  '#prefix' => '<div id="dateshowfrom"> <div class="col col-4"><label class="input"><i class="icon-prepend icon-calendar"></i>Date From',
+	  '#suffix' => '</label></div></div>',
+	);
+	
+	$form['circular_dateto'] = array(
+	  '#type' => 'textfield',
+	  '#title' => t(''),
+	  '#attributes' => array('id' => 'awarddateto','class'=>array('dateshow'), 'placeholder'=>'Circular Date To', 'autocomplete' => 'off'),
+	  '#prefix' => '<div id="dateshowto"><div class="col col-4"><label class="input"><i class="icon-prepend icon-calendar"></i>Date To',
+	  '#suffix' => '</label></div></div>',
+	);
+	 
+	
+	$form['circular_search'] = array(
+		'#type' => 'textfield',
+		'#title' => t(''),
+		'#attributes' => array('class'=>array(''), 'placeholder'=>'Circular Search', 'autocomplete' => 'off'),
+		/*'#attributes' => array('class'=>array(''),'style'=>'font-size:15px; margin:20px 0; font-weight:normal', 'placeholder'=>'Circular Search', 'autocomplete' => 'off'),*/
+		'#prefix' => '<div id="searchshow"><div class="col col-8"><label class="input name-circular"><i class="icon-prepend icon-search"></i>Circular Search',
+		'#suffix' => '</label></div></div>',
+   );
+
+   $form['submit'] = array (
+	  '#type' => 'submit',
+	  '#value' => 'Search',
+	  '#ajax' => array(
+		  'callback' => 'ajax_circular_callback',
+	  ),
+	  '#attributes' => array('class'=>array('btn btn-success form-submit buttonforsearch')),
+	  '#prefix' => '<div class="col col-4 search-btm" style="margin-top:22px">',
+  	  '#suffix' => '</div>',
+    ); 
+	 
+	$form['add_circular_list'] = array(
+	  '#type' => 'markup',
+	  '#markup' => '<div id="circular_replace"><div class="col-md-12">'.circular_list($datefrom,$dateto,$circularsearch).'</div></div>',
+    );	
+	
+	return  $form;
+ }
+
+function circular_list_form_submit($form, &$form_state){
+	$form_state['rebuild'] = TRUE;
+ }
+ 
+function circular_list($datefrom='',$dateto='',$circularsearch=''){
+	 global $base_root, $base_path;
+	 $sort = 'DESC';
+	 $order = 'circulardate';
+     $cms_circular_query = db_select('cms_circular', 't');
+     $cms_circular_query->fields('t', array('cid','circulardesc','circulardate','circularfile'));
+	  
+	  if($datefrom!='' && $dateto!=''){
+		 $circularsearch ="";
+		 $datefrom = date('Y-m-d', strtotime($datefrom));
+		 $dateto = date('Y-m-d', strtotime($dateto));
+		 $cms_circular_query->condition('t.circulardate',array($datefrom,$dateto),'BETWEEN');
+	   }
+	   
+	  if($circularsearch!='')
+		  {
+			  $datefrom='';
+			  $dateto!='';
+			  $cms_circular_query->condition('t.circulardesc', '%' . db_like($circularsearch) . '%', 'LIKE');
+		  }
+	 $cms_circular_query = $cms_circular_query->extend('TableSort')->extend('PagerDefault')->limit(20);
+	 $cms_circular_query->orderBy($order, $sort);
+	 $cms_circular_query_result = $cms_circular_query->execute();
+	 $cms_circular_query_result_data = $cms_circular_query_result->fetchAll();
+	 
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+  
+     $header = array(
+          array('data'=> 'SL.NO'),
+		  array('data'=> 'DATE'),
+          array('data' => 'DESCRIPTION'),
+		  array('data' => 'FILE'),
+      );
+	 //$i=0;
+	 if($_GET['page'] == ""){
+		 $p = 0;
+	 }else{
+		 $p = $_GET['page'];
+	 }
+	 $i = 20*($p) + 1;
+	 foreach($cms_circular_query_result_data as $data){
+		
+		$aa=$base_root.$base_path.'sites/default/files/upload/circular/'.$data->circularfile;
+		$link_s=l(t('View'), $aa, array('attributes' => array('target'=>'_blank'))) ;
+		$rows[] = array(
+      				$i,
+					date('d-m-Y', strtotime($data->circulardate)),
+      				$data->circulardesc,
+					$link_s
+	  	); 
+		$i++;  
+	 }
+	 
+      				
+	 
+	 $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+}
+
+function cmscircular_list($form, &$form_state){
+	
+	$form['add_circular'] = array(
+	  '#type' => 'markup',
+	  '#markup' => l('Add Circular','cmsentry/cmscircular/addcmscircular'),
+    );	
+	
+	$form['circular_list_details'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_circular_list(),
+    );	
+	return $form;
+}
+function get_circular_list(){
+	 global $base_root, $base_path;
+	 $sort = 'DESC';
+	 $order = 'circulardate';
+     $cms_circular_query = db_select('cms_circular', 't');
+     $cms_circular_query->fields('t', array('cid','circulardesc','circulardate'));
+	 $cms_circular_query = $cms_circular_query->extend('TableSort')->extend('PagerDefault')->limit(20);
+	 $cms_circular_query->orderBy($order, $sort);
+	 $cms_circular_query_result = $cms_circular_query->execute();
+	 $cms_circular_query_result_data = $cms_circular_query_result->fetchAll();
+	 
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+  
+     $header = array(
+          array('data'=> 'CIRCULAR SL.NO'),
+		  array('data'=> 'CIRCULAR DATE'),
+          array('data' => 'CIRCULAR DESCRIPTION'),
+		  array('data' => 'CIRCULAR VIEW/EDIT'),
+      );
+	 $i=0;
+	 foreach($cms_circular_query_result_data as $data){
+		$i++;
+		$aa=$base_root.$base_path.'cmsentry/cmscircular/'.$data->cid.'/cmscircularedit';
+		$link_s=l(t('View/Edit'), $aa) ;
+		$rows[] = array(
+      				$i,
+					date('d-m-Y', strtotime($data->circulardate)),
+      				$data->circulardesc,
+					$link_s
+	  	);   
+	 }
+	 
+      				
+	 
+	 $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+}
+
+function add_circular($form, &$form_state){
+   global $base_root, $base_path;
+	 
+   $form['add_circular_date'] = array(
+	 '#title'=>' Circular Date :',
+	 '#type' => 'date',
+     '#default_value' => array(
+         'month' => format_date(time(), 'custom', 'n'),
+         'day' => format_date(time(), 'custom', 'j'),
+         'year' => format_date(time(), 'custom', 'Y'),
+       ),
+	 '#required' => TRUE,
+	 );  
+		 
+	$form['add_circular_desc'] = array(
+	   '#title'=>'Circular Description :',
+	   '#cols' => 20, 
+       '#rows' => 4,
+	   '#type' => 'textarea',
+	   '#element_validate' => array('circular_textfield_validate'),
+	   '#required' => TRUE,
+	);
+		 
+    $form['add_circular_pdf'] = array(
+	   '#title' => t(' Upload an Circular Scanned file (JPG,PDF only)'),
+	   '#type' => 'managed_file',
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+	   '#upload_location' => 'public://upload/circular/',
+	   '#process' => array('import_my_file_element_process'),
+	   '#required' => TRUE,
+	);
+	
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Save',
+		'#prefix' => '<div align="center">',  
+        '#suffix' => '</div>',
+     ); 
+	  
+	return  $form;
+	 
+ }
+ 
+function add_circular_submit($form, &$form_state){ 
+	$arr = array();
+	$circularPdf = "";
+	
+	$circular_desc=check_plain($form_state['values']['add_circular_desc']);
+	$circular_date=$form_state['values']['add_circular_date']['year'].'-'.$form_state['values']['add_circular_date']['month'].'-'.$form_state['values']['add_circular_date']['day']; 
+
+	$circular_doc = file_load($form_state['values']['add_circular_pdf']);
+	if(!empty($circular_doc)){
+		$arr = explode("/", $circular_doc->uri);
+		$circular_doc->status = FILE_STATUS_PERMANENT;
+		file_save($circular_doc);
+		$circularPdf = $arr[4];
+	 }
+	
+	$circularInfo = array('circulardate'=>$circular_date,
+						'circulardesc'=>$circular_desc,
+						'circularfile' => $circularPdf);
+						
+	$id = db_insert('cms_circular')->fields($circularInfo)->execute();
+	drupal_set_message('Your Record has been inserted successfully.');
+
+}
+
+
+function edit_circular($form, &$form_state, $args=''){
+   global $base_root, $base_path;
+   
+   $cms_circular_query = db_select('cms_circular', 't');
+   $cms_circular_query->fields('t', array('cid','circulardesc','circulardate','circularfile'));	
+   $cms_circular_query->condition('t.cid',trim($args),'=');
+   $qry_data = $cms_circular_query->execute();
+   $result = $qry_data->fetchAssoc();
+   
+   if($result['circulardate']!=""){
+	   	$cdate = explode("-", $result['circulardate']);
+		
+		$cdate[1]= ltrim($cdate[1], '0'); 
+		$cdate[2]= ltrim($cdate[2], '0');  
+		$form['edit_circular_date'] = array(
+		 '#title'=>' Circular Date :',
+		 '#type' => 'date',
+		 '#default_value' => array(
+			 'month' => format_date(time(), 'custom', $cdate['1']),
+			 'day' => format_date(time(), 'custom', $cdate['2']),
+			 'year' => format_date(time(), 'custom', $cdate['0']),
+		   ),
+		 '#required' => TRUE,
+		 );   
+   }else{
+	   $form['edit_circular_date'] = array(
+		 '#title'=>' Circular Date :',
+		 '#type' => 'date',
+		 '#default_value' => array(
+			 'month' => format_date(time(), 'custom', 'n'),
+			 'day' => format_date(time(), 'custom', 'j'),
+			 'year' => format_date(time(), 'custom', 'Y'),
+		   ),
+		 '#required' => TRUE,
+		 );  
+   }
+		 
+	$form['edit_circular_desc'] = array(
+	   '#title'=>'Circular Description :',
+	   '#cols' => 20, 
+       '#rows' => 4,
+	   '#type' => 'textarea',
+	   '#default_value' =>trim($result['circulardesc']),
+	   '#element_validate' => array('circular_textfield_validate'),
+	   '#required' => TRUE,
+	);
+	
+	$uri = 'public://upload/circular/'.trim($result['circularfile']);
+	
+	if (file_exists($uri)) {
+		$form['circular_file_up'] = array(
+        '#markup' => l(t('<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/pdf.png">'),
+			     ''.$GLOBALS['base_url'].'/sites/default/files/upload/circular/'.$result['circularfile'], array('html' => TRUE,
+				 'attributes'=>array('target'=>'_blank' , 'class'=>array('pdfloc1')))),
+        );
+		$form['scan_file'] = array(
+        '#type' => 'hidden',
+		'#default_value' => trim($result['circularfile']),
+        );
+	}else{
+		$form['circular_file_up'] = array(
+        '#markup' => t('No File Exist'),
+		'#prefix' => '<div class="pdfnone">',
+	    '#suffix' => '</div>'
+        );
+	}
+		 
+    $form['edit_circular_pdf'] = array(
+	   '#title' => t(' Upload an Circular Scaned file (JPG,PDF only)'),
+	   '#type' => 'managed_file',
+	   '#upload_validators' => array('file_validate_extensions' => array('pdf jpg'), 'file_validate_size' => array(50*1024*1024)),
+	   '#upload_location' => 'public://upload/circular/',
+	   '#process' => array('import_my_file_element_process'),
+	   //'#required' => TRUE,
+	);
+	$form['circular_id'] = array(
+		'#title' => t('Circular Id'),
+		'#type' => 'hidden',
+		'#default_value' => isset($args) ? $args : NULL,
+	);	
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'Save',
+		'#prefix' => '<div align="center">',  
+        '#suffix' => '</div>',
+     ); 
+	  
+	return  $form;
+	 
+ } 
+ 
+function edit_circular_submit($form, &$form_state){ 
+	$arr = array();
+	$circularPdf = "";
+	
+	$circular_desc=check_plain($form_state['values']['edit_circular_desc']);
+	$circular_date=$form_state['values']['edit_circular_date']['year'].'-'.$form_state['values']['edit_circular_date']['month'].'-'.$form_state['values']['edit_circular_date']['day']; 
+
+	$circular_doc = file_load($form_state['values']['edit_circular_pdf']);
+	if(!empty($circular_doc)){
+		$arr = explode("/", $circular_doc->uri);
+		$circular_doc->status = FILE_STATUS_PERMANENT;
+		file_save($circular_doc);
+		$circularPdf = $arr[4];
+	 }else{
+		$file_name=$form_state['values']['scan_file'];
+		$circularPdf = $file_name;
+	}
+	
+	$circularInfo = array('circulardate'=>$circular_date,
+						'circulardesc'=>$circular_desc,
+						'circularfile' => $circularPdf);
+						
+	$query = db_update('cms_circular');
+	$query->fields(array('circulardate' =>	$circular_date,
+						 'circulardesc' =>	$circular_desc,
+ 						 'circularfile' =>	$circularPdf));
+	$query->condition('cid', $form_state['values']['circular_id']);
+	$rs = $query->execute();
+	if($rs){
+		drupal_set_message("Your data has been updated successfully");
+		drupal_goto('cmsentry/cmscircular');
+	}
+
+} 
+
+ 
+function circular_textfield_validate($element, &$form_state) {
+   if(trim($element['#value']))
+   {
+        $val="a".trim($element['#value']);
+		if(stripos($val,"~") >0  || stripos($val,"!") >0 || stripos($val,"@")>0 || stripos($val,"<")>0 || stripos($val,">")>0 || stripos($val,"'")>0 || stripos($val,"$")>0 || stripos($val,"#")>0 || stripos($val,"%")>0 || stripos($val,"^")>0  || stripos($val,"*")>0){
+       form_error($element, t($element['#title'].'  contain illegal character .'));
+	   }
+   }
+}
+
+/* It disables the default upload button that comes with this #managed_file form */
+function import_my_file_element_process($element, &$form_state, $form) {
+  $element = file_managed_file_process($element, $form_state, $form);
+  $element['upload_button']['#access'] = FALSE;
+ 
+  return $element;
+}
+
+function ajax_circular_callback($form,&$form_state){
+	$commands   = array();
+	if($form_state['values']['circulardate'] == 'C'){
+	$commands[] = ajax_command_replace('#circular_replace', '<div id="circular_replace">'.circular_list($form_state['values']['circular_datefrom'],$form_state['values']['circular_dateto'],'').'</div>');
+	}
+	elseif($form_state['values']['circulardate'] == 'T'){
+		$commands[] = ajax_command_replace('#circular_replace', '<div id="circular_replace">'.circular_list('','',$form_state['values']['circular_search']).'</div>');
+	}
+	else{
+		$commands[] = ajax_command_replace('#circular_replace', '<div id="circular_replace">'.circular_list('','','').'</div>');
+     }
+   return array('#type' => 'ajax', '#commands' => $commands);
+}

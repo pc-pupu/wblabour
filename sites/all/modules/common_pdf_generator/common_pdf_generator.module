@@ -1,0 +1,90 @@
+<?php
+
+function common_pdf_generator_permission() {
+  return array(
+	'pdf_pass_per' => array(
+      'title' => t('PDF Permission'),
+    ),
+  );
+}
+
+function common_pdf_generator_menu() {
+  $items = array();
+  
+  $items['generate/assetreport/%'] = array(
+	'page callback' => 'generateAssetPdf',
+	'page arguments' => array(2),
+	'access arguments' 	=> 	array('pdf_pass_per'),
+	'file' => 'includes/common_pdf.inc',
+	'type' => MENU_CALLBACK,
+  );
+  
+  $items['acknowledgement-print/%/%']=array(
+		'page callback'	=>	'acknowledgement_print_form',
+		'page arguments' =>	 array(1,2),
+		'access arguments' => array('pdf_pass_per'),
+		'file' => 'includes/common_pdf.inc',
+		'type' => MENU_CALLBACK,
+	);
+	
+  $items['showcause-print/%/%']=array(
+		'page callback'	=>	'showcause_print_form',
+		'page arguments' =>	 array(1,2),
+		'access arguments' => array('pdf_pass_per'),
+		'file' => 'includes/common_pdf.inc',
+		'type' => MENU_CALLBACK,
+	);
+	
+		
+	
+  /*$items['bulkacknowledgement-print/%']=array(
+		'page callback'	=>	'bulkacknowledgement_print_form',
+		'page arguments' =>	 array(1),
+		'access arguments' => array('pdf_pass_per'),
+		'file' => 'includes/common_pdf.inc',
+		'type' => MENU_CALLBACK,
+	);	*/
+	
+	$items['bulkacknowledgement-print/%/%']=array(
+		'page callback'	=>	'bulkacknowledgement_print_form',
+		'page arguments' =>	 array(1,2),
+		'access arguments' => array('pdf_pass_per'),
+		'file' => 'includes/common_pdf.inc',
+		'type' => MENU_CALLBACK,
+	);	
+	
+	$items['bulkacknowledgement-field-print/%/%']=array(
+	'page callback'	=>	'bulkacknowledgement_field_print_form',
+	'page arguments' =>	 array(1,2),
+	'access arguments' => array('pdf_pass_per'),
+	'file' => 'includes/common_pdf.inc',
+	'type' => MENU_CALLBACK,
+	);	
+	
+	$items['bulkacknowledgement-received/%/%']=array(
+		'page callback'	=>	'bulkacknowledgement_received_form',
+		'page arguments' =>	 array(1,2),
+		'access arguments' => array('pdf_pass_per'),
+		'file' => 'includes/common_pdf.inc',
+		'type' => MENU_CALLBACK,
+	);	
+	
+	$items['bulkacknowledgement-field-received/%']=array(
+		'page callback'	=>	'bulkacknowledgement_field_received_form',
+		'page arguments' =>	 array(1),
+		'access arguments' => array('pdf_pass_per'),
+		'file' => 'includes/common_pdf.inc',
+		'type' => MENU_CALLBACK,
+	);	
+	
+	 $items['sar-print/%/%']=array(
+		'page callback'	=>	'sar_print_form',
+		'page arguments' =>	 array(1),
+		'access arguments' => array('pdf_pass_per'),
+		'file' => 'includes/common_pdf.inc',
+		'type' => MENU_CALLBACK,
+	);
+   
+  return $items;
+}
+

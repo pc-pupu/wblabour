@@ -1,0 +1,1437 @@
+<?php
+
+function dwsearch_form($form, &$form_state) {
+	
+	/*drupal_add_js('code/highstock.js');
+	drupal_add_js('code/highcharts.js');
+	drupal_add_js('code/highcharts-3d.js');
+	drupal_add_js('code/modules/exporting.js');
+	drupal_add_js('code/modules/export-data.js');*/
+	
+	$from_dt ="";
+	$to_dt ="";
+	$district=array();
+	
+	$district = isset($form_state['values']['district']) && !empty($form_state['values']['district']) ? $form_state['values']['district'] : '';	
+	$from_dt = isset($form_state['values']['from_dt']) && !empty($form_state['values']['from_dt']) ? $form_state['values']['from_dt'] : '';	
+    $to_dt = isset($form_state['values']['to_dt']) && !empty($form_state['values']['to_dt']) ? $form_state['values']['to_dt'] : '';
+	
+	$form['form_begin'] = array( 
+		'#prefix' => '<h3 class="page-heading mb-4">Labour Commissionerate Search</h3><div class="row mb-2"><div class="col-lg-12"><div class="card"><div class="card-body">',
+		'#suffix' => '' ,
+	);
+	
+	$form['search_info_start'] = array( 
+		'#prefix' => '<div class="row">',
+		'#suffix' => '' ,
+	);
+	
+	 $form['district'] = array(
+	   '#title'=> '',
+	   '#type' => 'select', 
+	   '#id'=>'district_name',
+	   '#multiple' => true,
+	   '#options' => get_district_by_id(1),
+	   '#attributes' => array('class'=>array('district_name'), 'placeholder'=>'District', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp', 'multiple'=> 'multiple' ),
+	   '#prefix' => '<div class="col-md-3" id="ld_edit_emp_district_replace">',
+	   '#suffix' => '</div>'
+	);
+	
+  $form['from_dt'] = array(
+	   '#title'=> '',
+	   '#type' => 'textfield',
+	   '#attributes' => array('class'=>array('form-control p-input datepikersecfromlc'), 'placeholder'=>'From Date', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($district) ? "" : "",
+	   '#prefix' => '<div class="col-md-3 date-field"><span><i class="fa fa-calendar-alt"></i></span>',
+	   '#suffix' => '</div>'
+	);
+  $form['to_dt'] = array(
+	   '#title'=> '',
+	   '#type' => 'textfield', 
+	   '#attributes' => array('class'=>array('form-control p-input datepikersectolc'), 'placeholder'=>'To Date', 'autocomplete' => 'off', 'aria-describedby'=> 'nameHelp'),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div class="col-md-3 date-field"><span><i class="fa fa-calendar-alt"></i></span>',
+	   '#suffix' => '</div>'
+	);
+ $form['submit'] = array(
+	   '#title'=> '',
+	   '#type' => 'submit',
+	   '#value' => 'Search',
+	   '#attributes' => array('class'=>array('btn btn-primary'),'placeholder'=>''),
+	   //'#default_value'=>!empty($uamdata) ? $uamdata['fname'] : '',
+	   '#prefix' => '<div class="col-md-3 mt-2">',
+	   '#suffix' => '</div></div></div></div>'
+	);
+   $form['chartalldistrict_start'] = array(
+	'#prefix' => '<div class="col-md-12 report_details"><div class="row">'.loadMultipleDistrictWithDonateGraph(),
+	'#suffix' => ''
+  );	
+  
+    if($from_dt!="" && $to_dt!="" && sizeof($district)==1){
+	  
+	  $district_str_new ="";	
+	  $district_val = array_pop(array_reverse($district));
+	  
+	  $to_dtsix = date('d-m-Y');
+	  //$from_dtsix = $to_dtsix
+	  $from_dtsix = date("d-m-Y", strtotime("-6 months", strtotime($to_dtsix))); 
+	  
+	  $my_web_service_data = array();
+	  $my_web_service_data = gerWebServiceDataForPrc($district_val,$from_dt,$to_dt);
+	  $my_web_service_datasix = gerWebServiceDataForPrcsix($district_val,$from_dtsix,$to_dtsix);
+	  //$form['from_dt']['#value']="";
+	  //$form['to_dt']['#value']="";
+	 /* echo "--->";
+	  print_r($my_web_service_datasix);
+	  exit;*/
+	  $total_appl = 0;
+	  $pending_appl = 0;
+	  $issued_appl = 0;
+	  $date_range = '';
+	  $clratotal_appl ="";
+	  
+	  
+	  foreach($my_web_service_data['result'] as $val){
+		 
+		  if($val['service_id']==1){
+			  $clra_txt = 'CLRA Total';
+			  $clratotal_appl .= ",".$val['total_application'];
+			  $clrapending_appl .= ",".$val['pending_application'];
+			  $clraissued_appl .= ",".$val['issued_application'];
+			  
+			  $clra_tot += $val['total_application'];
+			  $clrapending_tot += $val['pending_application'];
+			  $clraissued_tot += $val['issued_application'];
+		  }
+		  if($val['service_id']==2){
+			  $bocwa_txt = 'BOCWA Total';
+			  $bocwatotal_appl .= ",".$val['total_application'];
+			  $bocwapending_appl .= ",".$val['pending_application'];
+			  $bocwaissued_appl .= ",".$val['issued_application'];
+			  
+			  
+			  $bocwa_tot += $val['total_application'];
+			  $bocwapending_tot += $val['pending_application'];
+			  $bocwaissued_tot += $val['issued_application'];
+		  }
+		  if($val['service_id']==3){
+			  $mtw_txt = 'MTW Total';
+			  $mtwtotal_appl .= ",".$val['total_application'];
+			  $mtwpending_appl .= ",".$val['pending_application'];
+			  $mtwissued_appl .= ",".$val['issued_application'];
+			  
+			  
+			  $mtw_tot += $val['total_application'];
+			  $mtwpending_tot += $val['pending_application'];
+			  $mtwissued_tot += $val['issued_application'];
+		  }
+		  if($val['service_id']==4){
+			  $ismw_txt = 'ISMW Total';
+			  $ismwtotal_appl .= ",".$val['total_application'];
+			  $ismwpending_appl .= ",".$val['total_application'];
+			  $ismwissued_appl .= ",".$val['total_application'];
+			  
+			  $ismw_tot += $val['total_application'];
+			  $ismwpending_tot += $val['pending_application'];
+			  $ismwissued_tot += $val['issued_application'];
+		  }
+	  }
+	  
+	  foreach($my_web_service_datasix['result'] as $valsix){
+		 
+		  if($valsix['service_id']==1){
+			  $clra_txt = 'CLRA Total';
+			 			  
+			  $clra_tot6 += $valsix['total_application'];
+			  $clrapending_tot6 += $valsix['pending_application'];
+			  $clraissued_tot6 += $valsix['issued_application'];
+		  }
+		  if($valsix['service_id']==2){
+			  $bocwa_txt = 'BOCWA Total';
+					  
+			  $bocwa_tot6 += $valsix['total_application'];
+			  $bocwapending_tot6 += $valsix['pending_application'];
+			  $bocwaissued_tot6 += $valsix['issued_application'];
+		  }
+		  if($valsix['service_id']==3){
+			  $mtw_txt = 'MTW Total';
+			
+			  $mtw_tot6 += $valsix['total_application'];
+			  $mtwpending_tot6 += $valsix['pending_application'];
+			  $mtwissued_tot6 += $valsix['issued_application'];
+		  }
+		  if($valsix['service_id']==4){
+			  $ismw_txt = 'ISMW Total';
+			
+			  $ismw_tot6 += $valsix['total_application'];
+			  $ismwpending_tot6 += $valsix['pending_application'];
+			  $ismwissued_tot6 += $valsix['issued_application'];
+		  }
+	  }
+	  
+	  
+	  
+	  $clratotal_appl = ltrim($clratotal_appl,",");
+	  $clrapending_appl = ltrim($clrapending_appl,",");
+	  $clraissued_appl = ltrim($clraissued_appl,",");
+	  
+	  $bocwatotal_appl = ltrim($bocwatotal_appl,",");
+	  $bocwapending_appl = ltrim($bocwapending_appl,",");
+	  $bocwaissued_appl = ltrim($bocwaissued_appl,",");
+	  
+	  $mtwtotal_appl = ltrim($mtwtotal_appl,",");
+	  $mtwpending_appl = ltrim($mtwpending_appl,",");
+	  $mtwissued_appl = ltrim($mtwissued_appl,",");
+	  
+	  $ismwtotal_appl = ltrim($ismwtotal_appl,",");
+	  $ismwpending_appl = ltrim($ismwpending_appl,",");
+	  $ismwissued_appl = ltrim($ismwissued_appl,",");
+	  
+	  //echo $bocwatotal_appl; exit;
+	  
+	  //$date_range = $from_dt1.$to_date1;
+	  
+	  
+	  /*$from_dt1_str=implode("','",$from_dt);
+	  $from_dt1_str_new = "'".$from_dt1_str."'";*/
+	$start    = new DateTime(format_date(strtotime($from_dt), 'custom', 'Y-m-d'));
+	$start->modify('first day of this month');
+	$end      = new DateTime(format_date(strtotime($to_dt), 'custom', 'Y-m-d'));
+	$end->modify('first day of next month');
+	$interval = DateInterval::createFromDateString('1 month');
+	$period   = new DatePeriod($start, $interval, $end);
+	
+	foreach ($period as $dt) {
+		$date_range .= ",'".$dt->format("Y-m")."'";
+	}
+	$date_range = ltrim($date_range,",");
+	//$date_range_new = $date_range;
+	//echo $date_range;
+	//exit;
+	  
+	  
+	  //echo $from_dt; exit;
+	  
+	  /*$form['search_result'] = array( 
+		  '#type' => 'markup',
+		  '#markup' => $total_appl,
+		  '#prefix' => '<div class="col-xl-12">',
+		  '#suffix' => '</div>'
+	  );*/
+	  
+	/*------------------------------------------- Pie Donut Begin ------------------------------------------- */
+	
+	drupal_add_js("jQuery(function () {
+		$('#containerAllDistrictDonate').css('display','none');
+			$('#containerAllDistrict').css('display','none');
+		 setInterval(function(){
+            getDonate()
+        },10000);
+		 
+		function getDonate(){
+			Highcharts.chart('containerCurrent', {
+			credits: {
+				enabled: false
+			},
+			exporting: {
+				enabled: false
+			},
+			chart: {
+				type: 'pie',
+				options3d: {
+					enabled: true,
+					alpha: 45
+				}
+			},
+			title: {
+				text: 'Cumulative Total Application Information'
+			},
+			/*subtitle: {
+				text: '3D donut in Highcharts'
+			},*/
+			plotOptions: {
+				pie: {
+					slicedOffset: 70,
+					allowPointSelect: true,
+					cursor: 'pointer',
+					
+					innerSize: 100,
+					depth: 45
+				}
+			},
+			series: [{
+				name: 'Total Application',
+				data: [
+					['CLRA Total Reg', $clra_tot],
+					['CLRA Pending', $clrapending_tot],
+					['CLRA Issued', $clraissued_tot],
+					['BOCWA Total App', $bocwa_tot],
+					['BOCWA Pending App', $bocwapending_tot],
+					['BOCWA Issued App', $bocwaissued_tot],
+					['MTW Total Renewal', $mtw_tot],
+					['MTW Renewal Pending', $mtwpending_tot],
+					['MTW Renewal Issued', $mtwissued_tot],
+					['ISMW Total App', $ismw_tot],
+					['ISMW Pending App', $ismwpending_tot],
+					['ISMW Issued App', $ismwissued_tot],
+				]
+			}]
+		});
+		}
+		
+		function getDonate1(){
+			Highcharts.chart('container12', {
+			credits: {
+				enabled: false
+			},
+			exporting: {
+				enabled: false
+			},
+			chart: {
+				type: 'pie',
+				options3d: {
+					enabled: true,
+					alpha: 45
+				}
+			},
+			title: {
+				text: 'Cumulative Total Application Information'
+			},
+			subtitle: {
+				text: 'From Current Date to Last 6 Months'
+			},
+			plotOptions: {
+				pie: {
+					innerSize: 100,
+					depth: 45
+				}
+			},
+			series: [{
+				name: 'Total Application',
+				data: [
+					['CLRA Total Reg', $clra_tot6],
+					['CLRA Pending', $clrapending_tot6],
+					['CLRA Issued', $clraissued_tot6],
+					['BOCWA Total App', $bocwa_tot6],
+					['BOCWA Pending App', $bocwapending_tot6],
+					['BOCWA Issued App', $bocwaissued_tot6],
+					['MTW Total Renewal', $mtw_tot6],
+					['MTW Renewal Pending', $mtwpending_tot6],
+					['MTW Renewal Issued', $mtwissued_tot6],
+					['ISMW Total App', $ismw_tot6],
+					['ISMW Pending App', $ismwpending_tot6],
+					['ISMW Issued App', $ismwissued_tot6],
+				]
+			}]
+		});
+		}
+		
+		getDonate();
+		getDonate1();
+	
+	});",'inline');
+	
+		 $form['chartCurrent'] = array(
+			'#prefix' => '<div class="col-md-6"><div id="containerCurrent">',
+			'#suffix' => '</div></div>'
+		  ); 
+		  
+		  $form['chartDonate2'] = array(
+			'#prefix' => '<div class="col-md-6"><div id="container12">',
+			'#suffix' => '</div></div></div></div>'
+		  );
+	  
+	/*------------------------------------------- Pie Donut END ------------------------------------------- */
+	
+	  
+	  // BAR GRAPH
+	  
+	   drupal_add_js("jQuery(function () {
+		   
+		    setInterval(function(){
+				getHighBarLC()
+			},10000);
+			
+		function getHighBarLC(){ 
+		
+		var easeOutBounce = function (pos) {
+				if ((pos) < (1 / 2.75)) {
+					return (7.5625 * pos * pos);
+				}
+				if (pos < (2 / 2.75)) {
+					return (7.5625 * (pos -= (1.5 / 2.75)) * pos + 0.75);
+				}
+				if (pos < (2.5 / 2.75)) {
+					return (7.5625 * (pos -= (2.25 / 2.75)) * pos + 0.9375);
+				}
+				return (7.5625 * (pos -= (2.625 / 2.75)) * pos + 0.984375);
+			};
+			
+			Math.easeOutBounce = easeOutBounce;
+			
+	 		Highcharts.chart('container2', {
+		credits: {
+			enabled: false
+		},
+		exporting: {
+			enabled: false
+		},
+		chart: {
+			type: 'column',
+			zoomType: 'xy'
+		},
+		title: {
+			text: 'Total, Pending, Issued Applications'
+		},
+		subtitle: {
+       		 text: 'Column Graph'
+    	},
+	
+		xAxis: {
+			title: {
+				text: 'DATE RANGE'
+			},
+			min:0,
+			max:3,
+			scrollbar:{
+				enabled: true	
+			},
+			categories: [$date_range] 
+		},
+		yAxis: {
+			title: {
+				text: 'Total no of application'
+			}
+		},
+		plotOptions: {
+			line: {
+				dataLabels: {
+					enabled: true
+				},
+				enableMouseTracking: true
+			}
+		},
+		series: [{
+			name: 'CLRA Total',
+			data: [$clratotal_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}
+		},
+		 {
+			name: 'CLRA Pending',
+			data: [$clrapending_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}
+		},
+		{
+			name: 'CLRA Issued',
+			data: [$clraissued_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}
+		},
+		{
+			name: 'BOCWA Total',
+			data: [$bocwatotal_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+		{
+			name: 'BOCWA Pending',
+			data: [$bocwapending_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+		{
+			name: 'BOCWA Issued',
+			data: [$bocwaissued_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+		 {
+			name: 'MTW Total',
+			data: [$mtwtotal_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+         {
+			name: 'MTW Pending',
+			data: [$mtwpwnding_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+         {
+			name: 'MTW Issued',
+			data: [$mtwissued_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+        
+        {
+			name: 'ISMW Total',
+			data: [$ismwtotal_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+         {
+			name: 'ISMW Pending',
+			data: [$ismwpending_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+         {
+			name: 'ISMW Issued',
+			data: [$ismwissued_appl],
+			animation: {
+				duration: 2000,
+				// Uses Math.easeOutBounce
+				easing: 'easeOutBounce'
+			}	
+		},
+		] 
+	});
+		}
+		getHighBarLC();
+});",'inline');
+	  $form['columnchart'] = array(
+		'#prefix' => '<div class="col-md-12 report_details"><div id="container2">',
+		'#suffix' => '</div></div>'
+	  ); 
+	  
+	  
+	  /*------------------------------------------- LINE BEGIN ------------------------------------------- */
+	  
+	  drupal_add_js("jQuery(function () {
+		  
+		   setInterval(function(){
+				getHighLineLC()
+			},10000);
+		
+		function getHighLineLC(){ 
+		 	Highcharts.chart('container1', {
+		credits: {
+			enabled: false
+		},
+		exporting: {
+			enabled: false
+		},
+		chart: {
+			type: 'line',
+			zoomType: 'xy'
+		},
+		title: {
+			text: 'Total Number of Applications'
+		},
+		subtitle: {
+       		 text: 'Line Graph'
+    	},
+	
+		xAxis: {
+			title: {
+				text: 'DATE RANGE'
+			},
+			min:0,
+			max:5,
+			scrollbar:{
+				enabled: true	
+			},
+			categories: [$date_range] 
+		},
+		yAxis: {
+			title: {
+				text: 'Total no of application'
+			}
+		},
+		plotOptions: {
+			line: {
+				dataLabels: {
+					enabled: true
+				},
+				enableMouseTracking: true
+			}
+		},
+		
+		/*tooltip: {
+			formatter: function () {
+			   if(this.series.name == 'CLRA') {	
+				return 'Extra data: <b>' + this.point.myData + '</b><br> Another Data: <b>' + this.point.myOtherData + '</b>';
+			   }
+			}
+		},*/
+		
+		series: [{
+			//id: 'CLR1',
+			name: '$clra_txt',
+			data: [$clratotal_appl]
+		},
+		 {
+			name: 'CLRA Pending',
+			data: [$clrapending_appl]
+		},
+		{
+			name: 'CLRA Issued',
+			data: [$clraissued_appl]
+		},
+		
+		 {
+			name: '$bocwa_txt',
+			data: [$bocwatotal_appl]
+		},
+		{
+			name: 'BOCWA Pending',
+			data: [$bocwapending_appl]
+		},
+		{
+			name: 'BOCWA Issued',
+			data: [$bocwaissued_appl]
+		},
+		
+		{
+			name: '$mtw_txt',
+			data: [$mtwtotal_appl]
+		},
+		{
+			name: 'MTW Pending',
+			data: [$mtwpending_appl]
+		},
+		{
+			name: 'MTW Issued',
+			data: [$mtwissued_appl]
+		},
+		
+		{
+			name: '$ismw_txt',
+			data: [$ismwtotal_appl]
+		},
+		{
+			name: 'ISMW Pending',
+			data: [$ismwpending_appl]
+		},
+		{
+			name: 'ISMW Issued',
+			data: [$ismwissued_appl]
+		},
+		] 
+	}); }  
+			getHighLineLC();
+});",'inline');
+	  
+	  $form['chart'] = array(
+			'#prefix' => '<div class="col-md-12 report_details"><div id="container1">',
+			'#suffix' => '</div></div>'
+		  ); 
+	  
+	 
+	  $form['tablechart'] = array(
+		'#prefix' => '<div class="col-md-12 report_details"><div id="tabchrt">'.tablechart($district_val,$clra_tot,$clrapending_tot,$clraissued_tot,$bocwa_tot,$bocwapending_tot,$bocwaissued_tot,$mtw_tot,$mtwpending_tot,$mtwissued_tot,$ismw_tot,$ismwpending_tot,$ismwissued_tot,$from_dt,$to_dt),
+		'#suffix' => ''
+	  ); 
+	  
+
+  }
+  
+  if($from_dt!="" && $to_dt!="" && sizeof($district)>1){	
+	  $form['chartalldistrictc'] = array(
+		'#prefix' => '<div class="col-md-12"><div id="containerAllDistrictc">',
+		'#suffix' => '</div></div>'
+	  );
+  }
+  
+  $form['chartalldistrictM'] = array(
+	'#prefix' => '<div class="col-md-6"><div id="containerAllDistrict">',
+	'#suffix' => '</div></div>'
+  );
+  
+  $form['chartDonatesix'] = array(
+	'#prefix' => '<div class="col-md-6"><div id="containerAllDistrictDonate">',
+	'#suffix' => '</div></div>'
+  );
+  
+  $form['chartalldistrict_end'] = array(
+	'#prefix' => '',
+	'#suffix' => '</div></div>'
+  ); 
+  
+  $form['search_info_end'] = array( 
+	  '#prefix' => '',
+	  '#suffix' => '</div>' ,
+  );	
+  
+ $form['form_end'] = array( 
+  '#prefix' => '',
+  '#suffix' => '</div>' ,
+ );
+	  
+  return  $form;
+
+}
+
+function dwsearch_form_submit($form, &$form_state) {
+	
+	$from_dt ="";
+	$to_dt ="";
+	$district=array();
+	
+	$district = isset($form_state['values']['district']) && !empty($form_state['values']['district']) ? $form_state['values']['district'] : '';	
+	$from_dt = isset($form_state['values']['from_dt']) && !empty($form_state['values']['from_dt']) ? $form_state['values']['from_dt'] : '';	
+    $to_dt = isset($form_state['values']['to_dt']) && !empty($form_state['values']['to_dt']) ? $form_state['values']['to_dt'] : '';
+	
+	if($from_dt!="" && $to_dt!="" && sizeof($district)>1){
+		loadMultipleDistrictGraph($district,$from_dt,$to_dt);
+	}
+	
+	$form_state['rebuild'] = TRUE;
+}
+
+function loadMultipleDistrictWithDonateGraph(){
+	  
+	  $district_data ="";
+	  $total_district_list = getDistrictAllList();
+	  
+	  $to_dt_cur_six = date('d-m-Y');
+	  $from_dt_cur_six = date("d-m-Y", strtotime("-6 months", strtotime($to_dt_cur_six))); 
+	  
+	  $my_web_service_data_cur = array();
+	  $my_web_service_data_cur_six = gerWebServiceDataForPrcsixAllDistrict($from_dt_cur_six,$to_dt_cur_six);
+	  
+	  
+	  
+	  foreach($total_district_list as $k=>$v){
+		
+		$total_appl_clra = 0;
+		$issued_application_clra = 0;
+		$pending_application_clra = 0;
+		
+		$total_appl_bocwa = 0;
+		$issued_application_bocwa = 0;
+		$pending_application_bocwa = 0;
+		
+		$total_appl_mtw = 0;
+		$issued_application_mtw = 0;
+		$pending_application_mtw = 0;
+		
+		$total_appl_ismw = 0;
+		$issued_application_ismw = 0;
+		$pending_application_ismw = 0;
+		  
+		$district_data .= ",'".$v."'";
+		
+		  for($i=0; $i<sizeof($my_web_service_data_cur_six['result']); $i++){
+			  if($k == trim($my_web_service_data_cur_six['result'][$i]['district_code'])){
+				  if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==1){
+					  $total_appl_clra += $my_web_service_data_cur_six['result'][$i]['total_application'];
+					  $issued_application_clra += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+					  $pending_application_clra += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+				  }
+				  if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==2){
+					  $total_appl_bocwa += $my_web_service_data_cur_six['result'][$i]['total_application'];
+					  $issued_application_bocwa += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+					  $pending_application_bocwa += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+				  }
+				  if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==3){
+					  $total_appl_mtw += $my_web_service_data_cur_six['result'][$i]['total_application'];
+					  $issued_application_mtw += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+					  $pending_application_mtw += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+				  }
+				  if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==4){
+					  $total_appl_ismw += $my_web_service_data_cur_six['result'][$i]['total_application'];
+					  $issued_application_ismw += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+					  $pending_application_ismw += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+				  }
+				  
+				 
+			  }
+		  }
+		 
+		 
+		  
+		 $total_appl_clra_str .= ",".$total_appl_clra."";
+		 $issued_application_clra_str .=  ",".$issued_application_clra."";
+		 $pending_application_clra_str .= ",".$pending_application_clra."";
+		 
+		 $total_appl_bocwa_str .= ",".$total_appl_bocwa."";
+		 $issued_application_bocwa_str .=  ",".$issued_application_bocwa."";
+		 $pending_application_bocwa_str .= ",".$pending_application_bocwa."";
+		 
+		 $total_appl_mtw_str .= ",".$total_appl_mtw."";
+		 $issued_application_mtw_str .=  ",".$issued_application_mtw."";
+		 $pending_application_mtw_str .= ",".$pending_application_mtw."";
+		 
+		 $total_appl_ismw_str .= ",".$total_appl_ismw."";
+		 $issued_application_ismw_str .=  ",".$issued_application_ismw."";
+		 $pending_application_ismw_str .= ",".$pending_application_ismw."";
+		 
+		 $issued_application_clra_arr[$v]=  $issued_application_clra+$issued_application_bocwa+$issued_application_mtw+$issued_application_ismw;
+		 $pending_application_clra_arr[$v]=  $pending_application_clra+$pending_application_bocwa+$pending_application_mtw+$pending_application_ismw;
+	  }
+	  
+	  
+	  for($i=0; $i<sizeof($my_web_service_data_cur_six['result']); $i++){
+		if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==1){
+			$total_appl_clra_d += $my_web_service_data_cur_six['result'][$i]['total_application'];
+			$issued_application_clra_d += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+			$pending_application_clra_d += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+		}
+		if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==2){
+			$total_appl_bocwa_d += $my_web_service_data_cur_six['result'][$i]['total_application'];
+			$issued_application_bocwa_d += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+			$pending_application_bocwa_d += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+		}
+		if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==3){
+			$total_appl_mtw_d += $my_web_service_data_cur_six['result'][$i]['total_application'];
+			$issued_application_mtw_d += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+			$pending_application_mtw_d += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+		}
+		if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==4){
+			$total_appl_ismw_d += $my_web_service_data_cur_six['result'][$i]['total_application'];
+			$issued_application_ismw_d += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+			$pending_application_ismw_d += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+		}
+	}
+	  
+	  $district_data_list = ltrim($district_data,",");
+	  
+	  $total_appl_clra_str = ltrim($total_appl_clra_str,",");
+	  $issued_application_clra_str =  ltrim($issued_application_clra_str,",");
+	  $pending_application_clra_str = ltrim($issued_application_clra_str,",");
+	  
+	  $total_appl_bocwa_str = ltrim($total_appl_bocwa_str,",");
+	  $issued_application_bocwa_str =  ltrim($issued_application_bocwa_str,",");
+	  $pending_application_bocwa_str = ltrim($pending_application_bocwa_str,",");
+	  
+	  $total_appl_mtw_str = ltrim($total_appl_mtw_str,",");
+	  $issued_application_mtw_str =  ltrim($issued_application_mtw_str,",");
+	  $pending_application_mtw_str = ltrim($pending_application_mtw_str,",");
+	  
+	  $total_appl_ismw_str = ltrim($total_appl_ismw_str,",");
+	  $issued_application_ismw_str =  ltrim($issued_application_ismw_str,",");
+	  $pending_application_ismw_str = ltrim($pending_application_ismw_str,",");
+	  
+	 arsort($issued_application_clra_arr); 
+	 $leading = key($issued_application_clra_arr); 
+	 
+	 arsort($pending_application_clra_arr); 
+	 $lagging = key($pending_application_clra_arr);
+	  /*------------------------------------------- BAR GRAPH ------------------------------------------- */
+	
+	  
+	   drupal_add_js("jQuery(function () {
+	Highcharts.chart('containerAllDistrict', {
+		credits: {
+			enabled: false
+		},
+		exporting: {
+			enabled: false
+		},
+		chart: {
+			type: 'column',
+			zoomType: 'xy'
+		},
+		title: {
+			text: 'Total, Pending, Issued Applications'
+		},
+		subtitle: {
+       		 text: 'Last 6 month<br> leading District: ".$leading." | Lagging Distrit: ".$lagging."'
+    	},
+	
+		xAxis: {
+			title: {
+				text: 'District Range'
+			},
+			min:0,
+			max:3,
+			scrollbar:{
+				enabled: true	
+			},
+			categories: [$district_data_list] 
+		},
+		yAxis: {
+			title: {
+				text: 'Total no of application'
+			}
+		},
+		plotOptions: {
+			line: {
+				dataLabels: {
+					enabled: true
+				},
+				enableMouseTracking: true
+			}
+		},
+		series: [{
+			name: 'CLRA Total',
+			data: [$total_appl_clra_str]
+		},
+		 {
+			name: 'CLRA Pending',
+			data: [$pending_application_clra_str]
+		},
+		{
+			name: 'CLRA Issued',
+			data: [$issued_application_clra_str]
+		},
+		{
+			name: 'BOCWA Total',
+			data: [$total_appl_bocwa_str ]	
+		},
+		{
+			name: 'BOCWA Pending',
+			data: [$pending_application_bocwa_str]	
+		},
+		{
+			name: 'BOCWA Issued',
+			data: [$issued_application_bocwa_str]	
+		},
+		 {
+			name: 'MTW Total',
+			data: [$total_appl_mtw_str]	
+		},
+         {
+			name: 'MTW Pending',
+			data: [$pending_application_mtw_str]	
+		},
+         {
+			name: 'MTW Issued',
+			data: [$issued_application_mtw_str]	
+		},
+        
+        {
+			name: 'ISMW Total',
+			data: [$total_appl_ismw_str]	
+		},
+         {
+			name: 'ISMW Pending',
+			data: [$pending_application_ismw_str]	
+		},
+         {
+			name: 'ISMW Issued',
+			data: [$issued_application_ismw_str]	
+		},
+		] 
+	});
+	
+	
+	function getDonateSix(){
+				Highcharts.chart('containerAllDistrictDonate', {
+				credits: {
+					enabled: false
+				},
+				exporting: {
+					enabled: false
+				},
+				chart: {
+					type: 'pie',
+					options3d: {
+						enabled: true,
+						alpha: 45
+					}
+				},
+				title: {
+					text: 'Cumulative Total Application Information'
+				},
+				subtitle: {
+					text: 'From Current Date to Last 6 Months'
+				},
+				plotOptions: {
+					pie: {
+						innerSize: 100,
+						depth: 45
+					}
+				},
+				series: [{
+					name: 'Total Application',
+					data: [
+						['CLRA Total', $total_appl_clra_d],
+						['CLRA Pending', $pending_application_clra_d],
+						['CLRA Issued', $issued_application_clra_d],
+						['BOCWA Total', $total_appl_bocwa_d],
+						['BOCWA Pending', $pending_application_bocwa_d],
+						['BOCWA Issued', $issued_application_bocwa_d],
+						['MTW Total', $total_appl_mtw_d],
+						['MTW Pending', $pending_application_mtw_d],
+						['MTW Issued', $issued_application_mtw_d],
+						['ISMW Total', $total_appl_ismw_d],
+						['ISMW Pending', $pending_application_ismw_d],
+						['ISMW Issued', $issued_application_ismw_d],
+					]
+				}]
+			});
+			}
+			
+			getDonateSix();
+	
+});",'inline');
+	  
+	  
+  
+}
+
+function loadMultipleDistrictGraph($district,$from_dt,$to_dt){
+	
+	 	$district_str_new = "";
+		$district_str = "";
+		foreach($district as $v){
+		  $district_str .= $v. ",";
+		}
+		$district_str_new = rtrim($district_str, ",");
+		//echo $district_str_new; exit;
+		
+		$district_data ="";
+		$total_district_list = getDistrictAllList();
+		$my_web_service_data_cur_six = array();
+		$my_web_service_data_cur_six = gerWebServiceDataForMultipleDistrict($district_str_new,$from_dt,$to_dt);
+		
+		$new_dist = array();
+		 foreach($total_district_list as $k=>$v){
+			 for($i=0; $i<sizeof($my_web_service_data_cur_six['result']); $i++){
+				 if($k == trim($my_web_service_data_cur_six['result'][$i]['district_code'])){
+					 if(!in_array($k,$new_dist)){
+						 $new_dist[$k]=$v;
+					 }
+				 }
+			 }
+		 }
+		 
+		 foreach($new_dist as $key=>$data){
+			 $district_data .= ",'".$data."'";
+			 
+			 $total_appl_reg_clra = 0;
+			 $issued_application_reg_clra = 0;
+			 $pending_application_reg_clra = 0;
+			 $total_appl_reg_bocwa = 0;
+			 $issued_application_reg_bocwa = 0;
+			 $pending_application_reg_bocwa = 0;
+			 
+			 for($i=0; $i<sizeof($my_web_service_data_cur_six['result']); $i++){
+				 if($key == trim($my_web_service_data_cur_six['result'][$i]['district_code'])){
+					 if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==1){
+						  $total_appl_reg_clra += $my_web_service_data_cur_six['result'][$i]['total_application'];
+						  $issued_application_reg_clra += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+						  $pending_application_reg_clra += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+					  }
+					  if(trim($my_web_service_data_cur_six['result'][$i]['service_id'])==2){
+						  $total_appl_reg_bocwa += $my_web_service_data_cur_six['result'][$i]['total_application'];
+						  $issued_application_reg_bocwa += $my_web_service_data_cur_six['result'][$i]['issued_application'];
+						  $pending_application_reg_bocwa += $my_web_service_data_cur_six['result'][$i]['pending_application'];
+					  }
+				 }
+			 }
+			$total_appl_reg_clra_str .= ",".$total_appl_reg_clra."";
+			$issued_application_reg_clra_str .=  ",".$issued_application_reg_clra."";
+			$pending_application_reg_clra_str .= ",".$pending_application_reg_clra."";
+			
+			$total_appl_renew_bocwa_str .= ",".$total_appl_reg_bocwa."";
+			$issued_application_renew_bocwa_str .=  ",".$issued_application_reg_bocwa."";
+			$pending_application_renew_bocwa_str .= ",".$pending_application_reg_bocwa."";
+			
+			
+			$tot = $total_appl_reg_clra + $total_appl_reg_bocwa;
+			$tot_issued =  $issued_application_reg_clra+$issued_application_reg_bocwa;
+			$tot_pending =  $pending_application_reg_clra+$pending_application_reg_bocwa;
+			
+			$issued_application_arr[$data] = round(($tot_issued / $tot )*100); 
+			$pending_application_arr[$data] = round(($tot_pending / $tot)*100);
+			 
+		 }
+		 
+		 $district_data_list = ltrim($district_data,",");
+		  
+		  $total_appl_reg_clra_str = ltrim($total_appl_reg_clra_str,",");
+		  $issued_application_reg_clra_str =  ltrim($issued_application_reg_clra_str,",");
+		  $pending_application_reg_clra_str = ltrim($pending_application_reg_clra_str,",");
+		  
+		  $total_appl_renew_bocwa_str = ltrim($total_appl_renew_bocwa_str,",");
+		  $issued_application_renew_bocwa_str =  ltrim($issued_application_renew_bocwa_str,",");
+		  $pending_application_renew_bocwa_str = ltrim($pending_application_renew_bocwa_str,",");
+		 
+		 
+		  arsort($issued_application_arr); 
+		  //print_r($issued_application_arr); exit;
+		  $leading = key($issued_application_arr); 
+		  
+		  arsort($pending_application_arr); 
+		  //print_r($pending_application_arr); exit;
+		  $lagging = key($pending_application_arr);
+		  
+		  /*------------------------------------------- BAR GRAPH ------------------------------------------- */
+		
+		  
+		   drupal_add_js("jQuery(function () {
+			   $('#containerAllDistrictDonate').css('display','none');
+			   $('#containerAllDistrict').css('display','none');
+		Highcharts.chart('containerAllDistrictc', {
+			credits: {
+				enabled: false
+			},
+			exporting: {
+				enabled: false
+			},
+			chart: {
+				type: 'column',
+				zoomType: 'xy'
+			},
+			title: {
+				text: 'Total, Pending, Issued Applications'
+			},
+			subtitle: {
+				 text: 'Leading District: ".$leading." | Lagging District: ".$lagging."'
+			},
+		
+			xAxis: {
+				title: {
+					text: 'District Range'
+				},
+				min:0,
+				max:3,
+				scrollbar:{
+					enabled: true	
+				},
+				categories: [$district_data_list] 
+			},
+			yAxis: {
+				title: {
+					text: 'Total no of application'
+				}
+			},
+			plotOptions: {
+				line: {
+					dataLabels: {
+						enabled: true
+					},
+					enableMouseTracking: true
+				}
+			},
+			series: [{
+				name: 'CLRA Total',
+				data: [$total_appl_reg_clra_str]
+			},
+			 {
+				name: 'CLRA Pending',
+				data: [$pending_application_reg_clra_str]
+			},
+			{
+				name: 'CLRA Issued',
+				data: [$issued_application_reg_clra_str]
+			},
+			{
+				name: 'BOCWA Total',
+				data: [$total_appl_renew_bocwa_str ]	
+			},
+			{
+				name: 'BOCWA Pending',
+				data: [$issued_application_renew_bocwa_str]	
+			},
+			{
+				name: 'BOCWA Issued',
+				data: [$issued_application_renew_bocwa_str]	
+			},
+			/* {
+				name: 'MTW Total',
+				data: [$total_appl_mtw_str]	
+			},
+			 {
+				name: 'MTW Pending',
+				data: [$pending_application_mtw_str]	
+			},
+			 {
+				name: 'MTW Issued',
+				data: [$issued_application_mtw_str]	
+			},
+			
+			{
+				name: 'ISMW Total',
+				data: [$total_appl_ismw_str]	
+			},
+			 {
+				name: 'ISMW Pending',
+				data: [$pending_application_ismw_str]	
+			},
+			 {
+				name: 'ISMW Issued',
+				data: [$issued_application_ismw_str]	
+			},*/
+			] 
+		});
+	});",'inline');
+		  
+		  
+  
+}
+/*function get_ajax_load_new($form, $form_state){
+	$commands = array();
+	$commands[] = ajax_command_replace('#ld_edit_emp_district_replace', drupal_render($form['district']));
+	$commands[] = ajax_command_replace('#ld_empsubdv_replace', drupal_render($form['subdivision']));
+	return array('#type' => 'ajax', '#commands' => $commands);
+}*/
+
+function gerWebServiceDataForPrcsixAllDistrict($from_dt_cur_six,$to_dt_cur_six){
+	$mydata = array();
+	if($from_dt_cur_six!="" && $to_dt_cur_six!=""){
+		$service_url 	= 	"https://wblc.gov.in//labourdept/eservices/reportAllServicesAlldistrict";
+		
+		$ch 			= 	curl_init();
+		$headers		=	array();
+		$curl_post_data = 	array(
+			//"service_id" 	=> "1",
+			//"district_code" => $district,
+			//"sub_div_code"  => $subdivision,       
+			"from_date" 	=> $from_dt_cur_six,
+			"to_date" 		=> $to_dt_cur_six
+		);
+		$headers[]		=	'Accept: application/json';
+		$headers[]		=	'Content-Type: application/json';
+		$headers[] 		= 	'charset=utf-8';
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_URL, $service_url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode( $curl_post_data ) );
+		curl_setopt($ch, CURLOPT_POST, true);
+		$results		=	curl_exec($ch);
+		$errors			=	curl_error($ch);
+		curl_close($ch);
+		$x				=	json_encode( $results );
+		$prsecallwblc 		= 	json_decode(json_decode(trim($x)), TRUE);
+		
+		//$tmp= print_r(json_decode($results)); //exit;
+		//print_r($tmp);
+		//exit;
+		return $prsecallwblc;
+	}else{
+		return $mydata;
+	}
+}
+
+function gerWebServiceDataForPrc($district='',$from_dt='',$to_dt=''){
+	$mydata = array();
+	if($district!="" && $from_dt!="" && $to_dt!=""){
+		$service_url 	= 	"https://wblc.gov.in//labourdept/eservices/reportAllServices";
+		
+		$ch 			= 	curl_init();
+		$headers		=	array();
+		$curl_post_data = 	array(
+			//"service_id" 	=> "1",
+			"district_code" => $district,
+			//"sub_div_code"  => $subdivision,       
+			"from_date" 	=> $from_dt,
+			"to_date" 		=> $to_dt
+		);
+		$headers[]		=	'Accept: application/json';
+		$headers[]		=	'Content-Type: application/json';
+		$headers[] 		= 	'charset=utf-8';
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_URL, $service_url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode( $curl_post_data ) );
+		curl_setopt($ch, CURLOPT_POST, true);
+		$results		=	curl_exec($ch);
+		$errors			=	curl_error($ch);
+		curl_close($ch);
+		$x				=	json_encode( $results );
+		$prsecwblc 		= 	json_decode(json_decode(trim($x)), TRUE);
+		
+		//$tmp= print_r(json_decode($results)); //exit;
+		//print_r($tmp);
+		//exit;
+		return $prsecwblc;
+	}else{
+		return $mydata;
+	}
+}
+
+
+function gerWebServiceDataForPrcsix($district='',$from_dtsix='',$to_dtsix=''){
+	$mydata1 = array();
+	if($district!="" && $from_dtsix!="" && $to_dtsix!=""){
+		$service_url 	= 	"https://wblc.gov.in//labourdept/eservices/reportAllServices";
+		
+		$ch 			= 	curl_init();
+		$headers		=	array();
+		$curl_post_data = 	array(
+			//"service_id" 	=> "1",
+			"district_code" => $district,
+			//"sub_div_code"  => $subdivision,       
+			"from_date" 	=> $from_dtsix,
+			"to_date" 		=> $to_dtsix
+		);
+		$headers[]		=	'Accept: application/json';
+		$headers[]		=	'Content-Type: application/json';
+		$headers[] 		= 	'charset=utf-8';
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_URL, $service_url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode( $curl_post_data ) );
+		curl_setopt($ch, CURLOPT_POST, true);
+		$results		=	curl_exec($ch);
+		$errors			=	curl_error($ch);
+		curl_close($ch);
+		$x				=	json_encode( $results );
+		$prsecwblcsix 		= 	json_decode(json_decode(trim($x)), TRUE);
+		
+		//$tmp= print_r(json_decode($results)); //exit;
+		//print_r($tmp);
+		//exit;
+		return $prsecwblcsix;
+	}else{
+		return $mydata1;
+	}
+}
+
+function gerWebServiceDataForMultipleDistrict($district_str='',$from_dt='',$to_dt=''){
+	$mydatasix = array();
+	if($district_str!="" && $from_dt!="" && $to_dt!=""){
+		//$service_url 	= 	"https://wbboilers.gov.in/labourdept/eservices/getEServiceStatistics";
+		$service_url 	= 	"https://wblc.gov.in/labourdept/eservices/reportallservicesselecteddistrict";
+		
+		$ch 			= 	curl_init();
+		$headers		=	array();
+		$curl_post_data = 	array(
+			//"service_id" 	=> "1",
+			"selecteddistrict" => $district_str,
+			//"sub_div_code"  => $subdivision,       
+			"from_date" 	=> $from_dt,
+			"to_date" 		=> $to_dt
+		);
+		$headers[]		=	'Accept: application/json';
+		$headers[]		=	'Content-Type: application/json';
+		$headers[] 		= 	'charset=utf-8';
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_URL, $service_url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode( $curl_post_data ) );
+		curl_setopt($ch, CURLOPT_POST, true);
+		$results		=	curl_exec($ch);
+		$errors			=	curl_error($ch);
+		curl_close($ch);
+		$x				=	json_encode( $results );
+		$prsecwblcsix 		= 	json_decode(json_decode(trim($x)), TRUE);
+		
+		//$tmp= print_r(json_decode($results)); //exit;
+		//print_r($tmp);
+		//exit;
+		return $prsecwblcsix;
+	}else{
+		return $mydatasix;
+	}
+}
+
+
+function tablechart($district='',$clra_tot=0,$clrapending_tot=0,$clraissued_tot=0,$bocwa_tot=0,$bocwapending_tot=0,$bocwaissued_tot=0,$mtw_tot=0,$mtwpending_tot=0,$mtwissued_tot=0,$ismw_tot=0,$ismwpending_tot=0,$ismwissued_tot=0,$from_dt,$to_dt){
+	$dist_list = get_district_by_id(1);
+	
+	//print_r($dist_list);
+	//exit;
+	$mytable ="";
+	$mytable .="</br></br><div class='table-responsive add_establishment'><h5>Search Result from $from_dt to $to_dt</h5>";
+	$mytable.='<table width="100%" border="1" cellspacing="0" cellpadding="0" class="table table-striped">
+			<thead>
+			  <tr>
+				<th rowspan="2">District</th>
+				<th colspan="3" align="center">CLRA</th>
+				<th colspan="3" align="center">MTW</th>
+				<th colspan="3" align="center">BOCWA</th>
+				<th colspan="3" align="center">ISMW</th>
+			  </tr>
+			  </thead>
+			  <tbody>
+			  <tr>
+				<td>&nbsp;</td>
+				<td>Total</td>
+				<td>Pending</td>
+				<td>Issued</td>
+				<td>Total</td>
+				<td>Pending</td>
+				<td>Issued</td>
+				<td>Total</td>
+				<td>Pending</td>
+				<td>Issued</td>
+				<td>Total</td>
+				<td>Pending</td>
+				<td>Issued</td>
+			  </tr>';
+			  foreach($dist_list as $k=>$v){
+				  if($k==$district){
+					$mytable.='<tr>
+					<td>'.$v.'</td>
+					<td>'.$clra_tot.'</td>
+					<td>'.$clrapending_tot.'</td>
+					<td>'.$clraissued_tot.'</td>
+					<td>'.$bocwa_tot.'</td>
+					<td>'.$bocwapending_tot.'</td>
+					<td>'.$bocwaissued_tot.'</td>
+					<td>'.$mtw_tot.'</td>
+					<td>'.$mtwpending_tot.'</td>
+					<td>'.$mtwissued_tot.'</td>
+					<td>'.$ismw_tot.'</td>
+					<td>'.$ismwpending_tot.'</td>
+					<td>'.$ismwissued_tot.'</td>
+				  </tr>';  
+				  }/*else if($v!="- Select District -"){
+				  $mytable.='<tr>
+					<td>'.$v.'</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+				  </tr>';
+				  }*/
+			  }
+			$mytable.='</tbody></table>';
+			$mytable.="</div>";
+	return $mytable;
+}
+
+
+
+

@@ -1,0 +1,18 @@
+ <?php if($messages){ print $messages; } ?>
+<?php print render($page['content']); ?>
+
+<script>
+////********************** Disable Mouse Right Click, Cut, Copy & Paste ******************************///////////
+
+ //Disable cut copy paste
+/*jQuery(document).ready(function () {
+    jQuery('body').bind('cut copy paste', function(e) {
+        e.preventDefault();
+    });*/
+   
+    //Disable mouse right click
+   /* jQuery("body").on("contextmenu",function(e){
+        return false;
+    });
+});*/
+</script>

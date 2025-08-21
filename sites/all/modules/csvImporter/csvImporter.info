@@ -1,0 +1,4 @@
+; $Id$
+name = CSV Importer for create user
+description = create user CSV Importer Module
+core = 7.x

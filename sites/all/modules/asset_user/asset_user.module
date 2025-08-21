@@ -1,0 +1,910 @@
+<?php
+
+function asset_user_permission() {
+  return array(
+  'asset_user_creation_per' => array(
+	  'title' => t('Permission Asset User Creation'),
+	),
+  'nodal_per' => array(
+	  'title' => t('Permission For Nodal Admin'),
+	),
+	'field_user_per'=> array(
+	  'title' => t('Permission For Field Admin'),
+	),
+  	'asset_admin_per' => array(
+	  'title' => t('Permission For Assets Admin'),
+	),
+	'asset_user_per' => array(
+	  'title' => t('Permission For Individual Assets User'),
+	),
+    'create_user_per' => array(
+      'title' => t('Create User Permission'),
+    ),
+	'change_user_pass_per' => array(
+      'title' => t('Change Password Permission'),
+    ),
+	'asset_diradmin_per' => array(
+	  'title' => t('Permission For Assets Directorate Admin'),
+	),
+  );
+}
+
+function asset_user_menu() {
+	$items=array();
+	$items['add-employee']=array(
+		'title'=>'Add Employee',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('add_employee'),
+		'access arguments' => array('nodal_per'),
+		'file' => 'includes/abc.inc',
+	);
+	$items['add-user']=array(
+		'title'=>'Add user',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('add_user_form'),
+		'access arguments' => array('asset_user_creation_per'),
+		'file' => 'includes/user_mgmt.inc',
+	);
+	$items['change-password-new'] = array(
+      'title' => t('Change password'),
+      //'description' => t('You can change your password here.'),
+	  'page callback'=>'drupal_get_form',
+	  'page arguments'=>array('change_password_form'),
+      //'page callback' => 'passchng_render_user_pass_change_form',
+      'access arguments' => array('change_user_pass_per'),
+	  'file' => 'includes/user_mgmt.inc',
+    );
+	$items['listuserbynodal']=array(
+		'title'=>'List user',
+		'page callback'=>'user_list_by_nodal',
+		//'page arguments'=>array('user_list_by_nodal'),
+		'access arguments' => array('nodal_per'),
+		'file' => 'includes/abc.inc',
+	);
+	$items['profile-edit/edit/%']=array(
+		'title'=>'Edit Profile By Nodal Officer',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('profile_edit_by_nodal',2),
+		'access arguments' => array('nodal_per'),
+		'file' => 'includes/abc.inc',
+	);
+	$items['add-office']=array(
+		'title'=>'Add Office',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('add_office'),
+		'access arguments' => array('nodal_per'),
+		'file' => 'includes/abc.inc',
+	);
+	$items['office-list']=array(
+		'title'=>'Office List of Assets',
+		'page callback'=>'asset_office_list',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('nodal_per'),
+		'file' => 'includes/abc.inc',
+	);
+	$items['assetadmin-dashboard'] = array(
+		'title'	 =>	'Assets Admin Dashboard',
+		'page callback'	 =>	'drupal_get_form',
+		'page arguments'	=> array('asset_admin_dashboard'),
+		'file' 	 => 	'includes/asset_admin_dashboard.inc',
+		'access arguments' 	=> 	array('asset_admin_per'),
+	);
+	$items['assetdiradmin-dashboard'] = array(
+		'title'	 =>	'Assets Directorate Admin Dashboard',
+		'page callback'	 =>	'drupal_get_form',
+		'page arguments'	=> array('asset_diradmin_dashboard'),
+		'file' 	 => 	'includes/asset_admin_dashboard.inc',
+		'access arguments' 	=> 	array('asset_diradmin_per'),
+	);  
+	
+	$items['pending-list/%/%'] = array(
+		'title'	 		 =>	'Assets Admin Dashboard',
+		'page callback'	 =>	'asset_pendingall_dashboard',
+		'page arguments' => array(1,2),
+		'file' 			 =>'includes/asset_admin_dashboard.inc',
+		'access arguments' 	=> 	array('asset_admin_per'),
+	);
+	
+	$items['dir-pending-list/%/%/%'] = array(
+		'title'	 		 =>	'Assets Admin Dashboard',
+		'page callback'	 =>	'asset_dirpendingall_dashboard',
+		'page arguments' => array(1,2,3),
+		'file' 			 =>'includes/asset_admin_dashboard.inc',
+		'access arguments' 	=> 	array('asset_diradmin_per'),
+	);
+	
+	$items['submitted-list/%/%'] = array(
+		'title'	 		 =>	'Assets Admin Dashboard',
+		'page callback'	 =>	'asset_submittedall_dashboard',
+		'page arguments' => array(1,2),
+		'file' 			 =>'includes/asset_admin_dashboard.inc',
+		'access arguments' 	=> 	array('asset_admin_per'),
+	);
+	
+	$items['dir-submited-list/%/%/%'] = array(
+		'title'	 		 =>	'Assets Admin Dashboard',
+		'page callback'	 =>	'asset_dirsubmitedall_dashboard',
+		'page arguments' => array(1,2,3),
+		'file' 			 =>'includes/asset_admin_dashboard.inc',
+		'access arguments' 	=> 	array('asset_diradmin_per'),
+	);
+	
+	$items['user-list']=array(
+		'title'=>'List user',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('project_list'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	$items['not-acceptable']=array(
+		'title'=>'Not Acceptable',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('not_acceptable_form'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	$items['acknowledgement']=array(
+		'title'=>'Acknowledgement',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('acknowledgement_received_form'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['generate-acknowledgement']=array(
+		'title'=>'Acknowledgement',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('generate_acknowledgement_received_form'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	$items['ack-file/%/%'] = array(
+		'title'=>'Acknowledge File',
+		'page callback'=>'ack_file_display',
+		'page arguments'=>array(1,2),
+		'access arguments' => array('access content'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	
+	$items['getassetuser/autocomplete'] = array(
+		'page callback' => 'get_asset_user',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+		'file' => 'includes/abc.inc',
+    ); 
+	
+	$items['getassetuser/autocompletebacklog'] = array(
+		'page callback' => 'get_asset_user_backlog',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+		'file' => 'includes/abc.inc',
+    );
+	
+	$items['getassetuser/autocompletebacklogall'] = array(
+		'page callback' => 'get_asset_user_backlog_all',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+		'file' => 'includes/abc.inc',
+    );
+	
+	$items['asset-received-list']=array(
+		'title'=>'Received List of Assets',
+		'page callback'=>'asset_received_list',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['asset-pending-list']=array(
+		'title'=>'Pending List of Assets',
+		'page callback'=>'asset_pending_list',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['asset-retirement-list']=array(
+		'title'=>'Retirement Officers List',
+		'page callback'=>'asset_retirement_list',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+		$items['asset-officers-list']=array(
+		'title'=>'Officers List',
+		'page callback'=>'asset_officers_list_form',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	 // for Retirement Status Change
+  $items['retirement-change-dashboard/changeStatus/%/%'] = array(
+	'title' => 'Retirement Status Change',
+	'page callback' => 'retirement_status_change',
+	'page arguments' => array(2,3),
+	'access arguments' => array('create_user_per'),
+	//'access arguments' => array('access content'),
+	'file' => 'includes/abc.inc',
+  );
+	
+	$items['all-group-a-officer-list']=array(
+		'title'=>'Yearly List of Assets Received',
+		'page callback'=>'all_group_a_officer_list',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['all-group-b-officer-list']=array(
+		'title'=>'Yearly List of Assets Received',
+		'page callback'=>'all_group_b_officer_list',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['all-group-c-officer-list']=array(
+		'title'=>'Yearly List of Assets Received',
+		'page callback'=>'all_group_c_officer_list',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['nodal-officer-list']=array(
+		'title'=>'Yearly List of Assets Received',
+		'page callback'=>'nodal_officer_list',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['all-year-list/%']=array(
+		'title'=>'List of Assets From Start of Service',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('all_year_list',1,2),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	/******************************************************* need to upload ******************************************/
+	$items['field-accept-list']=array(
+		'title'=>'Forward List of DoA',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('field_accept_list'),
+		'access arguments' => array('field_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	$items['field-inbox-list']=array(
+		'title'=>'Inbox For Directorates Field',
+		'page callback'=>'directorate_field_inbox_list',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('field_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['field-outbox-list/%/%']=array(
+		'title'=>'Sent List of DoA by Field Officers',
+		'page callback'=>'field_outbox_list',
+		'page arguments'=>array(1,2),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['directorate-inbox-list-from-field']=array(
+		'title'=>'Inbox From Field',
+		'page callback'=>'directorate_inbox_list_for_Field',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('nodal_per'),
+		'file' => 'includes/abc.inc',
+	);
+	$items['field-inbox-accept-reject/%/%/%']=array(
+		'title'=>'Field from Accept Reject',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('from_field_officer_list_to_nodal',1,2,3),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	$items['field-outbox-accept-reject']=array(
+		'title'=>'Field Outbox from Accept Reject',
+		'page callback'=>'from_nodal_field_outbox_list',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('nodal_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	/******************************************************* need to upload end ******************************************/
+	
+	$items['groupA-officer-list']=array(
+		'title'=>'Forward List of GroupA Officers',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('groupA_officer_list'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['backlog-accept-list-from-department']=array(
+		'title'=>'Backlog Accept List From Department',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('backlog_accept_list'),
+		'access arguments' => array('asset_admin_per'),
+		'file' => 'includes/abc.inc',
+	);
+	$items['backlog-outbox-accept-list']=array(
+		'title'=>'Backlog Outbox From Directorates',
+		'page callback'=>'backlog_outbox_accept_list',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('nodal_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['groupA-inbox-list/%/%']=array(
+		'title'=>'Sent List of GroupA Officers',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('groupA_officer_list_directorate',1,2),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['backlog-accept-doa-list-from-ld/%/%']=array(
+		'title'=>'Accept List Of DoA From LD',
+		'page callback'=>'backlog_accept_doa_list_from_ld',
+		'page arguments'=>array(1,2),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['groupA-outbox-list/%/%']=array(
+		'title'=>'Sent List of GroupA Officers',
+		'page callback'=>'groupA_outbox_list',
+		'page arguments'=>array(1,2),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['groupA-outbox-detail/%/%']=array(
+		'title'=>'Sent List of GroupA Officers',
+		'page callback'=>'groupA_outbox_details_list',
+		'page arguments'=>array(1,2),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['directorate-inbox-list']=array(
+		'title'=>'Inbox From Directorates',
+		'page callback'=>'directorate_inbox_list',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['directorate-inbox-list-from-ld']=array(
+		'title'=>'Inbox From Directorates',
+		'page callback'=>'directorate_inbox_list_for_LD',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['directorate-outbox-list']=array(
+		'title'=>'Outbox From Directorates',
+		'page callback'=>'directorate_outbox_list',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['display-list/%']=array(
+		'title'=>'Directorates',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('directorate_display_list',1),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	
+	$items['backlog-doa']=array(
+		'title'=>'Backlog DOA',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('backlog_doa_form'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['backlog-doa-all']=array(
+		'title'=>'Backlog DOA All',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('backlog_doa_all_form'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['employee-compliance']=array(
+		'title'=>'Employee Compliance',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('employee_compliance_form'),
+		'access arguments' => array('asset_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['empcompliance-file/%'] = array(
+		'title'=>'Compliance File',
+		'page callback'=>'compliance_file_display',
+		'page arguments'=>array(1),
+		'access arguments' => array('access content'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	$items['assetuser-dashboard'] = array(
+		'title'	 =>	'Assets User Dashboard',
+		'page callback'	 =>	'drupal_get_form',
+		'page arguments'	=> array('asset_user_dashboard'),
+		'file' 	 => 	'includes/asset_user_dashboard.inc',
+		'access arguments' 	=> 	array('asset_user_per'),
+	);
+	$items['individual-officer-list']=array(
+		'title'=>'Yearly List of Assets Received',
+		'page callback'=>'individual_officer_list',
+		//'page arguments'=>array('asset_received_list'),
+		'access arguments' => array('asset_user_per'),
+		'file' => 'includes/asset_user_dashboard.inc',
+	);
+	$items['profileupdate'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('employee_profile_form'),
+		'access arguments' => array('change_user_pass_per'),
+		'file' => 'includes/user_mgmt.inc',
+	);
+	
+	$items['showcause']=array(
+		'title'=>'Showause',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('showcause_notice_form'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	$items['showcause-list'] = array(
+		'title'	 =>	'Show Cause Notice',
+		'page callback'	 =>	'individual_showcause_list',
+		//'page arguments'	=> array('asset_user_dashboard'),
+		'file' 	 => 	'includes/asset_user_dashboard.inc',
+		'access arguments' 	=> 	array('asset_user_per'),
+	);
+	$items['showcause-admin-list'] = array(
+		'title'	 =>	'Show Cause Admin List',
+		'page callback'	 =>	'showcause_admin_list',
+		//'page arguments'	=> array('asset_user_dashboard'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/abc.inc',
+	);
+	
+	/*------------------------------------------  Service Record Monitoring System Begin ------------------------------------------------------*/
+	
+	$items['servicerecord'] = array(
+		'title'	 =>	'Service Details',
+		'page callback'	 =>	'drupal_get_form',
+		'page arguments'	=> array('service_record_monitoring'),
+		'file' 	 => 	'includes/service_record_monitoring.inc',
+		'access arguments' 	=> 	array('asset_user_per'),
+	);
+	
+	$items['servicerecord/default'] = array(
+		'title'  => 'Service Details',
+		'type' 	 => MENU_DEFAULT_LOCAL_TASK,
+		'weight' => -10,
+	  );
+	  
+	$items['servicerecord/eduqaulification'] = array(
+	'title' 			=> 	'Educational Qualification',
+	'page callback' 	=> 	'drupal_get_form',
+	'page arguments' 	=> 	array('eduqaul_form_entry'),
+	'access callback' 	=> 	'user_access',
+	'access arguments' 	=> 	array('asset_user_per'),
+	'weight' 			=> 	2,
+	'type' 				=> 	MENU_LOCAL_TASK,
+	'file' 				=> 'includes/service_record_monitoring.inc',
+   );
+   
+   $items['servicerecord/postingdetails'] = array(
+	'title' 			=> 	'Posting Details',
+	'page callback' 	=> 	'drupal_get_form',
+	'page arguments' 	=> 	array('postingdetails_form_entry'),
+	'access callback' 	=> 	'user_access',
+	'access arguments' 	=> 	array('asset_user_per'),
+	'weight' 			=> 	3,
+	'type' 				=> 	MENU_LOCAL_TASK,
+	'file' 				=> 'includes/service_record_monitoring.inc',
+   );
+   
+    $items['servicerecord/inservicetrainingdetails'] = array(
+	'title' 			=> 	'In-Service / Domestic Training',
+	'page callback' 	=> 	'drupal_get_form',
+	'page arguments' 	=> 	array('inservicetrainingdetails_form_entry'),
+	'access callback' 	=> 	'user_access',
+	'access arguments' 	=> 	array('asset_user_per'),
+	'weight' 			=> 	4,
+	'type' 				=> 	MENU_LOCAL_TASK,
+	'file' 				=> 'includes/service_record_monitoring.inc',
+   );
+   
+   /*$items['servicerecord/domestictrdetails'] = array(
+	'title' 			=> 	'Domestic Training',
+	'page callback' 	=> 	'drupal_get_form',
+	'page arguments' 	=> 	array('domestictrdetails_form_entry'),
+	'access callback' 	=> 	'user_access',
+	'access arguments' 	=> 	array('asset_user_per'),
+	'weight' 			=> 	5,
+	'type' 				=> 	MENU_LOCAL_TASK,
+	'file' 				=> 'includes/service_record_monitoring.inc',
+   );*/
+   
+   $items['servicerecord/foreigntrdetails'] = array(
+	'title' 			=> 	'Foreign Training',
+	'page callback' 	=> 	'drupal_get_form',
+	'page arguments' 	=> 	array('foreigntrdetails_form_entry'),
+	'access callback' 	=> 	'user_access',
+	'access arguments' 	=> 	array('asset_user_per'),
+	'weight' 			=> 	5,
+	'type' 				=> 	MENU_LOCAL_TASK,
+	'file' 				=> 'includes/service_record_monitoring.inc',
+   );
+   
+    $items['servicerecord/awardspubl'] = array(
+	'title' 			=> 	'Awards/Publications',
+	'page callback' 	=> 	'drupal_get_form',
+	'page arguments' 	=> 	array('awardspubl_form_entry'),
+	'access callback' 	=> 	'user_access',
+	'access arguments' 	=> 	array('asset_user_per'),
+	'weight' 			=> 	6,
+	'type' 				=> 	MENU_LOCAL_TASK,
+	'file' 				=> 'includes/service_record_monitoring.inc',
+   );
+   
+    $items['servicerecord/finalpreview'] = array(
+	'title' 			=> 	'Final PDF',
+	'page callback' 	=> 	'drupal_get_form',
+	'page arguments' 	=> 	array('finalpdf_form_entry'),
+	'access callback' 	=> 	'user_access',
+	'access arguments' 	=> 	array('asset_user_per'),
+	'weight' 			=> 	7,
+	'type' 				=> 	MENU_LOCAL_TASK,
+	'file' 				=> 'includes/service_record_monitoring.inc',
+   );
+   
+   
+   $items['service-officerdashboard'] = array(
+		'title'			   => 'Service Record Officer Dashboard',
+		'page callback'	   => 'serviceofficer_admin_dashboard',
+		//'page arguments'   => array('serviceofficer_admin_dashboard'),
+		'file' 			   => 'includes/service_record_monitoring.inc',
+		'access arguments' => array('nodal_per'),
+	);
+	
+	$items['service-officerdashboard/approvalview/%'] = array(
+		'title'			   => 'Approve Service Record of Officer',
+		'page callback'	    =>'drupal_get_form',
+		'page arguments'   => array('serviceofficer_approval',1),
+		'file' 			   => 'includes/service_record_monitoring.inc',
+		'access arguments' => array('nodal_per'),
+	);
+	
+	$items['service-empdashboard'] = array(
+		'title'			   => 'Service Record Officer Dashboard',
+		'page callback'	   => 'serviceemp_admin_dashboard',
+		//'page arguments'   => array('serviceofficer_admin_dashboard'),
+		'file' 			   => 'includes/service_record_monitoring.inc',
+		'access arguments' => array('asset_user_per'),
+	);
+	
+	/*------------------------------------------  Service Record Monitoring System End -------------------------------------------------------*/
+	
+	/*----------------------------------- SAR / ACR RECORD BEGIN --------------------------------------*/
+	
+	$items['sar-acr-record']=array(
+		'title'=>'SAR ACR Record',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('sar_acr_record_form'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/sar_acr_record.inc',
+	);
+	$items['getassetuser/autocompletesaracr'] = array(
+		'page callback' => 'get_asset_user_saracr',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+		'file' => 'includes/sar_acr_record.inc',
+    );
+	$items['display-file/%'] = array(
+		'title'=>'SAR ACR File Display',
+		'page callback'=>'sar_acr_file_display',
+		'page arguments'=>array(1),
+		'access arguments' => array('access content'),
+		'file' => 'includes/sar_acr_record.inc',
+	);
+  
+  /*----------------------------------- SAR / ACR RECORD END --------------------------------------*/
+  
+  /*----------------------------------- Employee Transfer BEGIN --------------------------------------*/
+	$items['employee-transfer']=array(
+		'title'=>'Employee Transfer',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('employee_transfer_form'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/employee_transfer.inc',
+	);
+	$items['getassetuser/autocompletetransfer'] = array(
+		'page callback' => 'get_asset_user_transfer',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+		'file' => 'includes/employee_transfer.inc',
+    );
+	$items['employee-transfer-out-list'] = array(
+		'title'	 =>	'Employee Transfer Out List',
+		'page callback'	 =>	'employee_transfer_out_list',
+		//'page arguments'	=> array('asset_user_dashboard'),
+		'file' 	 => 	'includes/employee_transfer.inc',
+		'access arguments' 	=> 	array('create_user_per'),
+	);
+	$items['employee-transfer-in-list'] = array(
+		'title'	 =>	'Employee Transfer In List',
+		'page callback'	 =>	'employee_transfer_in_list',
+		//'page arguments'	=> array('asset_user_dashboard'),
+		'file' 	 => 	'includes/employee_transfer.inc',
+		'access arguments' 	=> 	array('create_user_per'),
+	);
+	$items['transfer-accept/%'] = array(
+		'title'			   => 'Transfer Accept Employee',
+		'page callback'	    =>'drupal_get_form',
+		'page arguments'   => array('transfer_accepted_form',1),
+		'file' 	 => 	'includes/employee_transfer.inc',
+		'access arguments' 	=> 	array('create_user_per'),
+	);
+	
+	 $items['transfer-out-display/%'] = array(
+        'title'               => 'Transfer Display Employee',
+        'page callback'        =>'drupal_get_form',
+        'page arguments'   => array('transfer_display_form',1),
+        'file'      =>     'includes/employee_transfer.inc',
+        'access arguments'     =>     array('create_user_per'),
+    );
+  /*----------------------------------- Employee Transfer END --------------------------------------*/	
+  
+	/*$items['create-user']=array(
+		'title'=>'Create user',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('create_excel_form'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/create_user_excel.inc',
+		//'access callback'=>TRUE
+	);*/
+	/*$items['propertyuser-dashboard'] = array(
+		'title'	 =>	'Assets User Dashboard',
+		'page callback'	 =>	'drupal_get_form',
+		'page arguments'	=> array('asset_user_dashboard'),
+		'file' 	 => 	'includes/asset_user_dashboard.inc',
+		'access arguments' 	=> 	array('asset_user_per'),
+	);*/
+	/*$items['add-user']=array(
+		'title'=>'Add user',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('project_form'),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/user_mgmt.inc',
+		//'access callback'=>TRUE
+	);
+	$items['add-user/default'] = array(
+		'title' 			=> 'Add user',
+		'type' 				=> MENU_DEFAULT_LOCAL_TASK,
+		'weight' 			=> -10,
+	  );
+  	$items['add-user/userdtls'] = array(
+		'title' 			=> 	'User Details',
+		'page callback' 	=> 	'drupal_get_form',
+		'page arguments' 	=> 	array('user_details_form_entry'),
+		'access callback' 	=> 	'user_access',
+		'access arguments' => array('create_user_per'),
+		'weight' 			=> 	2,
+		'type' 				=> 	MENU_LOCAL_TASK,
+		'file' 				=> 'includes/user_mgmt.inc',
+   	);
+	$items['edit-user/%']=array(
+		'title'=>'Add user',
+		'page callback'=>'drupal_get_form',
+		'page arguments'=>array('project_edit_form',1),
+		'access arguments' => array('create_user_per'),
+		'file' => 'includes/user_mgmt.inc',
+		//'access callback'=>TRUE
+	);
+													
+		
+	
+	$items['delete-user/%'] = array(
+	    'title' => 'Delete User',
+	    'page callback' => 'drupal_get_form',
+	    'page arguments' => array('project_del',1),
+	    'access arguments' => array('create_user_per'),
+		'file' => 'includes/user_mgmt.inc',
+  	);
+	
+	/*$items['change-password'] = array(
+      'title' => t('Change password'),
+      //'description' => t('You can change your password here.'),
+	  'page callback'=>'drupal_get_form',
+	  'page arguments'=>array('passchng_render_user_pass_change_form'),
+      //'page callback' => 'passchng_render_user_pass_change_form',
+      'access arguments' => array('change_user_pass_per'),
+	  'file' => 'includes/user_mgmt.inc',
+    );*/
+	
+	/*$items['profileupdate'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('employee_profile_form'),
+		'access arguments' => array('change_user_pass_per'),
+		'file' => 'includes/user_mgmt.inc',
+	);
+	
+	/*$items['asset'] = array(
+		'title' 			=> 'Asset',
+		'page callback' 	=> 'drupal_get_form',
+		'page arguments' 	=> array('asset_form_entry'),
+		'access callback' 	=> 'user_access',
+		'access arguments'  => array('change_user_pass_per'),
+		'file' 				=> 'includes/asset_mgmt.inc',
+	);
+
+ 	$items['asset/default'] = array(
+		'title' 			=> 'Asset',
+		'type' 				=> MENU_DEFAULT_LOCAL_TASK,
+		'weight' 			=> -10,
+	  );
+	  
+  $items['asset/land'] = array(
+	'title' 			=> 	'Immovable-Land',
+	'page callback' 	=> 	'drupal_get_form',
+	'page arguments' 	=> 	array('land_form_entry'),
+	'access callback' 	=> 	'user_access',
+	'access arguments' 	=> 	array('change_user_pass_per'),
+	'weight' 			=> 	2,
+	'type' 				=> 	MENU_LOCAL_TASK,
+	'file' 				=> 'includes/asset_mgmt.inc',
+   );
+   
+   $items['asset/landedit/%'] = array(
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('land_form_edit',2),
+	'access arguments' => array('change_user_pass_per'),
+	'type' => MENU_CALLBACK,
+	'file' => 'includes/asset_mgmt.inc',
+  );
+   
+   $items['asset/landdel/%'] = array(
+	'page callback' => 'asset_land_del',
+	'page arguments' => array(2),
+	'access arguments' => array('change_user_pass_per'),
+	'type' => MENU_CALLBACK,
+	'file' => 'includes/asset_mgmt.inc',
+  );
+   
+    $items['asset/house'] = array(
+	'title' 			=> 	'Immovable-House',
+	'page callback' 	=> 	'drupal_get_form',
+	'page arguments' 	=> 	array('house_form_entry'),
+	'access callback' 	=> 	'user_access',
+	'access arguments' 	=> 	array('change_user_pass_per'),
+	'weight' 			=> 	3,
+	'type' 				=> 	MENU_LOCAL_TASK,
+	'file' 				=> 'includes/asset_mgmt.inc',
+   );
+   $items['asset/houseedit/%'] = array(
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('house_form_edit',2),
+	'access arguments' => array('change_user_pass_per'),
+	'type' => MENU_CALLBACK,
+	'file' => 'includes/asset_mgmt.inc',
+  );
+   $items['asset/housedel/%'] = array(
+	'page callback' => 'asset_house_del',
+	'page arguments' => array(2),
+	'access arguments' => array('change_user_pass_per'),
+	'type' => MENU_CALLBACK,
+	'file' => 'includes/asset_mgmt.inc',
+  );
+   
+   $items['asset/other-immovable'] = array(
+	'title' 			=> 	'Immovable-Others',
+	'page callback' 	=> 	'drupal_get_form',
+	'page arguments' 	=> 	array('other_immovable_form_entry'),
+	'access callback' 	=> 	'user_access',
+	'access arguments' 	=> 	array('change_user_pass_per'),
+	'weight' 			=> 	4,
+	'type' 				=> 	MENU_LOCAL_TASK,
+	'file' 				=> 'includes/asset_mgmt.inc',
+   );
+   $items['asset/otheredit/%'] = array(
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('other_immovable_form_edit',2),
+	'access arguments' => array('change_user_pass_per'),
+	'type' => MENU_CALLBACK,
+	'file' => 'includes/asset_mgmt.inc',
+  );
+   $items['asset/otherdel/%'] = array(
+	'page callback' => 'asset_other_immovable_del',
+	'page arguments' => array(2),
+	'access arguments' => array('change_user_pass_per'),
+	'type' => MENU_CALLBACK,
+	'file' => 'includes/asset_mgmt.inc',
+  );
+   
+   $items['asset/movabale'] = array(
+	'title' 			=> 	'Movable-Property',
+	'page callback' 	=> 	'drupal_get_form',
+	'page arguments' 	=> 	array('movable_form_entry'),
+	'access callback' 	=> 	'user_access',
+	'access arguments' 	=> 	array('change_user_pass_per'),
+	'weight' 			=> 	5,
+	'type' 				=> 	MENU_LOCAL_TASK,
+	'file' 				=> 'includes/asset_mgmt.inc',
+   );
+   $items['asset/movablepropertyedit/%'] = array(
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('movable_form_edit',2),
+	'access arguments' => array('change_user_pass_per'),
+	'type' => MENU_CALLBACK,
+	'file' => 'includes/asset_mgmt.inc',
+  );
+   $items['asset/movablepropertydel/%'] = array(
+	'page callback' => 'asset_movable_property_del',
+	'page arguments' => array(2),
+	'access arguments' => array('change_user_pass_per'),
+	'type' => MENU_CALLBACK,
+	'file' => 'includes/asset_mgmt.inc',
+  );
+   
+   $items['asset/other-movabale'] = array(
+	'title' 			=> 	'Movable-Others',
+	'page callback' 	=> 	'drupal_get_form',
+	'page arguments' 	=> 	array('other_movable_form_entry'),
+	'access callback' 	=> 	'user_access',
+	'access arguments' 	=> 	array('change_user_pass_per'),
+	'weight' 			=> 	6,
+	'type' 				=> 	MENU_LOCAL_TASK,
+	'file' 				=> 'includes/asset_mgmt.inc',
+   );
+   $items['asset/movableotheredit/%'] = array(
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('movable_other_form_edit',2),
+	'access arguments' => array('change_user_pass_per'),
+	'type' => MENU_CALLBACK,
+	'file' => 'includes/asset_mgmt.inc',
+  );
+   $items['asset/movableotherdel/%'] = array(
+	'page callback' => 'asset_movable_other_del',
+	'page arguments' => array(2),
+	'access arguments' => array('change_user_pass_per'),
+	'type' => MENU_CALLBACK,
+	'file' => 'includes/asset_mgmt.inc',
+  );
+  $items['asset/report'] = array(
+	'title' 			=> 	'Set Password',
+	'page callback' 	=> 	'drupal_get_form',
+	'page arguments' 	=> 	array('asset_generate_report'),
+	'access callback' 	=> 	'user_access',
+	'access arguments' 	=> 	array('change_user_pass_per'),
+	'weight' 			=> 	7,
+	'type' 				=> 	MENU_LOCAL_TASK,
+	'file' => 'includes/asset_mgmt.inc',
+   ); 
+   $items['asset/final'] = array(
+	'title' 			=> 	'Final Submit',
+	'page callback' 	=> 	'drupal_get_form',
+	'page arguments' 	=> 	array('asset_final_form'),
+	'access callback' 	=> 	'user_access',
+	'access arguments' 	=> 	array('change_user_pass_per'),
+	'weight' 			=> 	8,
+	'type' 				=> 	MENU_LOCAL_TASK,
+	'file' => 'includes/asset_mgmt.inc',
+   ); */
+	return $items;
+}

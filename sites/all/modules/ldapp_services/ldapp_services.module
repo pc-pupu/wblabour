@@ -1,0 +1,13 @@
+<?php
+function ldapp_services_services_resources() {
+  $resources = array();
+
+//Include the necessary inc files.
+  module_load_include('inc', 'ldapp_services', 'includes/ldapp_schemes.services');
+
+//Service Apis for contents.
+  $resources += ldapp_schemes_services_resource();
+
+  return $resources;
+}
+?>

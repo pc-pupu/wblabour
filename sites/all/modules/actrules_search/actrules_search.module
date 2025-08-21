@@ -1,0 +1,203 @@
+<?php
+
+function actrules_search_init() {
+  //drupal_add_js(drupal_get_path('module', 'actrules_search') . '/tooltip.js');
+}
+
+function actrules_search_permission() {
+  return array(
+    'search_per' => array(
+      'title' => t('Search Act Service Rules Notification permission'),
+    )
+	
+  );
+}
+
+function actrules_search_menu(){
+
+  $items['actrules'] = array(
+	'title' => 'Search Act Rules Notice Service',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('actrules_list'),
+	'access arguments' => array('search_per'),
+  );
+  
+  
+  return $items;
+  
+}
+
+function actrules_list($form, &$form_state){
+   global $base_root, $base_path;
+	
+   $filter_data = isset($form_state['values']['authority']) && !empty($form_state['values']['authority']) ? $form_state['values']['authority'] : '';	
+   $area_data = isset($form_state['values']['area']) && !empty($form_state['values']['area']) ? $form_state['values']['area'] : '';
+   //$service_data = isset($form_state['values']['service']) && !empty($form_state['values']['service']) ? $form_state['values']['service'] : '';
+	 
+   $form['authority'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+     '#options' => authority_list(),
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<fieldset class="form-group"><div class="col-md-4"><label for="authorityName form_error">Authority Name </label>',
+	 '#suffix' =>'</div>',
+	 ); 
+	 
+	$form['area'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+     '#options' => area_list(),
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<div class="col-md-4"><label for="areaName">Area Name </label>',
+	 '#suffix' =>'</div>',
+	 ); 
+	 
+	 $form['search'] = array (
+		'#type' => 'submit',
+		'#value' => 'Search',
+		'#attributes' => array('class'=>array('btn','btn-primary')),
+		'#prefix'=>'<div class="col-md-4" style="margin-top: 37px;">',
+		'#suffix' =>'</div></fieldset>',
+     ); 
+	 
+	 
+	/* $form['service'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+     '#options' => service_list(),
+	 '#validated' => TRUE,
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<div class="col-md-4"><label for="serviceName">Service Name</label>',
+	 '#suffix' =>'</div>',
+	 );
+	 
+	 $form['area'] = array(
+	 '#title'=>'',
+	 '#type' => 'select',
+     '#options' => area_list(),
+	 '#attributes' => array('class'=>array('form-control')),
+	 '#prefix'=>'<div class="col-md-4"><label for="areaName">Area Name </label>',
+	 '#suffix' =>'</div></fieldset>',
+	 ); 
+	 
+	 
+	 $form['search'] = array (
+		'#type' => 'submit',
+		'#value' => 'Search',
+		'#attributes' => array('class'=>array('btn','btn-primary')),
+		'#prefix'=>'<fieldset class="form-group"><div class="col-md-4">',
+		'#suffix' =>'',
+     ); 
+	 
+	  $form['tooltip'] = array(
+	    '#prefix'=>'<a href="#" data-toggle="tooltip" data-placement="right" title="Enter any or all search criteria for searching. To get all results leave all fields blank!!">
+		<img src="'.$GLOBALS['base_url']."/".drupal_get_path('theme', 'labourdept').'/images/tooltip.png">',
+		'#suffix' =>'</a></div></fieldset>',
+	 );*/
+	 
+	 $form['search_result'] = array(
+	  '#type' => 'markup',
+	  '#markup' => get_actrules_search($filter_data,$area_data),
+    ); 
+	 
+	return  $form; 
+}
+
+
+
+function actrules_list_submit($form, &$form_state){
+	$form_state['rebuild'] = TRUE;
+}
+
+
+function get_actrules_search($filter_data='',$area_data=''){
+	
+   	 global $base_root, $base_path;
+	 
+	 
+	if($filter_data!='' || $area_data!=''){
+	 
+	 
+	 //$sort = 'DESC';
+	 //$order = 'a.act_name';
+     $query = db_select('ar_mapping', 'm');
+	 $query ->fields('m', array( 'id','act_name','rules_name'));
+	 if($filter_data!=''){
+		 //echo "auth";
+		 //exit;
+		$query->condition('m.authority_id', '%' . db_like($filter_data) . '%', 'LIKE');
+		
+	  }
+   
+	 if($area_data!=''){
+		 //echo "area";
+		 //exit;
+		$query->condition('m.area_id',trim($area_data),'=');
+	 }
+	 $query->orderBy('m.id','ASC');
+	
+  	 //$query = $query->extend('TableSort')->extend('PagerDefault')->limit(10);
+  	 $result = $query->execute();
+	 $cms_act_query_result_data = $result->fetchAll();
+	/* if($service_data!=''){
+	 	$cms_act_query->condition('m.service_id',trim($service_data),'=');
+	 }*/
+	 //echo $cms_act_query;
+	 
+     //$cms_act_query->fields('t', array('id','authority_id','area_id','service_id','notification_id','rules_id','act_id'));
+	/* $cms_act_query = $cms_act_query->extend('TableSort')->extend('PagerDefault')->limit(20);
+	 $cms_act_query->orderBy($order, $sort);
+	 $cms_act_query_result = $cms_act_query->execute();*/
+	 
+	 
+	 
+	 
+	 $rows = array();
+     $header = array();
+  	 $output = '';
+  
+     $header = array(
+          array('data'=> 'SL.NO'),
+		  array('data'=> 'Act'),
+          array('data' => 'Rules'),
+		  //array('data' => 'Service'),
+		  //array('data' => 'Notification'),
+		  //array('data' => 'Authority Code'),
+		  //array('data' => 'Action'),
+      );
+	 $i=0;
+	 foreach($cms_act_query_result_data as $data){
+		$i++;
+		//$aa=$base_root.$base_path.'cmsentry/actrulesmapdel/'.$data->id;
+		//$link_s=l(t('Delete'), $aa) ;
+		$rows[] = array(
+					$i,
+					$data->act_name,
+      				$data->rules_name,
+					//$data->service_name,
+					//$data->notification_name
+					//$data->authority_code
+					//$link_s
+	  	);   
+	 }
+	 
+     //print_r($rows); exit; 				
+	 
+   $output = theme_table(
+    array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array('class' => array('table', 'table-bordered')),
+      'sticky' => true,
+      'caption' => '',
+      'colgroups' => array(),
+      'empty' => t("No data found!") // The message to be displayed if table is empty
+    )
+  ).theme('pager');
+
+  	 
+    return '<div class="table-responsive statistics_box">'.$output.'</div>';
+	}
+}
+
+
